@@ -10,14 +10,19 @@
 #' @param currecies Id (iso) of currencies of interest.
 #' @param convert_to_ref Indicator to define if series are converted to ref_curr.
 #' @param ref_per_unit_foreign Indicator if currencies are converted to Base (ref) currency per unit of foreign currency.
+#' @param invest_assets Indicator to decide if use investable asset series.
 #' @return xts series.
 #' @export
 
-series_merge <- function(series_list, dates, asset_data, ref_curr, assets, currencies = NULL, convert_to_ref = FALSE, ref_per_unit_foreign = FALSE) {
+series_merge <- function(series_list, dates, asset_data, ref_curr, assets, currencies = NULL, convert_to_ref = FALSE, ref_per_unit_foreign = FALSE, invest_assets = FALSE) {
   n_assets <- length(assets)
   n_curr <- length(currencies)
 
-  ticker <- asset_data$TickerBenchmark[match(assets, asset_data$Asset)]
+  if(invest_assets){
+    ticker <- asset_data$TickerInvestAsset[match(assets, asset_data$Asset)]
+  }else{
+    ticker <- asset_data$TickerBenchmark[match(assets, asset_data$Asset)]
+  }
 
   series_out <- NULL
   if(!is.null(assets)){
