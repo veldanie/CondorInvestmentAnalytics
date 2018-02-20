@@ -40,9 +40,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
     # Differential Evolution:
     control_list <- list(itermax = 500, # maximum iteration (population generation) allowed.
                          p = 0.2,
-                         NP = 20*n_par,       # number of population members
-                         F = 0.7,
-                         CR = 0.9,
+                         #NP = NP,       # number of population members
                          strategy = 2,  # DE / rand / 1 / bin (classical strategy)
                          #storepopfrom = 1, # store intermediate populations from 1st gen
                          parallelType = 0, # use all available cores

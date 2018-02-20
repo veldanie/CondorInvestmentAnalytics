@@ -39,6 +39,8 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
 
   #Forward premium: Forward premium per available currency with respect to ref curr. It builds cross outrights when required.
   fwd_active <- currencies[currencies != ref_curr]
+  if(length(fwd_active) == 0){warning("No existe riesgo de tasa de cambio en el portafolio."); return(NULL)}
+
   series_fx_outright <- NULL
 
   for (fx in currencies){
