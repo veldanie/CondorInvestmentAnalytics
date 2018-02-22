@@ -4,18 +4,20 @@
 \alias{asset_universe}
 \title{Asset Universe}
 \usage{
-asset_universe(mean_rets, cov_matrix, lambda)
+asset_universe(mean_rets, cov_matrix, n_assets_univ, lambda = 0.1)
 }
 \arguments{
-\item{mean_rets}{Named vector of mean returns.}
+\item{mean_rets}{Named vector of mean returns. Can be implied returns.}
 
-\item{cov_matrix}{Covariance matrix.}
+\item{cov_matrix}{(Annualized) Covariance matrix.}
 
-\item{lambda}{Penalty.}
+\item{n_assets_univ}{Number of assets in the ivestable universe}
+
+\item{lambda}{Correlation penalty.}
 }
 \value{
-Vector of asset names selected.
+Vector of asset names selected. The names are in order, meaning the i position in the output vector is the i-th asset selected.
 }
 \description{
-Estimates returns with a given period.
+Suggests a set of assets.
 }

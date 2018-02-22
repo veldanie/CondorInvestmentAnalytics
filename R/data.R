@@ -14,18 +14,10 @@
 #' @source \url{http://www.bloomberg.info/}
 "series_list"
 
-#' Series de tiempo.
+#' Series de tiempo fx forward.
 #'
 #' Lista de series de fx forwards. outright y fwd premium
 #'
 #' @format Una lista donde cada componente corresponde a un objeto xts.
 #' @source \url{http://www.bloomberg.info/}
 "series_fxfwd_list"
-
-#' Capitalización de mercado.
-#'
-#' Información de capitalización de mercado en USD asociada a cada clase de activo.
-#'
-#' @format Data frame con información de capitalización de mercado de los activos.
-#' @source \url{http://www.bloomberg.info/}
-"market_cap"

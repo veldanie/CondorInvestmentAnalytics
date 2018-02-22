@@ -5,7 +5,8 @@
 \title{Series merge}
 \usage{
 series_merge(series_list, dates, asset_data, ref_curr, assets,
-  currencies = NULL, convert_to_ref = FALSE, ref_per_unit_foreign = FALSE)
+  currencies = NULL, convert_to_ref = FALSE, ref_per_unit_foreign = FALSE,
+  invest_assets = FALSE)
 }
 \arguments{
 \item{series_list}{List of xts series.}
@@ -21,6 +22,8 @@ series_merge(series_list, dates, asset_data, ref_curr, assets,
 \item{convert_to_ref}{Indicator to define if series are converted to ref_curr.}
 
 \item{ref_per_unit_foreign}{Indicator if currencies are converted to Base (ref) currency per unit of foreign currency.}
+
+\item{invest_assets}{Indicator to decide if use investable asset series.}
 
 \item{currecies}{Id (iso) of currencies of interest.}
 }
