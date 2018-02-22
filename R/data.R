@@ -21,3 +21,11 @@
 #' @format Una lista donde cada componente corresponde a un objeto xts.
 #' @source \url{http://www.bloomberg.info/}
 "series_fxfwd_list"
+
+#' Benchmarks.
+#'
+#' Dataframe de benchmarks.
+#'
+#' @format Tabla de benchmarks.
+#' @source \url{http://www.bloomberg.info/}
+"benchmarks"
