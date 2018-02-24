@@ -51,7 +51,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
                          #packages = c("")), # load package for fn)
                          )
 
-    if (type == 'absolute') {
+    if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
       sol <- DEoptim(fn = fn, lower = lb, upper = ub, control = control_list)
       if(is.finite(sol$optim$bestval)){w <- sol$optim$bestmem/sum(sol$optim$bestmem)}else{w <- rep(0, n_par)}
     } else {

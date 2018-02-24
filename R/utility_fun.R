@@ -6,12 +6,13 @@
 #' @param Sigma covariance matrix
 #' @param lambda risk aversion coefficient
 #' @param w_bench Benchmark weigths
-#' @param min_var Min-Var portfolio indicator
-#' @return equilibrium returns. Annualized and not. The return is assumed to be continuous, i.e. estimated using natural log.
+#' @param min_var Indicator Min-Var portfolio
+#' @param same_assets_bench Indicator function. If the portfolio and the benchmark assets are the same TRUE, otherwise FALSE.
+#' @return Objective function.
 #' @export
 
-utility_fun <- function(type = 'absolute', mu, Sigma, lambda, w_bench = NULL, min_var = FALSE) {
-  if(type == 'absolute'){
+utility_fun <- function(type = 'absolute', mu, Sigma, lambda, w_bench = NULL, min_var = FALSE, same_assets_bench = TRUE) {
+  if(type == 'absolute' | !same_assets_bench){
     if (min_var == TRUE){
       function(w){
         util <- t(w)%*%Sigma%*%w
