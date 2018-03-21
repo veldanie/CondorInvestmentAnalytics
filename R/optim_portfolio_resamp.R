@@ -12,7 +12,7 @@
 #' @return Optimal weights, mean resampled optimal weights, matrix of sampled weights.
 #' @export
 
-optim_portfolio_resamp <- function(mu, Sigma, lb, ub, lambda = 1, N = 2e2, M = 5e3, plot_ef = FALSE){
+optim_portfolio_resamp <- function(mu, Sigma, lb, ub, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE){
 
   n_assets <- length(mu)
   w_ini <- rep(1/n_assets, n_assets)
@@ -27,7 +27,7 @@ optim_portfolio_resamp <- function(mu, Sigma, lb, ub, lambda = 1, N = 2e2, M = 5
   port_means <- port_vols <- rep(0, M)
 
   for (i in 1:M){
-    sample_i <- mvrnorm(n = N , mu, tau * Sigma)
+    sample_i <- mvrnorm(n = N , mu, Sigma)
     mu_i <- apply(sample_i, 2, mean)
     Sigma_i <- covar(sample_i)$cov_matrix
     obj_fun <- utility_fun(type = 'absolute', mu = mu_i, Sigma = Sigma_i, lambda = lambda)
