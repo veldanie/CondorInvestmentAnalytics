@@ -9,10 +9,11 @@
 #' @N Number of observations.
 #' @M Number of portfolios.
 #' @plot_ef Indicator to plot efficient frontier.
+#' @spar Smoothing parameter
 #' @return Optimal weights, mean resampled optimal weights, matrix of sampled weights.
 #' @export
 
-optim_portfolio_resamp <- function(mu, Sigma, lb, ub, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE){
+optim_portfolio_resamp <- function(mu, Sigma, lb, ub, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0){
 
   n_assets <- length(mu)
   w_ini <- rep(1/n_assets, n_assets)
