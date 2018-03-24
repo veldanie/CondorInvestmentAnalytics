@@ -20,12 +20,12 @@
 #' @param Sigma_bench covariance matrix of benchmark asset. Only takes values when the benchmark assets are different from portfolio assets.
 #' @param dd_obj Drawdown objective. Default: Inf
 #' @param series Assets prices series. Requiered to estimate drawdown.
-#' @param dd_horiz Dradown horizon.
+#' @param dd_pers Drawdown periods.
 #' @param dd_quant Quantile for max drawdown.
 #' @return Objective function. If type == 'absolute', portfolio risk is controlled by the risk function. If type == 'relative' risk measure can only be volatility.
 #' @export
 
-utility_fun_de <- function(type = 'absolute', mu, Sigma, lambda, risk_fun = NULL, w_bench = NULL, lb = rep(0, length(mu)), ub = rep(1, length(mu)), lb_act = rep(0, length(mu)), ub_act = rep(1, length(mu)), min_var = FALSE, risk_obj = Inf, f_const = rep(1, length(mu)), f_const_lb = 0, f_const_ub = Inf, same_assets_bench = TRUE, Sigma_bench = NULL, dd_obj = Inf, series = NULL, dd_horiz = '12M', dd_quant = 0.9) {
+utility_fun_de <- function(type = 'absolute', mu, Sigma, lambda, risk_fun = NULL, w_bench = NULL, lb = rep(0, length(mu)), ub = rep(1, length(mu)), lb_act = rep(0, length(mu)), ub_act = rep(1, length(mu)), min_var = FALSE, risk_obj = Inf, f_const = rep(1, length(mu)), f_const_lb = 0, f_const_ub = Inf, same_assets_bench = TRUE, Sigma_bench = NULL, dd_obj = Inf, series = NULL, dd_pers = NULL, dd_quant = 0.9) {
   if(type == 'absolute'){
     if (min_var == TRUE){
       function(w){
@@ -37,7 +37,7 @@ utility_fun_de <- function(type = 'absolute', mu, Sigma, lambda, risk_fun = NULL
     }else{
       function(w) {
         if (sum(w)!=1){w <- w/sum(w)}
-        if(any(w<lb) || any(w>ub) || risk_fun(w)>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || cond_drawdown(series, w, dd_horiz, dd_quant) > dd_obj) {return(Inf)}
+        if(any(w<lb) || any(w>ub) || risk_fun(w)>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || cond_drawdown(series, w, dd_pers, dd_quant) > dd_obj) {return(Inf)}
         util <- -(t(w) %*% mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w) %*% Sigma %*% w)
         return(as.numeric(util))
       }
@@ -46,14 +46,14 @@ utility_fun_de <- function(type = 'absolute', mu, Sigma, lambda, risk_fun = NULL
     if(same_assets_bench){
       function(w_act){
         if (sum(w_act)!=0){w_act[w_act > 0] <- abs(w_act[w_act > 0] * sum(w_act[w_act < 0]) / sum(w_act[w_act > 0]))}
-        if(any(w_act<lb_act) || any(w_act>ub_act) || any((w_act + w_bench) < lb) || any((w_act + w_bench)>ub) || as.numeric(sqrt(t(w_act) %*% Sigma %*% w_act))>risk_obj || any((f_const %*% (w_act+w_bench)) < f_const_lb) || any((f_const %*% (w_act+w_bench)) > f_const_ub) || cond_drawdown(series, w_act+w_bench, dd_horiz, dd_quant) > dd_obj) {return(Inf)}
+        if(any(w_act<lb_act) || any(w_act>ub_act) || any((w_act + w_bench) < lb) || any((w_act + w_bench)>ub) || as.numeric(sqrt(t(w_act) %*% Sigma %*% w_act))>risk_obj || any((f_const %*% (w_act+w_bench)) < f_const_lb) || any((f_const %*% (w_act+w_bench)) > f_const_ub) || cond_drawdown(series, w_act+w_bench, dd_pers, dd_quant) > dd_obj) {return(Inf)}
         util <- -(t(w_act+w_bench)%*%mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w_act)%*%Sigma%*%w_act)
         as.numeric(util)
       }
     }else{
       function(w) {
         if (sum(w)!=1){w <- w/sum(w)}
-        if(any(w<lb) || any(w>ub) || (as.numeric(sqrt(t(w) %*% Sigma %*% w)) - as.numeric(sqrt(t(w_bench) %*% Sigma_bench %*% w_bench)))>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || cond_drawdown(series, w, dd_horiz, dd_quant) > dd_obj) {return(Inf)}
+        if(any(w<lb) || any(w>ub) || (as.numeric(sqrt(t(w) %*% Sigma %*% w)) - as.numeric(sqrt(t(w_bench) %*% Sigma_bench %*% w_bench)))>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || cond_drawdown(series, w, dd_pers, dd_quant) > dd_obj) {return(Inf)}
         util <- -(t(w) %*% mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w) %*% Sigma %*% w)
         return(as.numeric(util))
       }
