@@ -37,7 +37,7 @@ utility_fun_de <- function(type = 'absolute', mu, Sigma, lambda, risk_fun = NULL
     }else{
       function(w) {
         if (sum(w)!=1){w <- w/sum(w)}
-        if(any(w<lb) || any(w>ub) || risk_fun(w)>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || drawdown(series, w, dd_horiz, dd_quant)$cond_dd > dd_obj) {return(Inf)}
+        if(any(w<lb) || any(w>ub) || risk_fun(w)>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || cond_drawdown(series, w, dd_horiz, dd_quant) > dd_obj) {return(Inf)}
         util <- -(t(w) %*% mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w) %*% Sigma %*% w)
         return(as.numeric(util))
       }
@@ -46,14 +46,14 @@ utility_fun_de <- function(type = 'absolute', mu, Sigma, lambda, risk_fun = NULL
     if(same_assets_bench){
       function(w_act){
         if (sum(w_act)!=0){w_act[w_act > 0] <- abs(w_act[w_act > 0] * sum(w_act[w_act < 0]) / sum(w_act[w_act > 0]))}
-        if(any(w_act<lb_act) || any(w_act>ub_act) || any((w_act + w_bench) < lb) || any((w_act + w_bench)>ub) || as.numeric(sqrt(t(w_act) %*% Sigma %*% w_act))>risk_obj || any((f_const %*% (w_act+w_bench)) < f_const_lb) || any((f_const %*% (w_act+w_bench)) > f_const_ub) || drawdown(series, w_act+w_bench, dd_horiz, dd_quant)$cond_dd > dd_obj) {return(Inf)}
+        if(any(w_act<lb_act) || any(w_act>ub_act) || any((w_act + w_bench) < lb) || any((w_act + w_bench)>ub) || as.numeric(sqrt(t(w_act) %*% Sigma %*% w_act))>risk_obj || any((f_const %*% (w_act+w_bench)) < f_const_lb) || any((f_const %*% (w_act+w_bench)) > f_const_ub) || cond_drawdown(series, w_act+w_bench, dd_horiz, dd_quant) > dd_obj) {return(Inf)}
         util <- -(t(w_act+w_bench)%*%mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w_act)%*%Sigma%*%w_act)
         as.numeric(util)
       }
     }else{
       function(w) {
         if (sum(w)!=1){w <- w/sum(w)}
-        if(any(w<lb) || any(w>ub) || (as.numeric(sqrt(t(w) %*% Sigma %*% w)) - as.numeric(sqrt(t(w_bench) %*% Sigma_bench %*% w_bench)))>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || drawdown(series, w, dd_horiz, dd_quant)$cond_dd > dd_obj) {return(Inf)}
+        if(any(w<lb) || any(w>ub) || (as.numeric(sqrt(t(w) %*% Sigma %*% w)) - as.numeric(sqrt(t(w_bench) %*% Sigma_bench %*% w_bench)))>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || cond_drawdown(series, w, dd_horiz, dd_quant) > dd_obj) {return(Inf)}
         util <- -(t(w) %*% mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w) %*% Sigma %*% w)
         return(as.numeric(util))
       }
