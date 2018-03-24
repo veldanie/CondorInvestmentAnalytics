@@ -18,7 +18,7 @@ cond_drawdown <- function(series, w, pers_end_ind, pers_matrix, quant = 0.9, typ
     port_ret <- xts(as.numeric(rowSums(series_ret)), order.by = index(series_ret))
     #dd_obs <- do.call(pmax,data.frame(t(pers_matrix * (port_ret %*% t(rep(1, ncol(pers_matrix))))))) - as.vector(port_ret[findInterval(ymd(substr(pers, 12,21)),index(port_ret))])
     dd_obs <- colMaxRcpp((pers_matrix * (port_ret %*% t(rep(1, ncol(pers_matrix)))))) - as.vector(port_ret[pers_end_ind])
-
+    A =(pers_matrix * (port_ret %*% t(rep(1, ncol(pers_matrix)))))
     max_dd <- quantile(dd_obs, probs = quant)
     cond_dd <- mean(dd_obs[dd_obs >= max_dd])
   }
