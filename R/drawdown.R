@@ -11,6 +11,7 @@
 #' @return Drawdown distribution, and mean, max and conditional drawdown.
 #' @export
 
+
 drawdown <- function(series, w, horizon = '12M', quant = 0.9, atribution = FALSE, type = 'log') {
   if(is.null(series)){
     return(list(dd_obs = 0, dd_factor = 0, max_dd = 0, mean_dd = 0, cond_dd = 0, dd_marg = 0, dd_contrib = 0))
