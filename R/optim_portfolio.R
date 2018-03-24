@@ -38,9 +38,9 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
       warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')}
   }else{
     # Differential Evolution:
-    control_list <- list(itermax = 500, # maximum iteration (population generation) allowed.
+    control_list <- list(itermax = 200, # maximum iteration (population generation) allowed.
                          p = 0.2,
-                         NP = 20*n_par,       # number of population members
+                         NP = 10*n_par,       # number of population members
                          F = 0.7,
                          CR = 0.9,
                          strategy = 2,  # DE / rand / 1 / bin (classical strategy)
