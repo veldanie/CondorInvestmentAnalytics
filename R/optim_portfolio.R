@@ -18,10 +18,12 @@
 #' @param n.restars Number of solver restarts.
 #' @param n.sim Random parameters for every restart of the solver.
 #' @param type Type of objective function. absolute or relative.
+#' @param itermax Maximum iteration (population generation) allowed.
+#' @param NP Number of population members.
 #' @return Optimal weights.
 #' @export
 
-optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_act = NULL, ub_act = NULL, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = "RI", fixed = NULL, n.restarts = 10, n.sim = 20000, type = 'absolute'){
+optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_act = NULL, ub_act = NULL, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = "RI", fixed = NULL, n.restarts = 10, n.sim = 20000, type = 'absolute', itermax = 1000, NP = 100){
   #objective function:
   n_fn <- length(fn)
   n_par <- length(w_ini)
@@ -38,9 +40,9 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
       warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')}
   }else{
     # Differential Evolution:
-    control_list <- list(itermax = 200, # maximum iteration (population generation) allowed.
+    control_list <- list(itermax = itermax, # maximum iteration (population generation) allowed.
                          p = 0.2,
-                         NP = 10*n_par,       # number of population members
+                         NP = NP,       # number of population members
                          F = 0.7,
                          CR = 0.9,
                          strategy = 2,  # DE / rand / 1 / bin (classical strategy)
