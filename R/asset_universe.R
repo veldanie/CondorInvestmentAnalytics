@@ -8,7 +8,7 @@
 #' @return Vector of asset names selected. The names are in order, meaning the i position in the output vector is the i-th asset selected.
 #' @export
 
-asset_universe <- function(mean_rets, cov_matrix, n_assets_univ, lambda = 0.1) {
+asset_universe <- function(mean_rets, cov_matrix, n_assets_univ, lambda = 0.1){
 
   vol <- sqrt(diag(cov_matrix))
 
