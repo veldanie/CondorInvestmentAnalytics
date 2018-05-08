@@ -10,18 +10,26 @@
 #' @param currecies Id (iso) of currencies of interest.
 #' @param convert_to_ref Indicator to define if series are converted to ref_curr.
 #' @param ref_per_unit_foreign Indicator if currencies are converted to Base (ref) currency per unit of foreign currency.
-#' @param invest_assets Indicator to decide if use investable asset series.
+#' @param invest_assets Investable asset. By default: Index. It can be set to ETF or IA (investable asset).
 #' @return xts series.
 #' @export
 
-series_merge <- function(series_list, dates, asset_data, ref_curr, assets, currencies = NULL, convert_to_ref = FALSE, ref_per_unit_foreign = FALSE, invest_assets = FALSE) {
+series_merge <- function(series_list, dates, asset_data, ref_curr, assets, currencies = NULL, convert_to_ref = FALSE, ref_per_unit_foreign = FALSE, invest_assets = NULL) {
   n_assets <- length(assets)
   n_curr <- length(currencies)
 
-  if(invest_assets){
+  if(!is.null(invest_assets) && invest_assets == 'ETF'){
+    ticker <- asset_data$TickerETF[match(assets, asset_data$Asset)]
+  }else if (!is.null(invest_assets) && invest_assets == 'IA'){
     ticker <- asset_data$TickerInvestAsset[match(assets, asset_data$Asset)]
   }else{
     ticker <- asset_data$TickerBenchmark[match(assets, asset_data$Asset)]
+  }
+
+  missing_ticker <- !(ticker %in% names(series_list))
+  if(any(missing_ticker)){
+    warning(paste0('Missing tickers: ', ticker[missing_ticker]))
+    ticker[missing_ticker] <- asset_data$TickerBenchmark[match(assets, asset_data$Asset)]
   }
 
   series_out <- NULL

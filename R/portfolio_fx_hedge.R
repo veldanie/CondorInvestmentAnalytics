@@ -12,17 +12,26 @@
 #' @param exp_ret Expected return over initial capital (1) over investment horizon.Given the difficulties to estimate the this value, it is assumed to be cero.
 #' @param group.by Set of assets that share the same hedging ratio. By default the grouping is per currency. c("All", "Asset_Class", "Asset", "Currency", "Country")
 #' @param bounded Hedge ratio bounded to the range 0-1.
+#' @param invest_assets Investable asset. By default: Index. It can be set to ETF or IA (investable asset).
 #' @return Fx hedge returns.
 #' @export
 
 
-portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfwd_list, dates, hold_per = '1M', exp_ret = 0, group.by = 'Asset', bounded = TRUE) {
+portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfwd_list, dates, hold_per = '1M', exp_ret = 0, group.by = 'Asset', bounded = TRUE, invest_assets = NULL) {
 
   if(!(hold_per %in% c('1M', '3M'))){stop('Holding period not supported!')}
   per <- switch(hold_per, '1M' = 'monthly', '3M' = 'quarterly')
   n_assets <- length(w)
   asset_univ <- names(w)
-  index_curr <- asset_data$Currency[match(asset_univ, asset_data$Asset)]
+
+  if(!is.null(invest_assets) && invest_assets == 'ETF'){
+    index_curr <- asset_data$CurrencyETF[match(asset_univ, asset_data$Asset)]
+  }else if (!is.null(invest_assets) && invest_assets == 'IA'){
+    index_curr <- asset_data$CurrencyIA[match(asset_univ, asset_data$Asset)]
+  }else{
+    index_curr <- asset_data$Currency[match(asset_univ, asset_data$Asset)]
+  }
+
   quotes_curr <- sapply(index_curr, iso_quote, curr2 = ref_curr)
 
   currencies <- unique(index_curr)
@@ -54,7 +63,7 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
     }else{
       series_fwd_prem <- merge.xts(series_fx_outright, xts(series_fxfwd_list[[i_fxfwd]][,2][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]]))], order.by = index(rets)))
 
-      if(any(c(i_curr, ref_curr) == 'USD')){
+      if(any(c(fx, ref_curr) == 'USD')){
         if(substr(i_iso,1,3)==ref_curr){ #Forward and premium with foreign currency as numeraire.
           series_fxfwd_list[[i_fxfwd]][,1] <- 1/series_fxfwd_list[[i_fxfwd]][,1]
           series_fxfwd_list[[i_fxfwd]][,2] <- 1/(1+series_fxfwd_list[[i_fxfwd]][,2])-1
@@ -91,13 +100,25 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
   rets <- rets[-1,]
   rets_ref <- rets_ref[-1,]
   names(rets) <- c(asset_univ, currencies, paste0(fwd_active, hold_per))
+
+  fwd_active_iso <- sapply(fwd_active, function(x) ifelse(any(c(x, ref_curr) == 'USD') && (x != ref_curr), c(x, ref_curr)[c(x, ref_curr)!= "USD"], x))
   names(series_fwd_prem) <- paste0(fwd_active, hold_per)
 
 
   #Hedgeable assets. Asset than can be hedged bec. 1) i_curr != ref_curr, 2) available fwd.
-  h_asset_univ <- asset_data %>% filter(Asset %in% asset_univ)  %>%
-                  filter(Currency != ref_curr) %>% filter(Currency %in% fwd_active) %>%
-                  select(Asset) %>% unlist()
+  if(!is.null(invest_assets) && invest_assets == 'ETF'){
+    h_asset_univ <- asset_data %>% filter(Asset %in% asset_univ)  %>%
+                    filter(CurrencyETF != ref_curr) %>% filter(CurrencyETF %in% fwd_active) %>%
+                    select(Asset) %>% unlist()
+  }else if (!is.null(invest_assets) && invest_assets == 'IA'){
+    h_asset_univ <- asset_data %>% filter(Asset %in% asset_univ)  %>%
+                    filter(CurrencyIA != ref_curr) %>% filter(CurrencyIA %in% fwd_active) %>%
+                    select(Asset) %>% unlist()
+  }else{
+    h_asset_univ <- asset_data %>% filter(Asset %in% asset_univ)  %>%
+                    filter(Currency != ref_curr) %>% filter(Currency %in% fwd_active) %>%
+                    select(Asset) %>% unlist()
+  }
 
 
   #Unhedged returns in ref_curr:
@@ -106,7 +127,13 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
   #Matrix: fx_ret - fwd_premium.
   e_f <- rets_u
   for (asset in h_asset_univ){
-    i_curr <- asset_data %>% filter(Asset == asset) %>% select(Currency) %>% unlist()
+    if(!is.null(invest_assets) && invest_assets == 'ETF'){
+      i_curr <- asset_data %>% filter(Asset == asset) %>% select(CurrencyETF) %>% unlist()
+    }else if (!is.null(invest_assets) && invest_assets == 'IA'){
+      i_curr <- asset_data %>% filter(Asset == asset) %>% select(CurrencyIA) %>% unlist()
+    }else{
+      i_curr <- asset_data %>% filter(Asset == asset) %>% select(Currency) %>% unlist()
+    }
     e_f[, asset] <- rets[, i_curr] - rets[, paste0(i_curr, hold_per)]
   }
 
@@ -124,7 +151,7 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
   }else if(group.by != 'Asset'){
     e_f_factors <- w_fact <- NULL
 
-    factors <- asset_data %>% filter(Asset %in% h_asset_univ) %>% select_(group.by) %>% unlist()
+    factors <- unique(asset_data %>% filter(Asset %in% h_asset_univ) %>% select_(group.by) %>% unlist())
     for (fac in factors){
       asset_data_fac <- asset_data %>% filter(Asset %in% h_asset_univ)
       fac_assets <- asset_data_fac[asset_data_fac[[group.by]]==fac,] %>% select(Asset) %>% unlist()
@@ -140,9 +167,19 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
   #Portfolio hedged return:
   rets_pu <- xts(rets_ref %*% w[asset_univ], order.by = index(rets_ref))
 
-  fit <- lm(rets_pu ~ ., data = e_f_factors)
-  coeff <- fit$coefficients[-1]
-  names(coeff) <- gsub("`", "", names(coeff))
+  # Option 1. Regress all factor. Problem of multicol. It might not allow us to separate the hedge ratio of each factor if they have the same currency.
+  # fit <- lm(rets_pu ~ ., data = e_f_factors)
+  # coeff <- fit$coefficients[-1]
+  # names(coeff) <- gsub("`", "", names(coeff))
+
+  # Option 2. Run a regression for each factor.
+
+  coeff <- NULL
+  for (fi in 1:length(factors)){
+    fit <- lm(rets_pu ~ e_f_factors[,fi])
+    coeff <- c(coeff, fit$coefficients[-1])
+  }
+  names(coeff) <- factors
   hedge_ratio <- coeff/w_fact[names(coeff)]
 
   if (bounded){

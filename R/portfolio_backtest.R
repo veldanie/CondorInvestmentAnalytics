@@ -11,20 +11,30 @@
 #' @param fwd_prem forward premium corresponding to holding period (hold_per).
 #' @param slippage Slippage basis points.
 #' @param commission Commission basis points.
+#' @param invest_assets Investable asset. By default: Index. It can be set to ETF or IA (investable asset).
 #' @return Backtesting results.
 #' @export
 
-portfolio_backtest <- function(weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', slippage = 5, commission = 5) {
+portfolio_backtest <- function (weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', slippage = 5, commission = 5, invest_assets = NULL) {
 
   hold_per_days <- switch(hold_per, '1D' = 1, '1M' = 30, '1Y' = 360)
   n_assets <- length(weights)
   asset_univ <- names(weights)
 
-  index_curr <- asset_data$Currency[match(asset_univ, asset_data$Asset)]
+
+  if(!is.null(invest_assets) && invest_assets == 'ETF'){
+    index_curr <- asset_data$CurrencyETF[match(asset_univ, asset_data$Asset)]
+  }else if (!is.null(invest_assets) && invest_assets == 'IA'){
+    index_curr <- asset_data$CurrencyIA[match(asset_univ, asset_data$Asset)]
+  }else{
+    index_curr <- asset_data$Currency[match(asset_univ, asset_data$Asset)]
+  }
+
   currencies <- unique(index_curr)
   lcurr <- length(currencies)
 
-  id_fwd <- sapply(index_curr, function(x) ifelse(any(c(x, currency) == 'USD') && (x != currency), c(x, currency)[c(x, currency)!= "USD"], x))
+  id_fwd <- index_curr
+  #id_fwd <- sapply(index_curr, function(x) ifelse(any(c(x, currency) == 'USD') && (x != currency), c(x, currency)[c(x, currency)!= "USD"], x))
   quotes_curr <- sapply(index_curr, iso_quote, curr2 = currency)
 
   date_ini <- index(series_backtest)[1]
@@ -36,6 +46,7 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
 
   # Forward outrights:
   if(any(fx_hedge_asset != 0)){
+    fwd_prem <- fwd_prem[index(fwd_prem)>date_ini]
     fwd_outright <- rbind(xts(0, order.by = date_ini), fwd_prem)
     names(fwd_outright) <- names(fwd_prem)
     for (i in 1:ncol(fwd_outright)){
@@ -74,11 +85,11 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
       cash_not_hedged_conv <- mapply(cash_in = cash_full - cash_ini_hedge[j], spot = spot_ser, cash_conv, MoreArgs = list(curr_in = index_curr[j], spot_id = quotes_curr[j]))
 
       cash_full_conv <- cash_hedged_conv + cash_not_hedged_conv
+      ret_cash_conv <- cash_full_conv - cash_ini_ref[j]
     }else{
       cash_full_conv <- mapply(cash_in = cash_full, spot = spot_ser, cash_conv, MoreArgs = list(curr_in = index_curr[j], spot_id = quotes_curr[j]))
       ret_cash_conv <- cash_full_conv - cash_ini_ref[j]
     }
-    #ret_cash_conv <- mapply(cash_in = ret_cash, spot = spot_ser, cash_conv, MoreArgs = list(curr_in = index_curr[j], spot_id = quotes_curr[j]))
     ret_cash_matrix[,j] <- ret_cash_conv
   }
 
