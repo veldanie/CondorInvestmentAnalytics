@@ -10,6 +10,7 @@
 #' @M Number of portfolios.
 #' @plot_ef Indicator to plot efficient frontier.
 #' @spar Smoothing parameter
+#' @method Default: GD
 #' @n.restarts Number of solver restarts.
 #' @n.sim Random parameters for every restart of the solver.
 #' @return Optimal weights, mean resampled optimal weights, matrix of sampled weights.
@@ -17,7 +18,7 @@
 
 
 
-optim_portfolio_resamp <- function(mu, Sigma, lb, ub, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, n.restarts = 10, n.sim = 20000){
+optim_portfolio_resamp <- function(mu, Sigma, lb, ub, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000){
 
   n_assets <- length(mu)
   w_ini <- rep(1/n_assets, n_assets)
@@ -28,7 +29,7 @@ optim_portfolio_resamp <- function(mu, Sigma, lb, ub, lambda = 1, N = 2e2, M = 1
 
   obj_fun <- utility_fun(type = 'absolute', mu = mu, Sigma = Sigma, lambda = lambda)
   w_optim <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = rep(0, n_assets), ub = rep(1, n_assets),
-                             eqfun = sum_weigths, eqB = 1, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = "GD")
+                             eqfun = sum_weigths, eqB = 1, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = method)
   port_means <- port_vols <- rep(0, M)
 
   for (i in 1:M){
@@ -37,7 +38,7 @@ optim_portfolio_resamp <- function(mu, Sigma, lb, ub, lambda = 1, N = 2e2, M = 1
     Sigma_i <- covar(sample_i)$cov_matrix
     obj_fun <- utility_fun(type = 'absolute', mu = mu_i, Sigma = Sigma_i, lambda = lambda)
     w_optim_mat[i,] <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
-                                       eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, method = "RI", n.restarts = n.restarts, n.sim = n.sim)
+                                       eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, method = method, n.restarts = n.restarts, n.sim = n.sim)
     port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu, Sigma)[c('port_mean_ret', 'port_vol')])
     port_means[i] <- port_ret[1]
     port_vols[i] <- port_ret[2]
