@@ -36,7 +36,13 @@ series_merge <- function(series_list, dates, asset_data, ref_curr, assets, curre
   if(!is.null(assets)){
     if (convert_to_ref){
       for (ind in ticker){
-        i_curr <- asset_data$Currency[match(ind, asset_data$TickerBenchmark)]
+        if(!is.null(invest_assets) && invest_assets == 'ETF'){
+          i_curr <- asset_data$CurrencyETF[match(ind, asset_data$TickerETF)]
+        }else if (!is.null(invest_assets) && invest_assets == 'IA'){
+          i_curr <- asset_data$CurrencyIA[match(ind, asset_data$TickerInvestAsset)]
+        }else{
+          i_curr <- asset_data$Currency[match(ind, asset_data$TickerBenchmark)]
+        }
         if(i_curr == ref_curr){
           # Case 1: No currency issue.
           series_out <- merge.xts(series_out, series_list[[ind]][paste0(dates, collapse = '/')], join = 'inner')
