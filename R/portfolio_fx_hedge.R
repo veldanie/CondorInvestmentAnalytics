@@ -58,8 +58,7 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
     i_fxfwd <- paste0(i_curr, hold_per)
     ref_fxfwd <- paste0(ref_curr, hold_per)
     if(fx == ref_curr){ #No hedging required.
-      next
-      #fwd_prem <- rep(NA, length(index(rets)))
+      next#fwd_prem <- rep(NA, length(index(rets)))
     }else{
       series_fwd_prem <- merge.xts(series_fx_outright, xts(series_fxfwd_list[[i_fxfwd]][,2][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]]))], order.by = index(rets)))
 
