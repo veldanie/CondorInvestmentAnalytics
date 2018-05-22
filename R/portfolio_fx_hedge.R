@@ -57,21 +57,20 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
     i_iso <- iso_quote(fx, ref_curr)
     i_fxfwd <- paste0(i_curr, hold_per)
     ref_fxfwd <- paste0(ref_curr, hold_per)
-    if(fx == ref_curr){ #No hedging required.
-      next#fwd_prem <- rep(NA, length(index(rets)))
+    if(fx == ref_curr){
+        next
     }else{
       series_fwd_prem <- merge.xts(series_fx_outright, xts(series_fxfwd_list[[i_fxfwd]][,2][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]]))], order.by = index(rets)))
-
       if(any(c(fx, ref_curr) == 'USD')){
         if(substr(i_iso,1,3)==ref_curr){ #Forward and premium with foreign currency as numeraire.
           series_fxfwd_list[[i_fxfwd]][,1] <- 1/series_fxfwd_list[[i_fxfwd]][,1]
           series_fxfwd_list[[i_fxfwd]][,2] <- 1/(1+series_fxfwd_list[[i_fxfwd]][,2])-1
-
           fwd_prem <- as.vector(series_fxfwd_list[[i_fxfwd]][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]])),2])
+
         }else{
           fwd_prem <- as.vector(series_fxfwd_list[[i_fxfwd]][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]])),2])
         }
-      }else{# Cross forward and cross fwd. premium.
+      }else{
           iso_cross <- paste0(fx, ref_curr) #In this case cross rates are built as ref currency per unit of foreign.
           series_temp_fxsp <- merge.xts(series_fxfwd_list[[i_fxfwd]][,1]/(1+series_fxfwd_list[[i_fxfwd]][,2]),
                                         series_fxfwd_list[[ref_fxfwd]][,1]/(1+series_fxfwd_list[[ref_fxfwd]][,2]), join = 'inner')
