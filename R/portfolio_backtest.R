@@ -46,6 +46,7 @@ portfolio_backtest <- function (weights, capital, currency, asset_data, series_b
 
   # Forward outrights:
   if(any(fx_hedge_asset != 0)){
+    fx_hedge_asset <-fx_hedge_asset[asset_univ]
     fwd_prem <- fwd_prem[index(fwd_prem)>date_ini]
     fwd_outright <- rbind(xts(0, order.by = date_ini), fwd_prem)
     names(fwd_outright) <- names(fwd_prem)

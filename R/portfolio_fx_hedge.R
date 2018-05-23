@@ -77,11 +77,11 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
           series_temp_fxfwd <- merge.xts(series_fxfwd_list[[i_fxfwd]][,1], series_fxfwd_list[[ref_fxfwd]][,1], join = 'inner')
           series_fxsp_cross <- xts(x = as.vector(mapply(fx_cross, fx_base = series_temp_fxsp[,1], fx_ref = series_temp_fxsp[,2],
                                                          MoreArgs = list(base_curr = substr(iso_cross,1,3), ref_curr = substr(iso_cross,4,6),
-                                                         quote_factor = 1, curr_mkt_base = iso_quote(substr(iso_cross,1,3)),
+                                                         curr_mkt_base = iso_quote(substr(iso_cross,1,3)),
                                                          curr_mkt_ref = iso_quote(substr(iso_cross,4,6))))), order.by = index(series_temp_fxsp))
           series_fxfwd_cross <- xts(x = as.vector(mapply(fx_cross, fx_base = series_temp_fxfwd[,1], fx_ref = series_temp_fxfwd[,2],
                                                          MoreArgs = list(base_curr = substr(iso_cross,1,3), ref_curr = substr(iso_cross,4,6),
-                                                         quote_factor = 1, curr_mkt_base = iso_quote(substr(iso_cross,1,3)),
+                                                         curr_mkt_base = iso_quote(substr(iso_cross,1,3)),
                                                          curr_mkt_ref = iso_quote(substr(iso_cross,4,6))))), order.by = index(series_temp_fxfwd))
 
           series_premfwd_cross <-series_fxfwd_cross[,1]/series_fxsp_cross[,1]-1
@@ -179,6 +179,7 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
   }
   names(coeff) <- factors
   hedge_ratio <- coeff/w_fact[names(coeff)]
+  hedge_ratio[is.infinite(hedge_ratio)] <- 0
 
   if (bounded){
     hedge_ratio <- hedge_ratio * (!(hedge_ratio < 0 | hedge_ratio > 1)) + 1*(hedge_ratio > 1)
