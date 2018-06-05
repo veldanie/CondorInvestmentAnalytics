@@ -36,7 +36,7 @@ drawdown <- function(series, w, horizon = '12M', quant = 0.9, atribution = FALSE
       else{
         series_ret <- w_mat * (series_per/(rep(1, nrow(series_per)) %*% head(series[per], 1)) - 1)
       }
-
+      series_ret[is.na(series_ret)] <- 0
       port_ret <- as.numeric(apply(series_ret,1,sum))
 
       pos_max <- which.max(port_ret)
