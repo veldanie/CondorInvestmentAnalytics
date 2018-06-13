@@ -18,11 +18,9 @@
 
 
 
-optim_portfolio_resamp <- function(mu, Sigma, lb, ub, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000){
+optim_portfolio_resamp <- function(mu, Sigma, lb, ub, w_ini = NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000){
 
   n_assets <- length(mu)
-  w_ini <- rep(1/n_assets, n_assets)
-  names(w_ini) <- names(mu)
 
   w_optim_mat <- matrix(0, nrow = M, ncol = n_assets)
   colnames(w_optim_mat) <- names(mu)
@@ -36,6 +34,7 @@ optim_portfolio_resamp <- function(mu, Sigma, lb, ub, lambda = 1, N = 2e2, M = 1
     sample_i <- mvrnorm(n = N , mu, Sigma)
     mu_i <- apply(sample_i, 2, mean)
     Sigma_i <- covar(sample_i)$cov_matrix
+    if(!is.null(ineqUB)){lambda <- 0}
     obj_fun <- utility_fun(type = 'absolute', mu = mu_i, Sigma = Sigma_i, lambda = lambda)
     w_optim_mat[i,] <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
                                        eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, method = method, n.restarts = n.restarts, n.sim = n.sim)
