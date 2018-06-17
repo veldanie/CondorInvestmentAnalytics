@@ -60,7 +60,7 @@ series_merge <- function(series_list, dates, asset_data, ref_curr, assets, curre
             series_temp_fx <- merge.xts(series_list[[ind]],  merge.xts(series_list[[ref_curr]], series_list[[i_curr]], join = 'inner'), join = 'inner')
             series_fx_cross <- xts(x = as.vector(mapply(fx_cross, fx_base = series_temp_fx[,2], fx_ref = series_temp_fx[,3],
                                                         MoreArgs = list(base_curr = ref_curr, ref_curr = i_curr,
-                                                                        quote_factor = 1, curr_mkt_base = iso_quote(ref_curr),
+                                                                        curr_mkt_base = iso_quote(ref_curr),
                                                                         curr_mkt_ref = iso_quote(i_curr)))), order.by = index(series_temp_fx))
             series_temp <- merge.xts(series_list[[ind]],  series_fx_cross, join = 'inner')
             series_conv <- xts(x = as.vector(mapply(cash_conv, cash_in = series_temp[,1], spot = series_temp[,2], MoreArgs = list(curr_in = i_curr, spot_id = iso_cross))),
@@ -93,7 +93,7 @@ series_merge <- function(series_list, dates, asset_data, ref_curr, assets, curre
           series_temp_fx <- merge.xts(series_list[[currencies[i]]], series_list[[ref_curr]], join = 'inner')
           series_fx_cross <- xts(x = as.vector(mapply(fx_cross, fx_base = series_temp_fx[,1], fx_ref = series_temp_fx[,2],
                                                       MoreArgs = list(base_curr = substr(iso_cross,1,3), ref_curr = substr(iso_cross,4,6),
-                                                                      quote_factor = 1, curr_mkt_base = iso_quote(substr(iso_cross,1,3)),
+                                                                      curr_mkt_base = iso_quote(substr(iso_cross,1,3)),
                                                                       curr_mkt_ref = iso_quote(substr(iso_cross,4,6))))), order.by = index(series_temp_fx))
           series_out <- merge.xts(series_out, series_fx_cross[paste0(dates, collapse = '/')], join = "inner")
         }

@@ -17,7 +17,7 @@
 
 portfolio_backtest <- function (weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', slippage = 5, commission = 5, invest_assets = NULL) {
 
-  hold_per_days <- switch(hold_per, '1D' = 1, '1M' = 30, '1Y' = 360)
+  hold_per_days <- switch(hold_per, '1D' = 1, '1M' = 30, '3M' = 90, '1Y' = 360)
   n_assets <- length(weights)
   asset_univ <- names(weights)
 
