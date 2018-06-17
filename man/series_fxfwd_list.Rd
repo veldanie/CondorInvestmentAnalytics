@@ -3,7 +3,7 @@
 \docType{data}
 \name{series_fxfwd_list}
 \alias{series_fxfwd_list}
-\title{Series de tiempo.}
+\title{Series de tiempo fx forward.}
 \format{Una lista donde cada componente corresponde a un objeto xts.}
 \source{
 \url{http://www.bloomberg.info/}
