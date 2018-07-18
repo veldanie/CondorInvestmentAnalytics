@@ -40,6 +40,7 @@ portfolio_backtest <- function (weights, capital, currency, asset_data, series_b
   date_ini <- index(series_backtest)[1]
   date_last <- tail(index(series_backtest),1)
 
+  rebal_dates <- NA
   if(!is.na(rebal_per_in_months)){
     rebal_dates <- seq(from = date_ini, to = date_last, by = paste(rebal_per_in_months, "months"))[-1]
     rebal_dates <- index(series_backtest)[findInterval(rebal_dates, index(series_backtest))]
