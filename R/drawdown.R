@@ -25,9 +25,10 @@ drawdown <- function(series, w, horizon = '12M', quant = 0.9, atribution = FALSE
     n_per <- length(months_seq)
     dd_obs <- rep(0, n_per)
     dd_factor <- matrix(0, nrow = n_per, ncol = length(w))
-
+    pers <- rep('', n_per)
     for (i in 1:n_per){ # For each period
       per <- paste(c(months_seq[i], months_seq[i] %m+% months(num_months)), collapse = '/')
+      pers[i] <- paste(format(ymd(base::strsplit(per, '/')[[1]]), '%b%Y'), collapse = '/')
       series_per <- series[per]# series_w[per] # Segmentation according to period
       w_mat <- rep(1, nrow(series_per)) %*% t(w)
 
@@ -58,6 +59,8 @@ drawdown <- function(series, w, horizon = '12M', quant = 0.9, atribution = FALSE
       dd_contrib <- dd_marg/cond_dd
       names(dd_marg)<-names(dd_contrib)<-names(w)
     }
-    return(list(dd_obs = dd_obs, dd_factor=dd_factor, max_dd = max_dd, mean_dd = mean_dd, cond_dd = cond_dd, dd_marg = dd_marg, dd_contrib = dd_contrib))
+    names(dd_obs) <- pers
+    max_dd_per <- pers[dd_obs == max(dd_obs)]
+    return(list(dd_obs = dd_obs, dd_factor=dd_factor, max_dd = max_dd, mean_dd = mean_dd, cond_dd = cond_dd, dd_marg = dd_marg, dd_contrib = dd_contrib, max_dd_per = max_dd_per))
   }
 }

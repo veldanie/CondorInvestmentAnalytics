@@ -50,7 +50,7 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
   fwd_active <- currencies[currencies != ref_curr]
   if(length(fwd_active) == 0){warning("No existe riesgo de tasa de cambio en el portafolio."); return(NULL)}
 
-  series_fx_outright <- NULL
+  series_fwd_prem <- NULL
 
   for (fx in currencies){
     i_curr <- ifelse(any(c(fx, ref_curr) == 'USD'), c(fx, ref_curr)[c(fx, ref_curr)!= "USD"], fx)
@@ -60,7 +60,7 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
     if(fx == ref_curr){
         next
     }else{
-      series_fwd_prem <- merge.xts(series_fx_outright, xts(series_fxfwd_list[[i_fxfwd]][,2][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]]))], order.by = index(rets)))
+      series_fwd_prem <- merge.xts(series_fwd_prem, xts(series_fxfwd_list[[i_fxfwd]][,2][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]]))], order.by = index(rets)))
       if(any(c(fx, ref_curr) == 'USD')){
         if(substr(i_iso,1,3)==ref_curr){ #Forward and premium with foreign currency as numeraire.
           series_fxfwd_list[[i_fxfwd]][,1] <- 1/series_fxfwd_list[[i_fxfwd]][,1]
@@ -190,7 +190,6 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
   for (fac in names(hedge_ratio)){
     asset_group$Hedge[which(asset_group[[group.by]] == fac & asset_group$Asset %in% h_asset_univ)] <- hedge_ratio[fac]
   }
-
   # Hedged Portfolio return:
   rets_ph <- rets_pu - e_f_factors %*% (hedge_ratio * w_fact)
 
