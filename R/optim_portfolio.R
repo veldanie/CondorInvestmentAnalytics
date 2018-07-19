@@ -60,7 +60,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
       lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
-      upper_act <- mapply(min, ub - w_bench, ub_act)
+      upper_act <- mapply(min, max(0, ub - w_bench), ub_act)
 
       sol <- DEoptim(fn = fn, lower = lower_act, upper = upper_act, control = control_list)
       if(is.finite(sol$optim$bestval)){
@@ -74,15 +74,15 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
     }
   }else if(method == 'GE'){
     # Genetic Optim. using Derivatives
-    
+
     if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
       sol <- genoud(fn = fn, nvar = length(lb), Domains = cbind(lb, ub))
       if(is.finite(sol$value)){w <- sol$par/sum(sol$par)}else{w <- rep(0, n_par)}
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
       lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
-      upper_act <- mapply(min, ub - w_bench, ub_act)
-      
+      upper_act <- mapply(min, max(0, ub - w_bench), ub_act)
+
       sol <- genoud(fn = fn, Domains = cbind(lower_act, upper_act))
       if(is.finite(sol$value)){
         w <- sol$par
@@ -95,15 +95,15 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
     }
   }else if(method == 'SA'){
     # Generalized Simulating Annealing
-    
+
     if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
       sol <- GenSA(par = w_ini, fn = fn, lower = lb, upper =  ub, control = list(max.time = max.time))
       if(is.finite(sol$value)){w <- sol$par/sum(sol$par)}else{w <- rep(0, n_par)}
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
       lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
-      upper_act <- mapply(min, ub - w_bench, ub_act)
-      
+      upper_act <- mapply(min, max(0, ub - w_bench), ub_act)
+
       sol <- GenSA(par = w_ini, fn = fn, lower = lower_act, upper = upper_act, control = list(max.time = max.time))
       if(is.finite(sol$value)){
         w <- sol$par

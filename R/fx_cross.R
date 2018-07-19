@@ -25,6 +25,9 @@ fx_cross<-function(base_curr, ref_curr, curr_mkt_base, fx_base, curr_mkt_ref, fx
   if (any(base_pos==2) & any(ref_pos==4)){
     cross=(1/fx_base)*(fx_ref)
   }
+  if (any(base_pos==2) & any(ref_pos==3)){
+    cross=1/(fx_base*fx_ref)
+  }
   return(cross)
 }
 
