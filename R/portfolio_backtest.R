@@ -88,7 +88,7 @@ portfolio_backtest <- function (weights, capital, currency, asset_data, series_b
     }
   }
 
-  fx_hedge_ind <- fx_hedge_asset==1 # Indicator of assets that are hedged.
+  fx_hedge_ind <- fx_hedge_asset != 0 # Indicator of assets that are hedged.
   fx_conv_ind <- index_curr != currency# Indicator of assets with index_curr != ref_curr
   fx_nhedge_conv <- !fx_hedge_ind & fx_conv_ind # Indicator of non-hedged assets with index_curr != ref_curr.
 
