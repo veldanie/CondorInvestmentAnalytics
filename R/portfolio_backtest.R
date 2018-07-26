@@ -123,11 +123,14 @@ portfolio_backtest <- function (weights, capital, currency, asset_data, series_b
     ret_cash_matrix <- cash_full_conv - (rep(1, nrow(cash_full_conv)) %*% t(cash_ini_ref))
     ret_cash_port <- xts(apply(ret_cash_matrix,1,sum), ymd(rownames(cum_diff_index)))
     cash_full_conv_all <- cash_full_conv
+    diff_cash_assets <- rbind(xts(ret_cash_matrix[1,]), diff(ret_cash_matrix)[-1,])
+    colnames(diff_cash_assets) <- colnames(cum_diff_index)
   }else{
-
+    cash_ini_ref_update <- cash_ini_ref
     ret_cash_port <- ret_port <- xts(rep(0, nrow(cum_diff_index)), order.by = index(cum_diff_index))
+    diff_cash_assets <- xts(matrix(0, nrow = nrow(cum_diff_index), ncol = n_assets), order.by = index(cum_diff_index))
     cash_full_conv_all <- xts(matrix(0, nrow(cum_diff_index), ncol = n_assets), order.by = index(cum_diff_index))
-    colnames(cash_full_conv_all) <- colnames(cum_diff_index)
+    colnames(cash_full_conv_all) <- colnames(diff_cash_assets) <- colnames(cum_diff_index)
     capital_prev <- capital
 
     for(k in 1:(length(rebal_dates)+1)){
@@ -160,11 +163,12 @@ portfolio_backtest <- function (weights, capital, currency, asset_data, series_b
                                                    ncol = sum(fx_nhedge_conv), byrow = TRUE)
       }
 
-      ret_cash_matrix <- cash_full_conv - (rep(1, nrow(cash_full_conv)) %*% t(cash_ini_ref))
       ind_per<- index(ret_cash_port) > dec_dates[k] & index(ret_cash_port) <= dec_dates[k+1]
+      ret_cash_matrix <- cash_full_conv - (rep(1, nrow(cash_full_conv)) %*% t(cash_ini_ref))
       ret_cash_port[ind_per] <- xts(apply(ret_cash_matrix,1,sum), index(cum_diff_index_temp))
       cash_full_conv_all[ind_per, ] <- cash_full_conv
 
+      diff_cash_assets[ind_per, ] <- diff(rbind(xts(t(cash_ini_ref_update), order.by = dec_dates[k]), cash_full_conv))[-1,]
       capital_update <- as.numeric(tail(ret_cash_port[ind_per],1)) + capital_prev
 
       ##Rebalancing
@@ -186,8 +190,8 @@ portfolio_backtest <- function (weights, capital, currency, asset_data, series_b
   cash_port <- xts(c(capital, apply(cash_full_conv_all, 1, sum)), order.by = c(date_ini, index(ret_cash_port)))
   weights_port <- cash_full_conv_all / (cash_port[-1] %*% t(rep(1, n_assets)))
   ret_port <- ret_cash_port/capital
+  cash_assets <- rbind(xts(t(cash_ini_ref), order.by = date_ini), cash_full_conv_all)
 
-
-  return(list(ret_cash_port = ret_cash_port, ret_port = ret_port, cash_port = cash_port, weights_port = weights_port, rebal_dates = rebal_dates))
+  return(list(ret_cash_port = ret_cash_port, ret_port = ret_port, cash_port = cash_port, cash_assets = cash_assets, diff_cash_assets = diff_cash_assets, weights_port = weights_port, rebal_dates = rebal_dates))
 }
 
