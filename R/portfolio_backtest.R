@@ -16,6 +16,8 @@
 #' @return Backtesting results.
 #' @export
 
+
+
 portfolio_backtest <- function (weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, slippage = 5, commission = 5, invest_assets = NULL) {
 
   hold_per_days <- switch(hold_per, '1D' = 1, '1M' = 30, '3M' = 90, '1Y' = 360)
@@ -51,15 +53,13 @@ portfolio_backtest <- function (weights, capital, currency, asset_data, series_b
 
   # Forward outrights:
   if(any(fx_hedge_asset != 0)){
-    fx_hedge_asset <-fx_hedge_asset[asset_univ]
+    fx_hedge_asset <- fx_hedge_asset[asset_univ]
+    fwd_names <- colnames(fwd_prem)
     fwd_prem <- fwd_prem[index(fwd_prem)>date_ini]
-    fwd_outright <- rbind(xts(t(rep(0, ncol(fwd_prem))), order.by = date_ini), fwd_prem)
-    names(fwd_outright) <- names(fwd_prem)
-    for (i in 1:ncol(fwd_outright)){
-      fwd_fact <- fwd_outright[,i]
-      fwd_fact[2] <- fwd_fact[2] * as.numeric(index(fwd_fact)[2]-date_ini)/hold_per_days
-      fwd_outright[,i] <- fx_ini[match(substr(names(fwd_prem)[i],1,3), index_curr)] * cumprod(1 + fwd_fact)
-    }
+    fwd_prem <- rbind(xts(t(rep(0, ncol(fwd_prem))), order.by = date_ini), fwd_prem)
+    fwd_prem[2,] <- fwd_prem[2,] * as.numeric(index(fwd_prem)[2]-date_ini)/hold_per_days
+    colnames(fwd_prem) <- fwd_names
+
   }
 
   # Initial cash in reference currency:
@@ -101,6 +101,9 @@ portfolio_backtest <- function (weights, capital, currency, asset_data, series_b
 
     #If there is hedging:
     if(any(fx_hedge_ind)){
+      fwd_outright <- xts((rep(1, nrow(fwd_prem)) %*% t(fx_ini[match(substr(names(fwd_prem),1,3), index_curr)])) * apply(1 + fwd_prem,2, cumprod),
+                          order.by = index(fwd_prem))
+      colnames(fwd_outright) <- colnames(fwd_prem)
       outrights_ser <- lapply(fwd_outright[, paste0(id_fwd[fx_hedge_ind], hold_per)], na.approx, xout = index(series_backtest)[-1])
 
       cash_hedged_conv <- matrix(mapply(spot = as.vector(t(matrix(unlist(outrights_ser), ncol=sum(fx_hedge_ind)))),
@@ -143,6 +146,14 @@ portfolio_backtest <- function (weights, capital, currency, asset_data, series_b
 
       #If there is hedging:
       if(any(fx_hedge_ind)){
+        ind_fwd_per<- index(fwd_prem) > dec_dates[k]
+        fwd_prem_temp <- rbind(xts(t(rep(0, ncol(fwd_prem))), order.by = dec_dates[k]), fwd_prem[ind_fwd_per,])
+        fwd_prem_temp[2,] <- fwd_prem[2,] * as.numeric(index(fwd_prem_temp)[2]-dec_dates[k])/hold_per_days
+
+
+        fwd_outright <- xts((rep(1, nrow(fwd_prem_temp)) %*% t(fx_ini[match(substr(names(fwd_prem),1,3), index_curr)])) * apply(1 + fwd_prem_temp,2, cumprod),
+                            order.by = index(fwd_prem_temp))
+        colnames(fwd_outright) <- colnames(fwd_prem)
         outrights_ser <- lapply(fwd_outright[, paste0(id_fwd[fx_hedge_ind], hold_per)], na.approx, xout = index(cum_diff_index_temp))
 
         cash_hedged_conv <- matrix(mapply(spot = as.vector(t(matrix(unlist(outrights_ser), ncol=sum(fx_hedge_ind)))),
