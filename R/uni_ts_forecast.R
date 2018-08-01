@@ -6,7 +6,7 @@
 #' @return Model order, coefficients and predictions.
 #' @export
 
-ini_ts_forecast <- function(series, h){
+uni_ts_forecast <- function(series, h){
   fit <- auto.arima(series, approximation = TRUE, d=0)
   pred <- forecast(fit, h)
   pred_series <- xts(cbind(as.numeric(pred$mean), as.numeric(as.matrix(pred$lower)[,2]), as.numeric(as.matrix(pred$upper)[,2])), order.by = seq(tail(index(series),1), by = 'months', length.out = h + 1)[-1])
