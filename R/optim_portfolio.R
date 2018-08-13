@@ -13,7 +13,7 @@
 #' @param ineqfun Inequality constraint function returning vector.
 #' @param ineqLB Inequality lower bound.
 #' @param ineqUB Inequality upper bound.
-#' @param method Gradient descent (GD), GD with random initialization (RI), differential evolution (DE), Genetic Opt. using Derivative (GE) or Generalized Simulated Annealing (SA).
+#' @param method Gradient descent (GD), GD with random initialization (RI), differential evolution (DE), Genetic Opt. using Derivative (GE), Generalized Simulated Annealing (SA) or Memetic with local search (MALS).
 #' @param fixed Numeric index indicating parameters that stay fixed.
 #' @param n.restars Number of solver restarts.
 #' @param n.sim Random parameters for every restart of the solver.
@@ -24,7 +24,7 @@
 #' @return Optimal weights.
 #' @export
 
-optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_act = NULL, ub_act = NULL, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = "RI", fixed = NULL, n.restarts = 10, n.sim = 20000, type = 'absolute', itermax = 1000, NP = 100, max.time = 2){
+optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_act = NULL, ub_act = NULL, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = "RI", fixed = NULL, n.restarts = 10, n.sim = 20000, type = 'absolute', itermax = 1000, NP = 100, max.time = 10){
   #objective function:
   n_fn <- length(fn)
   n_par <- length(w_ini)
@@ -115,6 +115,28 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
     if(!is.finite(sol$value)){
       warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
     }
+  }else if(method == 'MALS'){
+    # Memetic with local search
+
+    if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
+      sol <- malschains(fn = fn, lower = lb, upper =  ub)
+      if(is.finite(sol$fitness)){w <- sol$sol/sum(sol$sol)}else{w <- rep(0, n_par)}
+    } else {
+      if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
+      lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
+      upper_act <- mapply(min, max(0, ub - w_bench), ub_act)
+
+      sol <- malschains(fn = fn, lower = lower_act, upper = upper_act)
+      if(is.finite(sol$fitness)){
+        w <- sol$sol
+        w[w > 0] <- abs(w[w > 0] * sum(w[w < 0]) / sum(w[w > 0]))
+      }else{w <- rep(0, n_par)}
+    }
+    names(w) <- names(w_ini)
+    if(!is.finite(sol$fitness)){
+      warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
+    }
   }
+
   return(w)
 }
