@@ -11,6 +11,8 @@
 
 var_cvar <- function(series, w, quant, normal = FALSE, port_name = 'Portolio') {
   port_rets <- as.numeric(series %*% w)
+  fact_mean_ret <- apply(series, 2, mean)
+  port_mean_ret <- as.numeric(mean(port_rets))
   neg_rets <- -1 * port_rets
   covar_mat <- cov(series)
   cor_mat <- round(100 * cor(merge.xts(xts(port_rets, order.by = index(series)), series)), 3)
@@ -24,5 +26,5 @@ var_cvar <- function(series, w, quant, normal = FALSE, port_name = 'Portolio') {
     var <- quantile(neg_rets, probs = quant)
     cvar <- sapply(var, function(x) mean(neg_rets[neg_rets > x]))
   }
-  return(list(covar_mat = covar_mat, cor_mat = cor_mat, port_neg_rets = neg_rets, port_vol = port_vol, var = var, cvar = cvar))
+  return(list(covar_mat = covar_mat, cor_mat = cor_mat, port_neg_rets = neg_rets, fact_mean_ret = fact_mean_ret, port_mean_ret = port_mean_ret, port_vol = port_vol, var = var, cvar = cvar))
 }
