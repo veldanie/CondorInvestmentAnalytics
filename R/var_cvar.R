@@ -10,16 +10,15 @@
 #' @export
 
 var_cvar <- function(series, w, quant, normal = FALSE, port_name = 'Portolio') {
-  pos_valid <- w != 0
-  w <- w[pos_valid]
-  series <- series[, names(w)]
   port_rets <- as.numeric(series %*% w)
   fact_mean_ret <- apply(series, 2, mean)
   port_mean_ret <- as.numeric(mean(port_rets))
   neg_rets <- -1 * port_rets
   covar_mat <- cov(series)
-  cor_mat <- round(100 * cor(merge.xts(xts(port_rets, order.by = index(series)), series)), 3)
-  colnames(cor_mat) <- rownames(cor_mat) <- c(port_name, colnames(series))
+  pos_valid <- w != 0
+  cor_mat <- round(100 * cor(merge.xts(xts(port_rets, order.by = index(series)), series[,pos_valid])), 3)
+  colnames(cor_mat) <- rownames(cor_mat) <- c(port_name, colnames(series)[pos_valid])
+
   port_vol <- sqrt(as.numeric(t(w) %*% covar_mat %*% w))
 
   if(normal){
