@@ -10,6 +10,9 @@
 #' @export
 
 var_cvar <- function(series, w, quant, normal = FALSE, port_name = 'Portolio') {
+  pos_valid <- w != 0
+  w <- w[pos_valid]
+  series <- series[, names(w)]
   port_rets <- as.numeric(series %*% w)
   fact_mean_ret <- apply(series, 2, mean)
   port_mean_ret <- as.numeric(mean(port_rets))
