@@ -48,8 +48,8 @@ port_limits <- function(port_series, series, w, port_vol_lim, perc_sharpe_var = 
 
   port_sharpe_var <- port_sharpe * perc_sharpe_var
 
-  delta_w_up <- dw * port_var[1] / ds_up
-  delta_w_down <- dw *port_var[1] / ds_down
+  delta_w_up <- dw * port_sharpe_var[1] / ds_up
+  delta_w_down <- dw * port_sharpe_var[1] / ds_down
 
   w_sharpe_upper <- sapply(w + mapply(max, delta_w_up, delta_w_down), min, 1)
   w_sharpe_lower <- sapply(w + mapply(min, delta_w_up, delta_w_down), max, 0)
@@ -58,7 +58,7 @@ port_limits <- function(port_series, series, w, port_vol_lim, perc_sharpe_var = 
   d_up <- approx_dvol_dw(series, w, dw)$dvol_up_annual
   d_down <- approx_dvol_dw(series, w, dw)$dvol_down_annual
   port_vol_ann <- port_vol * freq
-  port_var <- port_vol_ann_lim - port_vol_ann
+  port_var <- port_vol_lim - port_vol_ann
 
   delta_w_up <- dw * port_var[1] / d_up
   delta_w_down <- dw *port_var[1] / d_down
@@ -71,5 +71,5 @@ port_limits <- function(port_series, series, w, port_vol_lim, perc_sharpe_var = 
 
   w_limits_table <- cbind(w, w_lower, w_upper, w_bias_lower,  w_bias_upper, w_risk_lower, w_risk_upper,  w_sharpe_lower, w_sharpe_upper)
 
-  return(list(w_upper = w_upper, w_lower = w_lower, w_limits_table))
+  return(list(w_upper = w_upper, w_lower = w_lower, w_limits_table = w_limits_table))
 }
