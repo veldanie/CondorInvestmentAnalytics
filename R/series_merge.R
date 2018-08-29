@@ -100,6 +100,8 @@ series_merge <- function(series_list, dates, asset_data, ref_curr, assets, curre
       }
     }
   }
-  names(series_out) <- c(assets, currencies)
+  if(length(series_out)>0){
+    names(series_out) <- c(assets, currencies)
+  }
   return(series_out)
 }
