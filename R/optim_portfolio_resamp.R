@@ -17,8 +17,7 @@
 #' @export
 
 
-
-optim_portfolio_resamp <- function(mu, Sigma, lb, ub, w_ini = NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000){
+optim_portfolio_resamp <- function(mu, Sigma, lb, ub, w_ini, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000){
 
   n_assets <- length(mu)
 
@@ -41,6 +40,7 @@ optim_portfolio_resamp <- function(mu, Sigma, lb, ub, w_ini = NULL, lambda = 1, 
     port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu, Sigma)[c('port_mean_ret', 'port_vol')])
     port_means[i] <- port_ret[1]
     port_vols[i] <- port_ret[2]
+    print(i)
   }
   w_optim_resamp <- apply(w_optim_mat, 2, mean)
 

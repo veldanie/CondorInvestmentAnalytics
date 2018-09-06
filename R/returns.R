@@ -8,7 +8,7 @@
 #' @return Returns
 #' @export
 
-returns <- function(series, dates = NULL, period = 'daily', type = 'log') {
+returns <- function(series, dates = NULL, period = 'daily', type = 'arithmetic') {
   if(!is.null(dates)){
     series <- series[paste(dates, collapse = '/')]
   }

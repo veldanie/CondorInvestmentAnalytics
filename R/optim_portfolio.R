@@ -31,9 +31,8 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
   if (method == "GD"){n.restarts = n.sim = 1}
   # Random Initialization:
   if (method %in% c("GD", "RI") & n_fn == 1){
-
-    sol <- gosolnp(pars = w_ini, fixed = fixed, fun = fn,
-                   eqfun = eqfun, eqB = eqB, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, LB = lb, UB = ub, n.restarts = n.restarts, n.sim = n.sim)
+    sol <- solnp(pars = w_ini, fun = fn,
+                   eqfun = eqfun, eqB = eqB, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, LB = lb, UB = ub)
     if(sol$convergence == 0){
       w <- sol$pars
     }else{
