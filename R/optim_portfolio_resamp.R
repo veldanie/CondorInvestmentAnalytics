@@ -16,8 +16,7 @@
 #' @return Optimal weights, mean resampled optimal weights, matrix of sampled weights.
 #' @export
 
-
-optim_portfolio_resamp <- function(mu, Sigma, lb, ub, w_ini, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000){
+optim_portfolio_resamp <- function(mu, Sigma, lb, ub, w_ini, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9){
 
   n_assets <- length(mu)
 
@@ -40,10 +39,12 @@ optim_portfolio_resamp <- function(mu, Sigma, lb, ub, w_ini, lambda = 1, N = 2e2
     port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu, Sigma)[c('port_mean_ret', 'port_vol')])
     port_means[i] <- port_ret[1]
     port_vols[i] <- port_ret[2]
-    print(i)
   }
   w_optim_resamp <- apply(w_optim_mat, 2, mean)
-
+  w_optim_resamp_sd <- apply(w_optim_mat, 2, sd)
+  z <- qnorm(conf_int + 0.5*(1 - conf_int))
+  w_optim_lower <- sapply(w_optim_resamp - z * w_optim_resamp_sd, max, 0)
+  w_optim_upper <- w_optim_resamp + z * w_optim_resamp_sd
   if(plot_ef){
     ef_ss <- efficient_frontier(mu, Sigma)$ef_ss
     x <- seq(min(port_vols),max(port_vols),0.001)
@@ -56,5 +57,5 @@ optim_portfolio_resamp <- function(mu, Sigma, lb, ub, w_ini, lambda = 1, N = 2e2
     legend('topleft', legend = c('Optimum Portfolio', 'Optimum Resampled Portfolio'), lty =1, col = c('red', 'blue'), bty = 'n')
   }
 
-  return(list(w_optim = w_optim, w_optim_resamp = w_optim_resamp, w_optim_matrix = w_optim_mat))
+  return(list(w_optim = w_optim, w_optim_resamp = w_optim_resamp, w_optim_resamp_sd = w_optim_resamp_sd, w_optim_lower = w_optim_lower, w_optim_upper = w_optim_upper, w_optim_matrix = w_optim_mat))
 }
