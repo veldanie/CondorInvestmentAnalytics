@@ -6,7 +6,8 @@
 \usage{
 portfolio_backtest(weights, capital, currency, asset_data, series_backtest,
   fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL,
-  hold_per = "1M", slippage = 5, commission = 5)
+  hold_per = "1M", rebal_per_in_months = NA, slippage = 5,
+  commission = 5, invest_assets = NULL)
 }
 \arguments{
 \item{weights}{Portfolio weights.}
@@ -23,9 +24,13 @@ portfolio_backtest(weights, capital, currency, asset_data, series_backtest,
 
 \item{fwd_prem}{forward premium corresponding to holding period (hold_per).}
 
+\item{rebal_per_in_months}{Rebalancing period in months.}
+
 \item{slippage}{Slippage basis points.}
 
 \item{commission}{Commission basis points.}
+
+\item{invest_assets}{Investable asset. By default: Index. It can be set to ETF or IA (investable asset).}
 }
 \value{
 Backtesting results.

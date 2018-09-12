@@ -4,12 +4,14 @@
 \alias{covar}
 \title{Covariance matrix and volatilities.}
 \usage{
-covar(series, per = 12)
+covar(series, per = 12, shrink = FALSE)
 }
 \arguments{
 \item{series}{data frame with return series.}
 
 \item{per}{returns period expressed as number of periods per year.}
+
+\item{shrink}{Shrink estimator. Lendoit and Wolf (2003).}
 }
 \value{
 Covariance matrix and volatility of each variable.

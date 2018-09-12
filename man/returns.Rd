@@ -4,7 +4,7 @@
 \alias{returns}
 \title{Returns}
 \usage{
-returns(series, dates = NULL, period = "daily", type = "log")
+returns(series, dates = NULL, period = "daily", type = "arithmetic")
 }
 \arguments{
 \item{series}{object of state prices, or an OHLC type object.}

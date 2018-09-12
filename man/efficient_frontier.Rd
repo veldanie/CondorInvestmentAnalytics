@@ -4,7 +4,7 @@
 \alias{efficient_frontier}
 \title{Efficient frontier.}
 \usage{
-efficient_frontier(mu, Sigma, lambda = c(0.5, 1.5^(0:10)))
+efficient_frontier(mu, Sigma, lambda = seq(0.5, 3, 0.25))
 }
 \arguments{
 \item{mu}{Expected return}

@@ -4,12 +4,15 @@
 \alias{transaction_costs}
 \title{Transaction costs}
 \usage{
-transaction_costs(units, price, slippage = 5, commission = 5)
+transaction_costs(units, price, slippage = 5, commission = 5,
+  purchase = TRUE)
 }
 \arguments{
 \item{slippage}{Fixed percentage over asset price.}
 
 \item{commission}{Percentage commission.}
+
+\item{purchase}{Purchase indicator.}
 }
 \value{
 Cost per transaction.

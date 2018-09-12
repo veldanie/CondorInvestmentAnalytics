@@ -5,7 +5,7 @@
 \title{Objective function}
 \usage{
 utility_fun(type = "absolute", mu, Sigma, lambda, w_bench = NULL,
-  min_var = FALSE)
+  min_var = FALSE, same_assets_bench = TRUE)
 }
 \arguments{
 \item{type}{of objective function. absolute or relative.}
@@ -18,10 +18,12 @@ utility_fun(type = "absolute", mu, Sigma, lambda, w_bench = NULL,
 
 \item{w_bench}{Benchmark weigths}
 
-\item{min_var}{Min-Var portfolio indicator}
+\item{min_var}{Indicator Min-Var portfolio}
+
+\item{same_assets_bench}{Indicator function. If the portfolio and the benchmark assets are the same TRUE, otherwise FALSE.}
 }
 \value{
-equilibrium returns. Annualized and not. The return is assumed to be continuous, i.e. estimated using natural log.
+Objective function.
 }
 \description{
 Utility function.

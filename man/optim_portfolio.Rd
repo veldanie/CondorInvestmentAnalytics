@@ -7,7 +7,8 @@
 optim_portfolio(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL,
   lb_act = NULL, ub_act = NULL, ineqfun = NULL, ineqLB = NULL,
   ineqUB = NULL, method = "RI", fixed = NULL, n.restarts = 10,
-  n.sim = 20000, type = "absolute")
+  n.sim = 20000, type = "absolute", itermax = 1000, NP = 100,
+  max.time = 10)
 }
 \arguments{
 \item{w_ini}{Initial weights.}
@@ -34,13 +35,19 @@ optim_portfolio(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL,
 
 \item{ineqUB}{Inequality upper bound.}
 
-\item{method}{Gradient descent (GD), GD with random initialization (RI) or differential evolution (DE).}
+\item{method}{Gradient descent (GD), GD with random initialization (RI), differential evolution (DE), Genetic Opt. using Derivative (GE), Generalized Simulated Annealing (SA) or Memetic with local search (MALS).}
 
 \item{fixed}{Numeric index indicating parameters that stay fixed.}
 
 \item{n.sim}{Random parameters for every restart of the solver.}
 
 \item{type}{Type of objective function. absolute or relative.}
+
+\item{itermax}{Maximum iteration (population generation) allowed.}
+
+\item{NP}{Number of population members.}
+
+\item{max.time}{Max time in seconds. Applied to SA.}
 
 \item{n.restars}{Number of solver restarts.}
 }

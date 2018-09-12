@@ -4,7 +4,8 @@
 \alias{iso_quote}
 \title{ISO quote}
 \usage{
-iso_quote(curr1, curr2 = NULL, base_currs = c("NZD", "AUD", "EUR", "GBP"))
+iso_quote(curr1, curr2 = NULL, base_currs = c("NZD", "AUD", "EUR", "GBP"),
+  short = FALSE)
 }
 \arguments{
 \item{curr1}{Currency 1.}

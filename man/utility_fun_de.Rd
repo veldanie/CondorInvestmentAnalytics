@@ -4,11 +4,13 @@
 \alias{utility_fun_de}
 \title{Objective function}
 \usage{
-utility_fun_de(type = "absolute", mu, Sigma, lambda, w_bench = NULL,
-  lb = rep(0, length(mu)), ub = rep(1, length(mu)), lb_act = rep(0,
-  length(mu)), ub_act = rep(1, length(mu)), min_var = FALSE,
-  vol_obj = Inf, f_const = rep(1, length(mu)), f_const_lb = 0,
-  f_const_ub = Inf)
+utility_fun_de(type = "absolute", mu, Sigma, lambda, risk_fun = NULL,
+  w_bench = NULL, lb = rep(0, length(mu)), ub = rep(1, length(mu)),
+  lb_act = rep(0, length(mu)), ub_act = rep(1, length(mu)),
+  min_var = FALSE, risk_obj = Inf, f_const = rep(1, length(mu)),
+  f_const_lb = 0, f_const_ub = Inf, same_assets_bench = TRUE,
+  Sigma_bench = NULL, dd_obj = Inf, series = NULL,
+  dd_pers_end_ind = NULL, dd_pers_matrix = NULL, dd_quant = 0.9)
 }
 \arguments{
 \item{type}{Type of objective function. absolute or relative.}
@@ -18,6 +20,8 @@ utility_fun_de(type = "absolute", mu, Sigma, lambda, w_bench = NULL,
 \item{Sigma}{covariance matrix}
 
 \item{lambda}{risk aversion coefficient}
+
+\item{risk_fun}{Risk as a function of w.}
 
 \item{w_bench}{Benchmark weigths}
 
@@ -31,16 +35,30 @@ utility_fun_de(type = "absolute", mu, Sigma, lambda, w_bench = NULL,
 
 \item{min_var}{Min-Var portfolio indicator}
 
-\item{vol_obj}{Volatility objective. Default: Inf}
+\item{risk_obj}{Risk objective. Default: Inf}
 
 \item{f_const}{Matrix of factor constraints. Each entry is 0 or 1. Dimesion is NxM where N is the number of constraints and M is the number of assets.}
 
 \item{f_const_lb}{Vector of lower bounds of each constraint.}
 
 \item{f_const_ub}{Vector of upper bounds of each constraint.}
+
+\item{same_assets_bench}{Indicator function. If the portfolio and the benchmark assets are the same TRUE, otherwise FALSE.}
+
+\item{Sigma_bench}{covariance matrix of benchmark asset. Only takes values when the benchmark assets are different from portfolio assets.}
+
+\item{dd_obj}{Drawdown objective. Default: Inf}
+
+\item{series}{Assets prices series. Requiered to estimate drawdown.}
+
+\item{dd_pers_end_ind}{Drawdown periods endpoint index..}
+
+\item{dd_pers_matrix}{Drawdown periods matrix.}
+
+\item{dd_quant}{Quantile for max drawdown.}
 }
 \value{
-equilibrium returns. Annualized and not. The return is assumed to be continuous, i.e. estimated using natural log.
+Objective function. If type == 'absolute', portfolio risk is controlled by the risk function. If type == 'relative' risk measure can only be volatility.
 }
 \description{
 Utility function.

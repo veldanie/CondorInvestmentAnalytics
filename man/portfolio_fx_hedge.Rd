@@ -6,7 +6,7 @@
 \usage{
 portfolio_fx_hedge(w, ref_curr, asset_data, series_list, series_fxfwd_list,
   dates, hold_per = "1M", exp_ret = 0, group.by = "Asset",
-  bounded = TRUE)
+  bounded = TRUE, invest_assets = NULL)
 }
 \arguments{
 \item{w}{Portfolio weights.}
@@ -28,6 +28,8 @@ portfolio_fx_hedge(w, ref_curr, asset_data, series_list, series_fxfwd_list,
 \item{group.by}{Set of assets that share the same hedging ratio. By default the grouping is per currency. c("All", "Asset_Class", "Asset", "Currency", "Country")}
 
 \item{bounded}{Hedge ratio bounded to the range 0-1.}
+
+\item{invest_assets}{Investable asset. By default: Index. It can be set to ETF or IA (investable asset).}
 }
 \value{
 Fx hedge returns.

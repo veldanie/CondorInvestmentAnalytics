@@ -6,7 +6,7 @@
 \usage{
 series_merge(series_list, dates, asset_data, ref_curr, assets,
   currencies = NULL, convert_to_ref = FALSE, ref_per_unit_foreign = FALSE,
-  invest_assets = FALSE)
+  invest_assets = NULL)
 }
 \arguments{
 \item{series_list}{List of xts series.}
@@ -23,7 +23,7 @@ series_merge(series_list, dates, asset_data, ref_curr, assets,
 
 \item{ref_per_unit_foreign}{Indicator if currencies are converted to Base (ref) currency per unit of foreign currency.}
 
-\item{invest_assets}{Indicator to decide if use investable asset series.}
+\item{invest_assets}{Investable asset. By default: Index. It can be set to ETF or IA (investable asset).}
 
 \item{currecies}{Id (iso) of currencies of interest.}
 }
