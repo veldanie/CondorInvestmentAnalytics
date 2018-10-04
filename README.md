@@ -1,2 +1,2 @@
 # SuraInvestmentAnalytics
-Funciones para análisis de inversiones, sincronización de series y optimización de portafolios.
+Funciones para análisis de inversiones, sincronización de seri, cuantificación de riesgo y optimización de portafolios.
