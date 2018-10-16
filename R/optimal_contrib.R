@@ -22,20 +22,20 @@ optimal_contrib <- function(pr_simul, port, rc_1 = 0.25, rc_2 = 0.333 , rc_3 = 0
   dim_pr <- dim(pr_simul)
   N <- dim_pr[1]
   M <- dim_pr[2]
-  V <- dim_pr[1]
+  V <- dim_pr[1] - L
   n_assets <- ncol(port) - 1
   n_port <- nrow(port)
-  cc_port <- matrix(0, nrow = n_port, ncol = M)
+  cc_port <- rep(0, nrow = n_port)
 
   for (k in 1:n_port){
-    weights_mat <- as.matrix(port[k,-1])
+    weights_mat <- as.numeric(port[k,-1])
     obj_cc <- function(cc){
-      pe_simul <- private_equity_simul(cc, M, V, rc_1, rc_2, rc_3, L_contrib, L, B, Y, gr_1 = gr_1, gr_2 = gr_2)
+      pe_simul <- private_equity_simul_const_contrib(cc, M, V, rc_1, rc_2, rc_3, L_contrib, L, B, Y, gr_1 = gr_1, gr_2 = gr_2)
       port_val <- matrix(0, nrow = L, ncol = M)
       pe_ti <- pe_t(pe_simul, 1)
       port_val[1,] <- 100 + pe_ti$cf + pe_ti$nav
       for (i in 2:L){
-        dist_asset <- ((port_val[i - 1,] - pe_ti$nav) %*% t(rep(1, n_assets))) * (rep(1, M) %*% weights_mat)
+        dist_asset <- ((port_val[i - 1,] - pe_ti$nav) %*% t(rep(1, n_assets))) * (rep(1, M) %*% t(weights_mat))
         asset_units <- dist_asset/pr_simul[i - 1,,]
         pe_ti <- pe_t(pe_simul, i)
 
@@ -47,9 +47,9 @@ optimal_contrib <- function(pr_simul, port, rc_1 = 0.25, rc_2 = 0.333 , rc_3 = 0
       return(pe_part)
     }
     #ptm <- proc.time()
-    sol <- nlm(obj_cc, rep(0,M), steptol=1e-3, gradtol=1e-3)
+    sol <- nlm(obj_cc, 0, steptol=1e-3, gradtol=1e-3)
     #proc.time() - ptm
-    cc_port[k,] <- sol$par
+    cc_port[k] <- sol$estimate
   }
   return(cc_port)
 }

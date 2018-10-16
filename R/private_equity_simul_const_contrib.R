@@ -37,11 +37,11 @@ private_equity_simul_const_contrib <- function(cc, M, V, rc_1 = 0.25, rc_2 = 0.3
   }
 
   dt[1,,] <- 0
-  nav[1,,] <- ct[1] * (1 + gr_1)
+  nav[1,,] <- ct[1] * (1 + gr_1[1:V,])
   cf[1,,] <- -ct[1] + dt[1,,]
 
   for (i in 2:L){
-    if(i <= 2){gr_t <- gr_1}else{gr_t <- gr_2}
+    if(i <= 2){gr_t <- gr_1[i:(i+V-1),]}else{gr_t <- gr_2[i:(i+V-1),]}
     dt[i,,] <- nav[i-1,,] * rd[i]
     nav[i,,] <- nav[i-1,,] * (1 + gr_t) + ct[i] - dt[i,,]
     cf[i,,] <- -ct[i] + dt[i,,]

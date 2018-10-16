@@ -26,7 +26,7 @@ portfolios_units_values <- function(pr_simul, port, port_ini_cc, rc_1 = 0.25, rc
   dim_pr <- dim(pr_simul)
   N <- dim_pr[1]
   M <- dim_pr[2]
-  V <- dim_pr[1]
+  V <- dim_pr[1] - L
   n_assets <- ncol(port) - 1
   n_port <- nrow(port)
   port_units <- array(0, dim = c(N, M, n_port))
@@ -41,7 +41,8 @@ portfolios_units_values <- function(pr_simul, port, port_ini_cc, rc_1 = 0.25, rc
   names(port_units_list) <- port[,1]
 
   for (k in 1:n_port){
-    weights_mat <- as.matrix(port[k,-1])
+    #print(k)
+    weights_mat <- as.numeric(port[k,-1])
     pe_simul <- private_equity_simul(port_ini_cc[k,], M, V, rc_1, rc_2, rc_3, L_contrib, L, B, Y, gr_1, gr_2)
 
     sample_vintage_nav[,k] <- pe_simul$nav[,1,1]
@@ -51,14 +52,15 @@ portfolios_units_values <- function(pr_simul, port, port_ini_cc, rc_1 = 0.25, rc
     pe_ti <- pe_t(pe_simul, 1)
     port_val[1,] <- 100 + pe_ti$cf + pe_ti$nav
     for (i in 2:N){
-      dist_asset <- ((port_val[i - 1,] - pe_ti$nav) %*% t(rep(1, n_assets))) * (rep(1, M) %*% weights_mat)
+      #print(i)
+      dist_asset <- ((port_val[i - 1,] - pe_ti$nav) %*% t(rep(1, n_assets))) * (rep(1, M) %*% t(weights_mat))
       asset_units <- dist_asset/pr_simul[i - 1,,]
       pe_ti <- pe_t(pe_simul, i)
       port_val[i, ] <- rowSums(asset_units * pr_simul[i,,]) + pe_ti$cf + pe_ti$nav
 
       pe_nav_perc <- pe_ti$nav/port_val[i, ]
 
-      if(i>L){
+      if(i>L & i <= V){
         pe_above_limit <- pe_nav_perc > pe_target[k]
         nav_surplus <- (pe_ti$nav - port_val[i, ] * pe_target[k])/pers_to_target
         prev_cc <- port_cc[i-1,,k]
@@ -68,7 +70,7 @@ portfolios_units_values <- function(pr_simul, port, port_ini_cc, rc_1 = 0.25, rc
         cc_new <- mapply(function(x,y,z) min(x + y,z), x = port_cc[i-1,,k], y = -nav_surplus / (rc_1 * (1+gr_1[i,])),  z = max_cont)
         cc_new[cc_new < 0] <- 0
 
-        pe_simul_vintage <- private_equity_simul(cc_new, M, 1, rc_1, rc_2, rc_3, L_contrib, L,  B, Y, gr_1[i,, drop = FALSE], gr_2[i,, drop = FALSE])
+        pe_simul_vintage <- private_equity_simul(cc_new, M, 1, rc_1, rc_2, rc_3, L_contrib, L,  B, Y, gr_1[i:(i+L-1),, drop = FALSE], gr_2[i:(i+L-1),, drop = FALSE])
         port_cc[i,,k] <- cc_new
 
         pe_simul$nav[,i,] <- pe_simul_vintage$nav[,1,]
