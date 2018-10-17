@@ -9,13 +9,13 @@
 #' @return Portfolio simulation.
 #' @export
 
-port_simul <- function(port_list, afil_dist, afil_cf, series_start_per = 12){
+port_simul <- function(port_list, capital, afil_dist, afil_cf, series_start_per = 12){
   n_port <- ncol(afil_dist)
   port_names <- colnames(afil_dist)
   N <- length(index(afil_dist))
   M <- ncol(port_list[[1]])
   port_val <- matrix(0, nrow = N, ncol = M)
-
+  port_val[1,] <- capital
   #Arreglo de series de unidad de fondo ordenadas iniciando cuando el programa de PE ha avanzado
   port_units <- array(0, dim = c(N, M, n_port))
   for(l in 1:n_port){
