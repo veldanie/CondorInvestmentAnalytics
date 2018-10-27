@@ -30,6 +30,7 @@ portfolios_units_values <- function(pr_simul, port, port_ini_cc, rc_1 = 0.25, rc
   n_assets <- ncol(port) - 1
   n_port <- nrow(port)
   port_units <- array(0, dim = c(N, M, n_port))
+  port_rets <- array(0, dim = c(N-1, M, n_port))
   pe_nav <- array(0, dim = c(N, M, n_port))
   pe_perc <- array(0, dim = c(N, M, n_port))
   port_cc <- array(0, dim = c(N, M, n_port))
@@ -84,7 +85,8 @@ portfolios_units_values <- function(pr_simul, port, port_ini_cc, rc_1 = 0.25, rc
       pe_perc[i,,k] <- pe_nav_perc
     }
     port_units_list[[k]] <- port_val
-    port_units [,,k]<-port_val
+    port_units[,,k] <- port_val
+    port_rets[,,k] <- apply(port_val, 2, diff)/port_val[-N,]
   }
-  return(list(port_units_list = port_units_list, port_units = port_units, pe_nav = pe_nav, pe_perc = pe_perc, sample_vintage_nav=sample_vintage_nav, sample_vintage_cf=sample_vintage_cf))
+  return(list(port_units_list = port_units_list, port_units = port_units, port_rets = port_rets, pe_nav = pe_nav, pe_perc = pe_perc, sample_vintage_nav=sample_vintage_nav, sample_vintage_cf=sample_vintage_cf))
 }

@@ -33,5 +33,7 @@ port_simul <- function(port_list, capital, afil_dist, afil_cf, series_start_per 
 
   port_mean <- mean(port_dist)
   port_sd <- sd(port_dist)
-  return(list(port_val = port_val, port_dist = port_dist, port_mean = port_mean, port_sd = port_sd))
+  port_rets <- (apply(port_val, 2, diff)-afil_cf[-1] %*% t(rep(1,M)))/port_val[-N,]
+
+  return(list(port_val = port_val, port_rets = port_rets, port_dist = port_dist, port_mean = port_mean, port_sd = port_sd))
 }

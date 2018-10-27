@@ -8,19 +8,28 @@
 #' @return Mean vector and Covariance matrix.
 #' @export
 
-params_simul <- function(series, asset_df, period="monthly"){
 
+params_simul <- function(series, mu_in = NA, sigma_in = NA, period="monthly"){
+  freq <- switch(period, 'monthly' = 12, 'quarterly' = 4, 'yearly' = 1)
   rets <- returns(series, period = period)
-  mu <- colMeans(rets)*12
-  mu_df <- asset_df$PROM[match(names(mu), asset_df$ACTIVO)]
-  mu[!is.na(mu_df)] <- mu_df[!is.na(mu_df)]
+  asset_names <- colnames(series)
 
+  mu <- colMeans(rets) * freq
   SIGMA <- covar(rets)$cov_matrix # No se reescala en este paso.
   sigma <- sqrt(diag(SIGMA))
-  sigma_df <- asset_df$DESV[match(names(mu), asset_df$ACTIVO)]/sqrt(12)
-  sigma[!is.na(sigma_df)] <- sigma_df[!is.na(sigma_df)]
 
-  SIGMA <-diag(sigma)%*%covar(rets)$cor_matrix%*%diag(sigma)
+  if(any(!is.na(mu_in))){
+    pos_mu <- !is.na(mu_in)
+    mu_new <- mu_in[pos_mu]
+
+    mu[names(mu_new)] <- mu_new
+  }
+  if(any(!is.na(sigma_in))){
+    pos_sigma <- !is.na(sigma_in)
+    sigma_new <- sigma_in[pos_mu]/sqrt(freq)
+    sigma[names(sigma_new)] <- sigma_new
+    SIGMA <-diag(sigma)%*%covar(rets)$cor_matrix%*%diag(sigma)
+  }
   colnames(SIGMA) <- rownames(SIGMA) <- names(sigma)
   return(list(mu = mu, SIGMA = SIGMA))
 }
