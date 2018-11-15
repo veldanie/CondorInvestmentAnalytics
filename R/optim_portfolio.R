@@ -24,7 +24,7 @@
 #' @return Optimal weights.
 #' @export
 
-optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_act = NULL, ub_act = NULL, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = "RI", fixed = NULL, n.restarts = 10, n.sim = 20000, type = 'absolute', itermax = 1000, NP = 100, max.time = 10){
+optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_act = NULL, ub_act = NULL, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = "RI", fixed = NULL, n.restarts = 10, n.sim = 20000, type = 'absolute', itermax = 1000, NP = 100, max.time = 180){
   #objective function:
   n_fn <- length(fn)
   n_par <- length(w_ini)
@@ -76,15 +76,15 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
     # Genetic Optim. using Derivatives
 
     if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
-      sol <- genoud(fn = fn, nvar = length(lb), Domains = cbind(lb, ub))
-      if(is.finite(sol$value)){w <- sol$par/sum(sol$par)}else{w <- rep(0, n_par)}
+      sol <- genoud(fn = fn, nvar = length(lb), Domains = cbind(lb, ub), wait.generations=50)
+      if(is.finite(fn(sol$par))){w <- sol$par/sum(sol$par)}else{w <- rep(0, n_par)}
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
       lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
       upper_act <- mapply(min, max(0, ub - w_bench), ub_act)
 
-      sol <- genoud(fn = fn, Domains = cbind(lower_act, upper_act))
-      if(is.finite(sol$value)){
+      sol <- genoud(fn = fn, Domains = cbind(lower_act, upper_act), wait.generations=50)
+      if(is.finite(fn(sol$par))){
         w <- sol$par
         w[w > 0] <- abs(w[w > 0] * sum(w[w < 0]) / sum(w[w > 0]))
       }else{w <- rep(0, n_par)}
@@ -97,14 +97,14 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
     # Generalized Simulating Annealing
 
     if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
-      sol <- GenSA(par = w_ini, fn = fn, lower = lb, upper =  ub, control = list(max.time = max.time))
+      sol <- GenSA(par = w_ini, fn = fn, lower = lb, upper =  ub, control = list(max.time = max.time, nb.stop.improvement=20))
       if(is.finite(sol$value)){w <- sol$par/sum(sol$par)}else{w <- rep(0, n_par)}
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
       lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
       upper_act <- mapply(min, max(0, ub - w_bench), ub_act)
 
-      sol <- GenSA(par = w_ini, fn = fn, lower = lower_act, upper = upper_act, control = list(max.time = max.time))
+      sol <- GenSA(par = w_ini, fn = fn, lower = lower_act, upper = upper_act, control = list(max.time = max.time, nb.stop.improvement=20))
       if(is.finite(sol$value)){
         w <- sol$par
         w[w > 0] <- abs(w[w > 0] * sum(w[w < 0]) / sum(w[w > 0]))
