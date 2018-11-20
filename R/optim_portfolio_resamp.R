@@ -6,13 +6,13 @@
 #' @param lb Lower bound.
 #' @param ub Upper bound.
 #' @param lambda Risk aversion coefficient.
-#' @N Number of observations.
-#' @M Number of portfolios.
-#' @plot_ef Indicator to plot efficient frontier.
-#' @spar Smoothing parameter
-#' @method Default: GD
-#' @n.restarts Number of solver restarts.
-#' @n.sim Random parameters for every restart of the solver.
+#' @param N Number of observations.
+#' @param M Number of portfolios.
+#' @param plot_ef Indicator to plot efficient frontier.
+#' @param spar Smoothing parameter
+#' @param method Default: GD
+#' @param n.restarts Number of solver restarts.
+#' @param n.sim Random parameters for every restart of the solver.
 #' @return Optimal weights, mean resampled optimal weights, matrix of sampled weights.
 #' @export
 
