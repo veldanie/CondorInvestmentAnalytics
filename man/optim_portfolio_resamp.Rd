@@ -4,7 +4,7 @@
 \alias{optim_portfolio_resamp}
 \title{Optimal portfolio.}
 \usage{
-\method{Default:}{GD}(mu, Sigma, lb, ub, w_ini, lambda = 1, N = 200,
+optim_portfolio_resamp(mu, Sigma, lb, ub, w_ini, lambda = 1, N = 200,
   M = 1000, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = NULL,
   ineqUB = NULL, method = "GD", n.restarts = 10, n.sim = 20000,
   conf_int = 0.9)
@@ -19,6 +19,20 @@
 \item{ub}{Upper bound.}
 
 \item{lambda}{Risk aversion coefficient.}
+
+\item{N}{Number of observations.}
+
+\item{M}{Number of portfolios.}
+
+\item{plot_ef}{Indicator to plot efficient frontier.}
+
+\item{spar}{Smoothing parameter}
+
+\item{method}{Default: GD}
+
+\item{n.restarts}{Number of solver restarts.}
+
+\item{n.sim}{Random parameters for every restart of the solver.}
 }
 \value{
 Optimal weights, mean resampled optimal weights, matrix of sampled weights.

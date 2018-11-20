@@ -8,7 +8,7 @@ optim_portfolio(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL,
   lb_act = NULL, ub_act = NULL, ineqfun = NULL, ineqLB = NULL,
   ineqUB = NULL, method = "RI", fixed = NULL, n.restarts = 10,
   n.sim = 20000, type = "absolute", itermax = 1000, NP = 100,
-  max.time = 10)
+  max.time = 180)
 }
 \arguments{
 \item{w_ini}{Initial weights.}
