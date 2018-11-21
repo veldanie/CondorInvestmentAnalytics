@@ -15,10 +15,9 @@ rets_complete_index_series <- function(series, backup_series, ref_dates='2000/20
   ini_val <- as.numeric(series[1])
 
   target_dates <- all_dates[all_dates<ini_date]
-
-  set.seed(42)
-  random_rets <- rnorm(length(target_dates), mean(ingrtas_ret), sd(ingrtas_ret))
   rets <- as.vector(coredata(returns(series[ref_dates], type = 'log')))
+  set.seed(42)
+  random_rets <- rnorm(length(target_dates), mean(rets), sd(rets))
   series_complete <- rbind(series, xts(rev(ini_val * exp(-cumsum(random_rets))), order.by = target_dates))
   return(series_complete)
 }
