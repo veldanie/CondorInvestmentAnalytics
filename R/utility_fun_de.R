@@ -31,30 +31,42 @@ utility_fun_de <- function(type = 'absolute', mu, Sigma, lambda, risk_fun = NULL
     if (min_var == TRUE){
       function(w){
         if (sum(w)!=1){w <- w/sum(w)}
-        if(any(w<lb) || any(w>ub)) {return(Inf)}
+        if(any(w<(lb-1e-7)) || any(w>(ub+1e-7))) {return(1000)}
         util <- t(w)%*%Sigma%*%w
         as.numeric(util)
       }
     }else{
       function(w) {
-        if (sum(w)!=1){w <- w/sum(w)}
-        if(any(w<lb) || any(w>ub) || risk_fun(w)>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || cond_drawdown(series, w, dd_pers_end_ind, dd_pers_matrix, dd_quant) > dd_obj) {return(Inf)}
+        if (sum(w)!=1){
+          #w <- w_norm_fun(w)
+          #w <- w/sum(w)
+          w <- w-(sum(w)-1)*(w-lb)/sum(w-lb)
+        }
+        if(any(w<(lb-1e-7)) || any(w>(ub+1e-7)) || risk_fun(w)>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || cond_drawdown(series, w, dd_pers_end_ind, dd_pers_matrix, dd_quant) > dd_obj) {return(1000)}
         util <- -(t(w) %*% mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w) %*% Sigma %*% w)
         return(as.numeric(util))
       }
     }
   }else if(type == 'relative'){
     if(same_assets_bench){
+      lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
+
       function(w_act){
-        if (sum(w_act)!=0){w_act[w_act > 0] <- abs(w_act[w_act > 0] * sum(w_act[w_act < 0]) / sum(w_act[w_act > 0]))}
-        if(any(w_act<lb_act) || any(w_act>ub_act) || any((w_act + w_bench) < lb) || any((w_act + w_bench)>ub) || as.numeric(sqrt(t(w_act) %*% Sigma %*% w_act))>risk_obj || any((f_const %*% (w_act+w_bench)) < f_const_lb) || any((f_const %*% (w_act+w_bench)) > f_const_ub) || cond_drawdown(series, w_act+w_bench, dd_pers_end_ind, dd_pers_matrix, dd_quant) > dd_obj) {return(Inf)}
+        if (sum(w_act)!=0){
+          #w_act[w_act > 0] <- abs(w_act[w_act > 0] * sum(w_act[w_act < 0]) / sum(w_act[w_act > 0]))
+          w_act <- w_act-sum(w_act)*(w_act-lower_act)/sum(w_act-lower_act)
+        }
+        if(any(w_act<(lb_act-1e-7)) || any(w_act>(ub_act+1e-7)) || any((w_act + w_bench) < (lb-1e-7)) || any((w_act + w_bench)>(ub+1e-7)) || as.numeric(sqrt(t(w_act) %*% Sigma %*% w_act))>risk_obj || any((f_const %*% (w_act+w_bench)) < f_const_lb) || any((f_const %*% (w_act+w_bench)) > f_const_ub) || cond_drawdown(series, w_act+w_bench, dd_pers_end_ind, dd_pers_matrix, dd_quant) > dd_obj) {return(1000)}
         util <- -(t(w_act+w_bench)%*%mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w_act)%*%Sigma%*%w_act)
         as.numeric(util)
       }
     }else{
       function(w) {
-        if (sum(w)!=1){w <- w/sum(w)}
-        if(any(w<lb) || any(w>ub) || (as.numeric(sqrt(t(w) %*% Sigma %*% w)) - as.numeric(sqrt(t(w_bench) %*% Sigma_bench %*% w_bench)))>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || cond_drawdown(series, w, dd_pers_end_ind, dd_pers_matrix, dd_quant) > dd_obj) {return(Inf)}
+        if (sum(w)!=1){
+          # w <- w/sum(w)
+          w <- w-(sum(w)-1)*(w-lb)/sum(w-lb)
+        }
+        if(any(w<(lb-1e-7)) || any(w>(ub+1e-7)) || (as.numeric(sqrt(t(w) %*% Sigma %*% w)) - as.numeric(sqrt(t(w_bench) %*% Sigma_bench %*% w_bench)))>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || cond_drawdown(series, w, dd_pers_end_ind, dd_pers_matrix, dd_quant) > dd_obj) {return(1000)}
         util <- -(t(w) %*% mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w) %*% Sigma %*% w)
         return(as.numeric(util))
       }

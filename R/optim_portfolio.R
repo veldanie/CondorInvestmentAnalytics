@@ -24,7 +24,7 @@
 #' @return Optimal weights.
 #' @export
 
-optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_act = NULL, ub_act = NULL, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = "RI", fixed = NULL, n.restarts = 10, n.sim = 20000, type = 'absolute', itermax = 1000, NP = 100, max.time = 180){
+optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_act = NULL, ub_act = NULL, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = "RI", fixed = NULL, n.restarts = 10, n.sim = 20000, type = 'absolute', itermax = 1000, NP = 100, max.time = 60){
   #objective function:
   n_fn <- length(fn)
   n_par <- length(w_ini)
@@ -55,84 +55,111 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
 
     if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
       if(any(lb > ub)){w <- rep(0, n_par); names(w) <- names(w_ini); return(w)}
-      sol <- DEoptim(fn = fn, lower = lb, upper = ub, control = control_list)
-      if(is.finite(sol$optim$bestval)){w <- sol$optim$bestmem/sum(sol$optim$bestmem)}else{w <- rep(0, n_par)}
+      sol <- DEoptim(fn = fn, lower = lb-1e-7, upper = ub+1e-7, control = control_list)
+      if(sol$optim$bestval<1000){
+        w <- sol$optim$bestmem-(sum(sol$optim$bestmem)-1)*(sol$optim$bestmem-lb)/sum(sol$optim$bestmem-lb)
+        #w <- sol$optim$bestmem/sum(sol$optim$bestmem)
+      }else{
+        w <- rep(0, n_par)
+      }
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
       lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
       upper_act <- mapply(min, sapply(ub - w_bench, max, 0), ub_act)
       if(any(lower_act > upper_act)){w <- rep(0, n_par); names(w) <- names(w_ini); return(w)}
-      sol <- DEoptim(fn = fn, lower = lower_act, upper = upper_act, control = control_list)
-      if(is.finite(sol$optim$bestval)){
+      sol <- DEoptim(fn = fn, lower = lower_act-1e-7, upper = upper_act+1e-7, control = control_list)
+      if(sol$optim$bestval<1000){
         w <- sol$optim$bestmem
-        w[w > 0] <- abs(w[w > 0] * sum(w[w < 0]) / sum(w[w > 0]))
+        w <- w-sum(w)*(w-lower_act)/sum(w-lower_act)
+        #w[w > 0] <- abs(w[w > 0] * sum(w[w < 0]) / sum(w[w > 0]))
       }else{w <- rep(0, n_par)}
     }
     names(w) <- names(w_ini)
-    if(!is.finite(sol$optim$bestval)){
+    if(sol$optim$bestval==1000){
       warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
     }
   }else if(method == 'GE'){
     # Genetic Optim. using Derivatives
 
     if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
-      sol <- genoud(fn = fn, nvar = length(lb), Domains = cbind(lb, ub), wait.generations=50)
-      if(is.finite(fn(sol$par))){w <- sol$par/sum(sol$par)}else{w <- rep(0, n_par)}
+      if(any(lb > ub)){w <- rep(0, n_par); names(w) <- names(w_ini); return(w)}
+      sol <- genoud(fn = fn, nvar = length(lb), Domains = cbind(lb-1e-7, ub+1e-7), wait.generations=50)
+      if(fn(sol$par)<1000){
+        w <- sol$par-(sum(sol$par)-1)*(sol$par-lb)/sum(sol$par-lb)
+        #w <- sol$par/sum(sol$par)
+      }else{
+        w <- rep(0, n_par)
+      }
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
       lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
       upper_act <- mapply(min, sapply(ub - w_bench, max, 0), ub_act)
 
       sol <- genoud(fn = fn, Domains = cbind(lower_act, upper_act), wait.generations=50)
-      if(is.finite(fn(sol$par))){
+      if(fn(sol$par)<1000){
         w <- sol$par
-        w[w > 0] <- abs(w[w > 0] * sum(w[w < 0]) / sum(w[w > 0]))
+        w <- w-sum(w)*(w-lower_act)/sum(w-lower_act)
+        #w[w > 0] <- abs(w[w > 0] * sum(w[w < 0]) / sum(w[w > 0]))
       }else{w <- rep(0, n_par)}
     }
     names(w) <- names(w_ini)
-    if(!is.finite(sol$value)){
+    if(sol$value==1000){
       warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
     }
   }else if(method == 'SA'){
     # Generalized Simulating Annealing
 
     if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
-      sol <- GenSA(par = w_ini, fn = fn, lower = lb, upper =  ub, control = list(max.time = max.time, nb.stop.improvement=10, verbose=TRUE, smooth=FALSE))
-      if(is.finite(sol$value)){w <- sol$par/sum(sol$par)}else{w <- rep(0, n_par)}
+      if(any(lb > ub)){w <- rep(0, n_par); names(w) <- names(w_ini); return(w)}
+      sol <- GenSA(par = w_ini, fn = fn, lower = lb-1e-7, upper =  ub+1e-7, control = list(max.time = max.time, nb.stop.improvement=100, verbose=TRUE, smooth=FALSE))
+      if(sol$value<1000){
+        #w <- sol$par/sum(sol$par)
+        w <- sol$par-(sum(sol$par)-1)*(sol$par-lb)/sum(sol$par-lb)
+      }else{
+        w <- rep(0, n_par)
+      }
     } else {
-      if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
       lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
       upper_act <- mapply(min, sapply(ub - w_bench, max, 0), ub_act)
-
-      sol <- GenSA(par = w_ini, fn = fn, lower = lower_act, upper = upper_act, control = list(max.time = max.time, nb.stop.improvement=10, verbose=TRUE, smooth=FALSE))
-      if(is.finite(sol$value)){
+      w_act_ini <- rep(0, n_par)
+      names(w_act_ini) <- names(w_ini)
+      sol <- GenSA(par = w_act_ini, fn = fn, lower = lower_act-1e-7, upper = upper_act+1e-7, control = list(max.time = max.time, nb.stop.improvement=10, verbose=TRUE, smooth=FALSE))
+      if(sol$value<1000){
         w <- sol$par
-        w[w > 0] <- abs(w[w > 0] * sum(w[w < 0]) / sum(w[w > 0]))
+        w <- w-sum(w)*(w-lower_act)/sum(w-lower_act)
+        #w[w > 0] <- abs(w[w > 0] * sum(w[w < 0]) / sum(w[w > 0]))
       }else{w <- rep(0, n_par)}
     }
     names(w) <- names(w_ini)
-    if(!is.finite(sol$value)){
+    if(sol$value==1000){
       warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
     }
   }else if(method == 'MALS'){
     # Memetic with local search
 
     if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
-      sol <- malschains(fn = fn, lower = lb, upper =  ub)
-      if(is.finite(sol$fitness)){w <- sol$sol/sum(sol$sol)}else{w <- rep(0, n_par)}
+      if(any(lb > ub)){w <- rep(0, n_par); names(w) <- names(w_ini); return(w)}
+      sol <- malschains(fn = fn, lower = lb-1e-7, upper =  ub+1e-7)
+      if(sol$fitness<1000){
+        w <- sol$sol-(sum(sol$sol)-1)*(sol$sol-lb)/sum(sol$sol-lb)
+        #w <- sol$sol/sum(sol$sol)
+      }else{
+        w <- rep(0, n_par)
+      }
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
       lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
       upper_act <- mapply(min, sapply(ub - w_bench, max, 0), ub_act)
 
       sol <- malschains(fn = fn, lower = lower_act, upper = upper_act)
-      if(is.finite(sol$fitness)){
+      if(sol$fitness<1000){
         w <- sol$sol
-        w[w > 0] <- abs(w[w > 0] * sum(w[w < 0]) / sum(w[w > 0]))
+        w <- w-sum(w)*(w-lower_act)/sum(w-lower_act)
+        #w[w > 0] <- abs(w[w > 0] * sum(w[w < 0]) / sum(w[w > 0]))
       }else{w <- rep(0, n_par)}
     }
     names(w) <- names(w_ini)
-    if(!is.finite(sol$fitness)){
+    if(sol$fitness==1000){
       warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
     }
   }
