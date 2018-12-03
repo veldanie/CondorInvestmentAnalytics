@@ -4,10 +4,11 @@
 #' @param series Assets series.
 #' @param len_window Length of the window in months.
 #' @param period Returns period.
+#' @param M Sample size.
 #' @return Annualized volatilies expressed in percentage.
 #' @export
 
-bootstrap_mean_vol <- function(series, len_window = 60, period = "monthly"){
+bootstrap_mean_vol <- function(series, len_window = 60, period = "monthly", M = 1e3){
   rets <- returns(series, period = period)
   freq <- switch(period, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4)
 
@@ -25,12 +26,12 @@ bootstrap_mean_vol <- function(series, len_window = 60, period = "monthly"){
   }
 
   rets_mean <- apply(rets,2,mean)*100*freq
-  bp_means <- freq*boxplot(mu_df*100, outline = TRUE, y_lab = 'Retornos', main = 'Boxplot', plot = FALSE)$stats
+  bp_means <- boxplot(mu_df, outline = TRUE, y_lab = 'Retornos', main = 'Boxplot', plot = FALSE)$stats
   summ_means <- t(round(rbind(rets_mean, bp_means[3,, drop = FALSE], bp_means[c(2,4),, drop = FALSE]),3))
   colnames(summ_means) <- c('Promedio', 'Mediana', 'Cuartil 1', 'Cuartil 3')
 
   rets_sd <- apply(rets,2,sd)*100*sqrt(freq)
-  bp_sd <- sqrt(freq)*boxplot(sd_df*100, outline = TRUE, y_lab = 'Retornos', main = 'Boxplot', plot = FALSE)$stats
+  bp_sd <- boxplot(sd_df, outline = TRUE, y_lab = 'Retornos', main = 'Boxplot', plot = FALSE)$stats
   summ_sd <- t(round(rbind(rets_sd, bp_sd[3,, drop = FALSE], bp_sd[c(2,4),, drop = FALSE]),3))
   colnames(summ_sd) <- c('Promedio', 'Mediana', 'Cuartil 1', 'Cuartil 3')
   return(list(summ_means=summ_means, summ_sd=summ_sd, mu_dist=mu_df, sd_dist=sd_df))
