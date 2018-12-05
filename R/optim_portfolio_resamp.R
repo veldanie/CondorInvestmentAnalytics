@@ -16,40 +16,45 @@
 #' @param k Number of groups.
 #' @param sample_window Sample window of returns.
 #' @param len_window Length of the window in months.
+#' @param dyn_mu
 #' @return Optimal weights, mean resampled optimal weights, matrix of sampled weights.
 #' @export
 
-optim_portfolio_resamp <- function(rets, lb, ub, w_ini, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = TRUE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 60){
-
-  if(mom){
-    if(length(k)==0){k <- round(as.numeric((tail(index(ur_rets),1) - index(ur_rets)[1])/365)/2)}
-
+optim_portfolio_resamp <- function(rets, lb, ub, w_ini, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = TRUE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 60, dyn_mu = FALSE){
+  mu_all <- apply(rets, 2, mean)
+  if(mom | dyn_mu){
+    if(length(k)==0){k <- round(as.numeric((tail(index(rets),1) - index(rets)[1])/365)/2)}
     n_rows <- nrow(rets)
     size <- ceiling(n_rows/k)
     sample_means <- matrix(0, nrow=k, ncol=ncol(rets))
-    for (i in 1:(k-1)){
-      if(i==(k-1)){
+    for (i in 1:k){
+      if(i==k){
         sample_means[i,] <- apply(rets[(1+size*(i-1)):nrow(rets)],2,mean)
       }else{
         sample_means[i,] <- apply(rets[(1+size*(i-1)):(size*i)],2,mean)
       }
     }
-    mu <- apply(sample_means,2,median)
-    names(mu) <- colnames(ur_rets)
+    if(dyn_mu){
+      mu <- rbind(sample_means, mu_all)
+      colnames(mu) <- colnames(rets)
+    }else{
+      mu <- apply(sample_means,2,median)
+      names(mu) <- colnames(rets)
+    }
   }else{
-    mu <- apply(ur_rets, 2, mean)
+    mu <- mu_all
   }
 
-  Sigma <- covar(ur_rets, shrink = shrink_cov)$cov_matrix
+  Sigma <- covar(rets, shrink = shrink_cov)$cov_matrix
 
-  n_assets <- length(mu)
+  n_assets <- ncol(rets)
 
   w_optim_mat <- matrix(0, nrow = M, ncol = n_assets)
-  colnames(w_optim_mat) <- names(mu)
+  colnames(w_optim_mat) <- colnames(rets)
 
-  obj_fun <- utility_fun(type = 'absolute', mu = mu, Sigma = Sigma, lambda = lambda)
-  w_optim <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = rep(0, n_assets), ub = rep(1, n_assets),
-                             eqfun = sum_weigths, eqB = 1, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = method)
+  #obj_fun <- utility_fun(type = 'absolute', mu = mu, Sigma = Sigma, lambda = lambda)
+  #w_optim <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = rep(0, n_assets), ub = rep(1, n_assets),
+  #                           eqfun = sum_weigths, eqB = 1, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = method)
   port_means <- port_vols <- rep(0, M)
 
   date_ini <- index(rets)[1]
@@ -66,21 +71,24 @@ optim_portfolio_resamp <- function(rets, lb, ub, w_ini, lambda = 1, N = 2e2, M =
       obj_fun <- utility_fun(type = 'absolute', mu = mu_i, Sigma = Sigma_i, lambda = lambda)
       w_optim_mat[i,] <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
                                          eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, method = method, n.restarts = n.restarts, n.sim = n.sim)
-      port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu, Sigma)[c('port_mean_ret', 'port_vol')])
+      port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma)[c('port_mean_ret', 'port_vol')])
       port_means[i] <- port_ret[1]
       port_vols[i] <- port_ret[2]
       if(i %% 10==0){cat("iter:", i)}
     }
   }else{
+    mu_regime <- mu
     for (i in 1:M){
-      sample_i <- mvrnorm(n = N , mu, Sigma)
+      if(dyn_mu){mu_regime <- mu[sample(1:k, 1, replace = TRUE),]}
+
+      sample_i <- mvrnorm(n = N , mu_regime, Sigma)
       mu_i <- apply(sample_i, 2, mean)
       Sigma_i <- covar(sample_i)$cov_matrix
       if(!is.null(ineqUB)){lambda <- 0}
       obj_fun <- utility_fun(type = 'absolute', mu = mu_i, Sigma = Sigma_i, lambda = lambda)
       w_optim_mat[i,] <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
                                          eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, method = method, n.restarts = n.restarts, n.sim = n.sim)
-      port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu, Sigma)[c('port_mean_ret', 'port_vol')])
+      port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma)[c('port_mean_ret', 'port_vol')])
       port_means[i] <- port_ret[1]
       port_vols[i] <- port_ret[2]
       if(i %% 10==0){cat("iter:", i)}
@@ -103,5 +111,5 @@ optim_portfolio_resamp <- function(rets, lb, ub, w_ini, lambda = 1, N = 2e2, M =
     legend('topleft', legend = c('Optimum Portfolio', 'Optimum Resampled Portfolio'), lty =1, col = c('red', 'blue'), bty = 'n')
   }
 
-  return(list(w_optim = w_optim, w_optim_resamp = w_optim_resamp, w_optim_resamp_sd = w_optim_resamp_sd, w_optim_lower = w_optim_lower, w_optim_upper = w_optim_upper, w_optim_matrix = w_optim_mat))
+  return(list(w_optim_resamp = w_optim_resamp, w_optim_resamp_sd = w_optim_resamp_sd, w_optim_lower = w_optim_lower, w_optim_upper = w_optim_upper, w_optim_matrix = w_optim_mat))
 }
