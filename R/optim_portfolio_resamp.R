@@ -21,6 +21,8 @@
 #' @export
 
 optim_portfolio_resamp <- function(rets, lb, ub, w_ini, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = TRUE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 60, dyn_mu = FALSE){
+
+
   mu_all <- apply(rets, 2, mean)
   if(mom | dyn_mu){
     if(length(k)==0){k <- round(as.numeric((tail(index(rets),1) - index(rets)[1])/365)/2)}
