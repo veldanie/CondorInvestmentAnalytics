@@ -48,6 +48,9 @@ optim_portfolio_resamp <- function(rets, lb, ub, w_ini, lambda = 1, N = 2e2, M =
   }
 
   Sigma <- covar(rets, shrink = shrink_cov)$cov_matrix
+  if(ineqfun==NULL & (ineqUB!=NULL | ineqLB!=NULL)){
+    ineqfun <- risk_fun(Sigma = Sigma, type = 'vol') # Assumes volatility restriction
+  }
 
   n_assets <- ncol(rets)
 
