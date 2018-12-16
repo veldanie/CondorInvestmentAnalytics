@@ -23,10 +23,11 @@
 #' @param dd_pers_end_ind Drawdown periods endpoint index..
 #' @param dd_pers_matrix Drawdown periods matrix.
 #' @param dd_quant Quantile for max drawdown.
+#' @param vol_diff When type=relative and benchmark and port. assets are different, it is possible to make the risk target the vol. difference.
 #' @return Objective function. If type == 'absolute', portfolio risk is controlled by the risk function. If type == 'relative' risk measure can only be volatility.
 #' @export
 
-utility_fun_de <- function(type = 'absolute', mu, Sigma, lambda, risk_fun = NULL, w_bench = NULL, lb = rep(0, length(mu)), ub = rep(1, length(mu)), lb_act = rep(0, length(mu)), ub_act = rep(1, length(mu)), min_var = FALSE, risk_obj = Inf, f_const = rep(1, length(mu)), f_const_lb = 0, f_const_ub = Inf, same_assets_bench = TRUE, Sigma_bench = NULL, dd_obj = Inf, series = NULL, dd_pers_end_ind = NULL, dd_pers_matrix = NULL, dd_quant = 0.9) {
+utility_fun_de <- function(type = 'absolute', mu, Sigma, lambda, risk_fun = NULL, w_bench = NULL, lb = rep(0, length(mu)), ub = rep(1, length(mu)), lb_act = rep(0, length(mu)), ub_act = rep(1, length(mu)), min_var = FALSE, risk_obj = Inf, f_const = rep(1, length(mu)), f_const_lb = 0, f_const_ub = Inf, same_assets_bench = TRUE, Sigma_bench = NULL, dd_obj = Inf, series = NULL, dd_pers_end_ind = NULL, dd_pers_matrix = NULL, dd_quant = 0.9, vol_diff = FALSE) {
   if(type == 'absolute'){
     if (min_var == TRUE){
       function(w){
@@ -62,15 +63,27 @@ utility_fun_de <- function(type = 'absolute', mu, Sigma, lambda, risk_fun = NULL
         as.numeric(util)
       }
     }else{
-      function(w) {
-        if (sum(w)!=1){
-          # w <- w/sum(w)
-          w <- w-(sum(w)-1)*(w-lb)/sum(w-lb)
+      if(vol_diff){
+        function(w) {
+          if (sum(w)!=1){
+            # w <- w/sum(w)
+            w <- w-(sum(w)-1)*(w-lb)/sum(w-lb)
+          }
+          if(any(w<(lb-1e-7)) || any(w>(ub+1e-7)) || (as.numeric(sqrt(t(w) %*% Sigma %*% w)) - as.numeric(sqrt(t(w_bench) %*% Sigma_bench %*% w_bench)))>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || cond_drawdown(series, w, dd_pers_end_ind, dd_pers_matrix, dd_quant) > dd_obj) {return(1000)}
+          util <- -(t(w) %*% mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w) %*% Sigma %*% w)
+          return(as.numeric(util))
         }
-        if(any(w<(lb-1e-7)) || any(w>(ub+1e-7)) || (as.numeric(sqrt(t(w) %*% Sigma %*% w)) - as.numeric(sqrt(t(w_bench) %*% Sigma_bench %*% w_bench)))>risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || cond_drawdown(series, w, dd_pers_end_ind, dd_pers_matrix, dd_quant) > dd_obj) {return(1000)}
-        util <- -(t(w) %*% mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w) %*% Sigma %*% w)
-        return(as.numeric(util))
+      }else{
+        function(w) {
+          if (sum(w)!=1){
+            # w <- w/sum(w)
+            w <- w-(sum(w)-1)*(w-lb)/sum(w-lb)
+          }
+          if(any(w<(lb-1e-7)) || any(w>(ub+1e-7)) || as.numeric(sqrt(t(c(w, -w_bench)) %*% Sigma_bench %*% c(w, -w_bench))) >risk_obj || any((f_const %*% w) < f_const_lb) || any((f_const %*% w) > f_const_ub) || cond_drawdown(series, w, dd_pers_end_ind, dd_pers_matrix, dd_quant) > dd_obj) {return(1000)}
+          util <- -(t(w) %*% mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w) %*% Sigma %*% w)
+          return(as.numeric(util))
+        }
       }
-    }
+    } #else
   }
 }
