@@ -21,10 +21,12 @@
 #' @param itermax Maximum iteration (population generation) allowed.
 #' @param NP Number of population members.
 #' @param max.time Max time in seconds. Applied to SA.
+#' @param outer.iter Outer Iter solnp parameter.
+#' @param inner.iter Inner Iter solnp parameter.
 #' @return Optimal weights.
 #' @export
 
-optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_act = NULL, ub_act = NULL, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = "RI", fixed = NULL, n.restarts = 10, n.sim = 20000, type = 'absolute', itermax = 1000, NP = 100, max.time = 60){
+optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_act = NULL, ub_act = NULL, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = "RI", fixed = NULL, n.restarts = 10, n.sim = 20000, type = 'absolute', itermax = 1000, NP = 100, max.time = 60, outer.iter=400, inner.iter=800){
   #objective function:
   n_fn <- length(fn)
   n_par <- length(w_ini)
@@ -32,11 +34,12 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
   # Random Initialization:
   if (method %in% c("GD", "RI") & n_fn == 1){
     sol <- solnp(pars = w_ini, fun = fn,
-                   eqfun = eqfun, eqB = eqB, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, LB = lb, UB = ub)
+                 eqfun = eqfun, eqB = eqB, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, LB = lb, UB = ub,
+                 control = list(outer.iter=outer.iter, inner.iter=inner.iter))
     if(sol$convergence == 0){
       w <- sol$pars
     }else{
-      w <- w_ini
+      w <- rep(0, n_par)
       warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')}
   }else if (method == 'DE'){
     # Differential Evolution:
