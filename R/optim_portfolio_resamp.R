@@ -21,15 +21,21 @@
 #' @return Optimal weights, mean resampled optimal weights, matrix of sampled weights.
 #' @export
 
-optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep(1, ncol(rets)), w_ini=NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = 0, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = FALSE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 60, dyn_mu = FALSE){
+optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep(1, ncol(rets)), w_ini=NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = 0, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = FALSE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 36, dyn_mu = FALSE){
 
   if(is.null(w_ini)){
     w_ini <- lb + (1-sum(lb))*(ub - lb)/sum(ub - lb)
     names(w_ini) <- colnames(rets)
   }
+  date_ini <- index(rets)[1]
+  date_last <- tail(index(rets), 1)
+  months_seq <- seq(date_ini, date_last %m+% -months(len_window), by = "months")
+
   mu_all <- apply(rets, 2, mean)
   if(mom | dyn_mu){
-    if(length(k)==0){k <- round(as.numeric((tail(index(rets),1) - index(rets)[1])/365)/2)}
+    if(length(k)==0){
+      k <- round(as.numeric((date_last - date_ini)/365)/(len_window/12))
+    }
     n_rows <- nrow(rets)
     size <- ceiling(n_rows/k)
     sample_means <- matrix(0, nrow=k, ncol=ncol(rets))
@@ -62,14 +68,8 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
   w_optim_mat <- matrix(0, nrow = M, ncol = n_assets)
   colnames(w_optim_mat) <- colnames(rets)
 
-  #obj_fun <- utility_fun(type = 'absolute', mu = mu, Sigma = Sigma, lambda = lambda)
-  #w_optim <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = rep(0, n_assets), ub = rep(1, n_assets),
-  #                           eqfun = sum_weigths, eqB = 1, ineqfun = NULL, ineqLB = NULL, ineqUB = NULL, method = method)
   port_means <- port_vols <- rep(0, M)
 
-  date_ini <- index(rets)[1]
-  date_last <- tail(index(rets), 1)
-  months_seq <- seq(date_ini, date_last %m+% -months(len_window), by = "months")
   if(sample_window){
     for (i in 1:M){
       m_ini <- sample(months_seq, size = 1, replace = TRUE)
