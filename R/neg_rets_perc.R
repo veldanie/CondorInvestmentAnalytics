@@ -23,8 +23,9 @@ neg_rets_perc <- function(series, w, horizons = '12M') {
     series_t0 <- series[,names(w)][findInterval(months_seq, index(series))]
     series_t1 <- series[,names(w)][findInterval(months_seq %m+% months(num_months), index(series))]
     n_obs <- nrow(series_t0)
-
-    perc_neg_rets[i] <- sum(as.numeric(log(coredata(series_t1)/coredata(series_t0)) %*% w) < 0)/n_obs
+    log_rets <- log(coredata(series_t1)/coredata(series_t0))
+    log_rets[is.na(log_rets)] <- 0
+    perc_neg_rets[i] <- sum(as.numeric(log_rets %*% w) < 0)/n_obs
   }
   names(perc_neg_rets) <- horizons
   return(perc_neg_rets)
