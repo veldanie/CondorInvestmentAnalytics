@@ -97,7 +97,7 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
       mu_i <- apply(sample_i, 2, mean)
       mu_mat[i,] <- mu_i
       Sigma_i <- covar(sample_i)$cov_matrix
-      if(!is.null(ineqUB)){lambda <- 0}
+      #if(!is.null(ineqUB)){lambda <- 0}
       obj_fun <- utility_fun(type = 'absolute', mu = mu_i, Sigma = Sigma_i, lambda = lambda)
       w_optim_mat[i,] <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
                                          eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, method = method, n.restarts = n.restarts, n.sim = n.sim,
