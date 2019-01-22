@@ -94,15 +94,15 @@ portfolio_hedged_series <- function(w, ref_curr, asset_data, series_list, series
   if(!is.null(invest_assets) && invest_assets == 'ETF'){
     h_asset_univ <- asset_data %>% filter(Asset %in% asset_univ)  %>%
                     filter(CurrencyETF != ref_curr) %>% filter(CurrencyETF %in% fwd_active) %>%
-                    select(Asset) %>% unlist()
+                    dplyr::select(Asset) %>% unlist()
   }else if (!is.null(invest_assets) && invest_assets == 'IA'){
     h_asset_univ <- asset_data %>% filter(Asset %in% asset_univ)  %>%
                     filter(CurrencyIA != ref_curr) %>% filter(CurrencyIA %in% fwd_active) %>%
-                    select(Asset) %>% unlist()
+                    dplyr::select(Asset) %>% unlist()
   }else{
     h_asset_univ <- asset_data %>% filter(Asset %in% asset_univ)  %>%
                     filter(Currency != ref_curr) %>% filter(Currency %in% fwd_active) %>%
-                    select(Asset) %>% unlist()
+                    dplyr::select(Asset) %>% unlist()
   }
 
   #Unhedged returns in ref_curr:
@@ -112,11 +112,11 @@ portfolio_hedged_series <- function(w, ref_curr, asset_data, series_list, series
   e_f <- rets_u
   for (asset in h_asset_univ){
     if(!is.null(invest_assets) && invest_assets == 'ETF'){
-      i_curr <- asset_data %>% filter(Asset == asset) %>% select(CurrencyETF) %>% unlist()
+      i_curr <- asset_data %>% filter(Asset == asset) %>% dplyr::select(CurrencyETF) %>% unlist()
     }else if (!is.null(invest_assets) && invest_assets == 'IA'){
-      i_curr <- asset_data %>% filter(Asset == asset) %>% select(CurrencyIA) %>% unlist()
+      i_curr <- asset_data %>% filter(Asset == asset) %>% dplyr::select(CurrencyIA) %>% unlist()
     }else{
-      i_curr <- asset_data %>% filter(Asset == asset) %>% select(Currency) %>% unlist()
+      i_curr <- asset_data %>% filter(Asset == asset) %>% dplyr::select(Currency) %>% unlist()
     }
     e_f[, asset] <- rets[, i_curr] - rets[, paste0(i_curr, hold_per)]
   }
