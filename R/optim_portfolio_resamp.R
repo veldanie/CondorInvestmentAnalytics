@@ -17,11 +17,12 @@
 #' @param k Number of groups.
 #' @param sample_window Sample window of returns.
 #' @param len_window Length of the window in months.
-#' @param dyn_mu
+#' @param dyn_mu Dynamic means
+#' @param q_sel Quantile to select portfolio to reach risk target. Vola or diversification criterion.
 #' @return Optimal weights, mean resampled optimal weights, matrix of sampled weights.
 #' @export
 
-optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep(1, ncol(rets)), w_ini=NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = 0, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = FALSE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 36, dyn_mu = FALSE){
+optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep(1, ncol(rets)), w_ini=NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = 0, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = FALSE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 36, dyn_mu = FALSE, q_sel = 0.2){
 
   if(is.null(w_ini)){
     w_ini <- lb + (1-sum(lb))*(ub - lb)/sum(ub - lb)
@@ -84,8 +85,8 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
                                          eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, method = method, n.restarts = n.restarts, n.sim = n.sim,
                                          outer.iter = 10, inner.iter = 10)
       port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma)[c('port_mean_ret', 'port_vol')])
-      port_means[i] <- port_ret[1]
-      port_vols[i] <- port_ret[2]
+      port_means[i] <- port_ret[1]*per
+      port_vols[i] <- port_ret[2]*sqrt(per)
       if(i %% 10==0){cat("iter:", i)}
     }
   }else{
@@ -116,7 +117,26 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
 
   w_optim_resamp <- apply(w_optim_mat, 2, mean)
 
+
   w_best_avg_ret <- w_optim_mat[which.max(as.numeric(apply(w_optim_mat %*% t(mu_mat),1,mean))),]
+
+  #average solution when risk constraint
+  w_avg_risk <- NULL
+  if(!is.null(ineqfun)){
+    #q_vol <- quantile(port_vols, q_sel)
+    #sel_port <- port_vols >= q_sel
+
+    port_div <- -apply(w_optim_mat**2, 1, sum)
+    q_diver <- quantile(port_div, q_sel)
+    sel_port <- port_div >= q_diver
+
+
+    pond <- rep(1/sum(sel_port), sum(sel_port))
+    risk_target = function(pond)(as.numeric(sqrt((t(pond/sum(pond)) %*%w_optim_mat[sel_port,]) %*% Sigma %*% (t(w_optim_mat[sel_port,]) %*%(pond/sum(pond))))*sqrt(per)) - mean(port_vols))**2
+    pond_sol = nlminb(pond, risk_target,  lower = 0, upper = 1)$par
+    w_avg_risk <- apply(((pond_sol/sum(pond_sol)) %*% t(rep(1, ncol(w_optim_mat[sel_port,])))) * w_optim_mat[sel_port,], 2, sum)
+  }
+
 
   w_optim_resamp_sd <- apply(w_optim_mat, 2, sd)
   z <- qnorm(conf_int + 0.5*(1 - conf_int))
@@ -134,5 +154,5 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
     legend('topleft', legend = c('Optimum Portfolio', 'Optimum Resampled Portfolio'), lty =1, col = c('red', 'blue'), bty = 'n')
   }
 
-  return(list(w_optim_resamp = w_optim_resamp, w_optim_resamp_sd = w_optim_resamp_sd, w_optim_lower = w_optim_lower, w_optim_upper = w_optim_upper, w_optim_matrix = w_optim_mat, w_best_avg_ret=w_best_avg_ret))
+  return(list(w_optim_resamp = w_optim_resamp, w_optim_resamp_sd = w_optim_resamp_sd, w_optim_lower = w_optim_lower, w_optim_upper = w_optim_upper, w_optim_matrix = w_optim_mat, w_best_avg_ret=w_best_avg_ret, w_avg_risk = w_avg_risk))
 }
