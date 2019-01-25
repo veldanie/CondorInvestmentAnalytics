@@ -93,19 +93,18 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
     mu_regime <- mu
     for (i in 1:M){
       if(dyn_mu){mu_regime <- mu[sample(1:k, 1, replace = TRUE),]}
-
       sample_i <- mvrnorm(n = N , mu_regime, Sigma)
       mu_i <- apply(sample_i, 2, mean)
       mu_mat[i,] <- mu_i
       Sigma_i <- covar(sample_i)$cov_matrix
-      #if(!is.null(ineqUB)){lambda <- 0}
+      if(!is.null(ineqUB)){lambda <- 0}
       obj_fun <- utility_fun(type = 'absolute', mu = mu_i, Sigma = Sigma_i, lambda = lambda)
       w_optim_mat[i,] <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
                                          eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, method = method, n.restarts = n.restarts, n.sim = n.sim,
                                          outer.iter = 10, inner.iter = 10)
       port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma)[c('port_mean_ret', 'port_vol')])
-      port_means[i] <- port_ret[1]
-      port_vols[i] <- port_ret[2]
+      port_means[i] <- port_ret[1]*per
+      port_vols[i] <- port_ret[2]*sqrt(per)
       if(i %% 10==0){cat("iter:", i)}
     }
   }
