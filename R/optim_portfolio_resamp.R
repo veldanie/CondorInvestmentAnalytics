@@ -109,48 +109,53 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
     }
   }
   ind_sol <- apply(w_optim_mat, 1, sum) != 0
-  port_means <- port_means[ind_sol]
-  port_vols <- port_vols[ind_sol]
-  mu_mat <- mu_mat[ind_sol,]
-  w_optim_mat <- w_optim_mat[ind_sol,]
-
-  w_optim_resamp <- apply(w_optim_mat, 2, mean)
-
-
-  w_best_avg_ret <- w_optim_mat[which.max(as.numeric(apply(w_optim_mat %*% t(mu_mat),1,mean))),]
-
-  #average solution when risk constraint
-  w_avg_risk <- NULL
-  if(!is.null(ineqfun)){
-    q_vol <- quantile(port_vols, q_sel)
-    sel_port_vol <- port_vols >= q_vol
-    port_div <- -apply(w_optim_mat**2, 1, sum)
-    q_diver <- quantile(port_div, q_sel)
-    sel_port_div <- port_div >= q_diver
-    sel_port <- sel_port_vol & sel_port_div
-
-    pond <- rep(1/sum(sel_port), sum(sel_port))
-    risk_target = function(pond)(as.numeric(sqrt((t(pond/sum(pond)) %*%w_optim_mat[sel_port,]) %*% Sigma %*% (t(w_optim_mat[sel_port,]) %*%(pond/sum(pond))))*sqrt(per)) - mean(port_vols[sel_port]))**2
-    pond_sol = nlminb(pond, risk_target,  lower = 0, upper = 1)$par
-    w_avg_risk <- apply(((pond_sol/sum(pond_sol)) %*% t(rep(1, ncol(w_optim_mat[sel_port,])))) * w_optim_mat[sel_port,], 2, sum)
+  if(!any(ind_sol)){
+    w_sol <- rep(0, n_assets)
+    names(w_sol) <- colnames(rets)
+    w_optim_resamp <- w_optim_resamp_sd <- w_optim_lower <- w_optim_upper <- w_best_avg_ret <- w_avg_risk <- w_sol
+  }else{
+    port_means <- port_means[ind_sol]
+    port_vols <- port_vols[ind_sol]
+    mu_mat <- mu_mat[ind_sol,]
+    w_optim_mat <- w_optim_mat[ind_sol,]
+    
+    w_optim_resamp <- apply(w_optim_mat, 2, mean)
+    
+    
+    w_best_avg_ret <- w_optim_mat[which.max(as.numeric(apply(w_optim_mat %*% t(mu_mat),1,mean))),]
+    
+    #average solution when risk constraint
+    w_avg_risk <- NULL
+    if(!is.null(ineqfun)){
+      q_vol <- quantile(port_vols, q_sel)
+      sel_port_vol <- port_vols >= q_vol
+      port_div <- -apply(w_optim_mat**2, 1, sum)
+      q_diver <- quantile(port_div, q_sel)
+      sel_port_div <- port_div >= q_diver
+      sel_port <- sel_port_vol & sel_port_div
+      
+      pond <- rep(1/sum(sel_port), sum(sel_port))
+      risk_target = function(pond)(as.numeric(sqrt((t(pond/sum(pond)) %*%w_optim_mat[sel_port,]) %*% Sigma %*% (t(w_optim_mat[sel_port,]) %*%(pond/sum(pond))))*sqrt(per)) - mean(port_vols[sel_port]))**2
+      pond_sol = nlminb(pond, risk_target,  lower = 0, upper = 1)$par
+      w_avg_risk <- apply(((pond_sol/sum(pond_sol)) %*% t(rep(1, ncol(w_optim_mat[sel_port,])))) * w_optim_mat[sel_port,], 2, sum)
+    }
+    
+    
+    w_optim_resamp_sd <- apply(w_optim_mat, 2, sd)
+    z <- qnorm(conf_int + 0.5*(1 - conf_int))
+    w_optim_lower <- sapply(w_optim_resamp - z * w_optim_resamp_sd, max, 0)
+    w_optim_upper <- w_optim_resamp + z * w_optim_resamp_sd
+    if(plot_ef){
+      ef_ss <- efficient_frontier(mu, Sigma)$ef_ss
+      x <- seq(min(port_vols),max(port_vols),0.001)
+      plot(100*x , y = 100*predict(ef_ss, x)$y, type = 'h', main = 'Efficient Frontier', xlab = 'Volatility', ylab = 'Returns', col = 'grey')
+      port_ret <- 100*unlist(portfolio_return(w_optim, mu, Sigma)[c('port_mean_ret', 'port_vol')])
+      points(x = port_ret[2], y = port_ret[1], col = 'red', pch = 3)
+      
+      port_ret <- 100*unlist(portfolio_return(w_optim_resamp, mu, Sigma)[c('port_mean_ret', 'port_vol')])
+      points(x = port_ret[2], y = port_ret[1], col = 'blue', pch = 3)
+      legend('topleft', legend = c('Optimum Portfolio', 'Optimum Resampled Portfolio'), lty =1, col = c('red', 'blue'), bty = 'n')
+    }
   }
-
-
-  w_optim_resamp_sd <- apply(w_optim_mat, 2, sd)
-  z <- qnorm(conf_int + 0.5*(1 - conf_int))
-  w_optim_lower <- sapply(w_optim_resamp - z * w_optim_resamp_sd, max, 0)
-  w_optim_upper <- w_optim_resamp + z * w_optim_resamp_sd
-  if(plot_ef){
-    ef_ss <- efficient_frontier(mu, Sigma)$ef_ss
-    x <- seq(min(port_vols),max(port_vols),0.001)
-    plot(100*x , y = 100*predict(ef_ss, x)$y, type = 'h', main = 'Efficient Frontier', xlab = 'Volatility', ylab = 'Returns', col = 'grey')
-    port_ret <- 100*unlist(portfolio_return(w_optim, mu, Sigma)[c('port_mean_ret', 'port_vol')])
-    points(x = port_ret[2], y = port_ret[1], col = 'red', pch = 3)
-
-    port_ret <- 100*unlist(portfolio_return(w_optim_resamp, mu, Sigma)[c('port_mean_ret', 'port_vol')])
-    points(x = port_ret[2], y = port_ret[1], col = 'blue', pch = 3)
-    legend('topleft', legend = c('Optimum Portfolio', 'Optimum Resampled Portfolio'), lty =1, col = c('red', 'blue'), bty = 'n')
-  }
-
   return(list(w_optim_resamp = w_optim_resamp, w_optim_resamp_sd = w_optim_resamp_sd, w_optim_lower = w_optim_lower, w_optim_upper = w_optim_upper, w_optim_matrix = w_optim_mat, w_best_avg_ret=w_best_avg_ret, w_avg_risk = w_avg_risk))
 }
