@@ -118,26 +118,28 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
     port_vols <- port_vols[ind_sol]
     mu_mat <- mu_mat[ind_sol,]
     w_optim_mat <- w_optim_mat[ind_sol,]
-    
     w_optim_resamp <- apply(w_optim_mat, 2, mean)
-    
-    
     w_best_avg_ret <- w_optim_mat[which.max(as.numeric(apply(w_optim_mat %*% t(mu_mat),1,mean))),]
     
-    #average solution when risk constraint
+    #average solution when risk constraint. 
     w_avg_risk <- NULL
     if(!is.null(ineqfun)){
       q_vol <- quantile(port_vols, q_sel)
       sel_port_vol <- port_vols >= q_vol
-      port_div <- -apply(w_optim_mat**2, 1, sum)
-      q_diver <- quantile(port_div, q_sel)
-      sel_port_div <- port_div >= q_diver
-      sel_port <- sel_port_vol & sel_port_div
       
-      pond <- rep(1/sum(sel_port), sum(sel_port))
-      risk_target = function(pond)(as.numeric(sqrt((t(pond/sum(pond)) %*%w_optim_mat[sel_port,]) %*% Sigma %*% (t(w_optim_mat[sel_port,]) %*%(pond/sum(pond))))*sqrt(per)) - mean(port_vols[sel_port]))**2
-      pond_sol = nlminb(pond, risk_target,  lower = 0, upper = 1)$par
-      w_avg_risk <- apply(((pond_sol/sum(pond_sol)) %*% t(rep(1, ncol(w_optim_mat[sel_port,])))) * w_optim_mat[sel_port,], 2, sum)
+      #Option1: Average solutiom but selecting portafolios with higher volatility, i.e. closer to target.
+      w_avg_risk <- apply(w_optim_mat[sel_port_vol,], 2, mean)
+      
+      #Option 2: Selecto ports. with higher vol. and more diversified. Adjust weigths such that we enforce solution to be equal to target.
+      #port_div <- -apply(w_optim_mat**2, 1, sum)
+      #q_diver <- quantile(port_div, q_sel)
+      #sel_port_div <- port_div >= q_diver
+      #sel_port <- sel_port_vol & sel_port_div
+      
+      #pond <- rep(1/sum(sel_port), sum(sel_port))
+      #risk_target = function(pond)(as.numeric(sqrt((t(pond/sum(pond)) %*%w_optim_mat[sel_port,]) %*% Sigma %*% (t(w_optim_mat[sel_port,]) %*%(pond/sum(pond))))*sqrt(per)) - mean(port_vols[sel_port]))**2
+      #pond_sol = nlminb(pond, risk_target,  lower = 0, upper = 1)$par
+      #w_avg_risk <- apply(((pond_sol/sum(pond_sol)) %*% t(rep(1, ncol(w_optim_mat[sel_port,])))) * w_optim_mat[sel_port,], 2, sum)
     }
     
     
