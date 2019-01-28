@@ -114,15 +114,15 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
   if(!is.null(invest_assets) && invest_assets == 'ETF'){
     h_asset_univ <- asset_data %>% filter(Asset %in% asset_univ)  %>%
                     filter(CurrencyETF != ref_curr) %>% filter(CurrencyETF %in% fwd_active) %>%
-                    select(Asset) %>% unlist()
+                    dplyr::select(Asset) %>% unlist()
   }else if (!is.null(invest_assets) && invest_assets == 'IA'){
     h_asset_univ <- asset_data %>% filter(Asset %in% asset_univ)  %>%
                     filter(CurrencyIA != ref_curr) %>% filter(CurrencyIA %in% fwd_active) %>%
-                    select(Asset) %>% unlist()
+                    dplyr::select(Asset) %>% unlist()
   }else{
     h_asset_univ <- asset_data %>% filter(Asset %in% asset_univ)  %>%
                     filter(Currency != ref_curr) %>% filter(Currency %in% fwd_active) %>%
-                    select(Asset) %>% unlist()
+                    dplyr::select(Asset) %>% unlist()
   }
 
 
@@ -133,11 +133,11 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
   e_f <- rets_u
   for (asset in h_asset_univ){
     if(!is.null(invest_assets) && invest_assets == 'ETF'){
-      i_curr <- asset_data %>% filter(Asset == asset) %>% select(CurrencyETF) %>% unlist()
+      i_curr <- asset_data %>% filter(Asset == asset) %>% dplyr::select(CurrencyETF) %>% unlist()
     }else if (!is.null(invest_assets) && invest_assets == 'IA'){
-      i_curr <- asset_data %>% filter(Asset == asset) %>% select(CurrencyIA) %>% unlist()
+      i_curr <- asset_data %>% filter(Asset == asset) %>% dplyr::select(CurrencyIA) %>% unlist()
     }else{
-      i_curr <- asset_data %>% filter(Asset == asset) %>% select(Currency) %>% unlist()
+      i_curr <- asset_data %>% filter(Asset == asset) %>% dplyr::select(Currency) %>% unlist()
     }
     e_f[, asset] <- rets[, i_curr] - rets[, paste0(i_curr, hold_per)]
   }
@@ -156,10 +156,10 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
   }else if(group.by != 'Asset'){
     e_f_factors <- w_fact <- NULL
 
-    factors <- unique(asset_data %>% filter(Asset %in% h_asset_univ) %>% select_(group.by) %>% unlist())
+    factors <- unique(asset_data %>% filter(Asset %in% h_asset_univ) %>% dplyr::select_(group.by) %>% unlist())
     for (fac in factors){
       asset_data_fac <- asset_data %>% filter(Asset %in% h_asset_univ)
-      fac_assets <- asset_data_fac[asset_data_fac[[group.by]]==fac,] %>% select(Asset) %>% unlist()
+      fac_assets <- asset_data_fac[asset_data_fac[[group.by]]==fac,] %>% dplyr::select(Asset) %>% unlist()
       e_f_factors <- merge.xts(e_f_factors, xts(as.numeric(apply(e_f[, fac_assets], 1, sum)), order.by = index(e_f)), check.names=FALSE)
       w_fact <- c(w_fact, sum(w[fac_assets]))
     }
@@ -192,7 +192,7 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
     hedge_ratio <- hedge_ratio * (!(hedge_ratio < 0 | hedge_ratio > 1)) + 1*(hedge_ratio > 1)
   }
 
-  asset_group <- asset_data %>% filter(Asset %in% asset_univ)  %>% select_(~Asset, group.by) %>% mutate(Hedge = 0)
+  asset_group <- asset_data %>% filter(Asset %in% asset_univ)  %>% dplyr::select_(~Asset, group.by) %>% mutate(Hedge = 0)
 
   for (fac in names(hedge_ratio)){
     asset_group$Hedge[which(asset_group[[group.by]] == fac & asset_group$Asset %in% h_asset_univ)] <- hedge_ratio[fac]
