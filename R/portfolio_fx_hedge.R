@@ -35,9 +35,14 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
   quotes_curr <- sapply(index_curr, iso_quote, curr2 = ref_curr)
 
   currencies <- unique(index_curr)
-  currencies_h <- c(currencies[currencies != ref_curr], ref_curr)
+  if(ref_curr=="USD"){
+    currencies_h <- c(currencies[currencies != ref_curr])
+  }else{
+    currencies_h <- c(currencies[currencies != ref_curr], ref_curr)
+  }
+
   #Adjust dates to fx forwards available:
-  if(length(currencies_h)>1){
+  if(length(currencies_h)>0){
     min_fx_date <- max(sapply(currencies_h, function(fx) index(series_fxfwd_list[[paste0(ifelse(any(c(fx, ref_curr) == 'USD'), c(fx, ref_curr)[c(fx, ref_curr)!= "USD"], fx), hold_per)]])[1]))
     dates[1] <- max(dates[1], min_fx_date)
   }
