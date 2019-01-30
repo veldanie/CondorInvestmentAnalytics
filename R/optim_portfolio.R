@@ -13,7 +13,7 @@
 #' @param ineqfun Inequality constraint function returning vector.
 #' @param ineqLB Inequality lower bound.
 #' @param ineqUB Inequality upper bound.
-#' @param method Gradient descent (GD), GD with random initialization (RI), differential evolution (DE), Genetic Opt. using Derivative (GE), Generalized Simulated Annealing (SA) or Memetic with local search (MALS).
+#' @param method Gradient descent (GD), differential evolution (DE), Genetic Opt. using Derivative (GE), Generalized Simulated Annealing (SA) or Memetic with local search (MALS).
 #' @param fixed Numeric index indicating parameters that stay fixed.
 #' @param n.restars Number of solver restarts.
 #' @param n.sim Random parameters for every restart of the solver.
@@ -30,9 +30,27 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
   #objective function:
   n_fn <- length(fn)
   n_par <- length(w_ini)
-  if (method == "GD"){n.restarts = n.sim = 1}
-  # Random Initialization:
-  if (method %in% c("GD", "RI") & n_fn == 1){
+  if (method == "GD" && is.null(ineqfun)){
+    sol <- auglag(x0 = w_ini, fn = fn, lower = lb, upper = ub, heq = function(w) eqfun(w) - 1,
+                  localsolver = c("LBFGS"))
+    if(!all(sol1$par==w_ini)){
+      w <- sol$par
+      names(w) <- names(w_ini)
+    }else{
+      w <- rep(0, n_par)
+      warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
+    }
+  }else if (method == "GD" && !is.null(ineqfun)){
+    sol <- auglag(x0 = w_ini, fn = fn, lower = lb, upper = ub,
+                  hin = function(w) ineqUB - ineqfun(w), heq = function(w) eqfun(w) - 1,
+                  localsolver = c("LBFGS"))
+    if(sol$convergence > 0){
+      w <- sol$par
+    }else{
+      w <- rep(0, n_par)
+      warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
+    }
+  }else if (method == "RI"){# Random Initialization:
     sol <- solnp(pars = w_ini, fun = fn,
                  eqfun = eqfun, eqB = eqB, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, LB = lb, UB = ub,
                  control = list(outer.iter=outer.iter, inner.iter=inner.iter))
@@ -40,7 +58,8 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
       w <- sol$pars
     }else{
       w <- rep(0, n_par)
-      warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')}
+      warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
+      }
   }else if (method == 'DE'){
     # Differential Evolution:
     control_list <- list(itermax = itermax, # maximum iteration (population generation) allowed.
