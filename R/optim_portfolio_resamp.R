@@ -24,6 +24,7 @@
 
 optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep(1, ncol(rets)), w_ini=NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = 0, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = FALSE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 36, dyn_mu = FALSE, q_sel = 0.2){
   options('nloptr.show.inequality.warning'=FALSE)
+  options(warn=-1)
   if(is.null(w_ini)){
     w_ini <- lb + (1-sum(lb))*(ub - lb)/sum(ub - lb)
     names(w_ini) <- colnames(rets)
@@ -87,7 +88,7 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
       port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma)[c('port_mean_ret', 'port_vol')])
       port_means[i] <- port_ret[1]*per
       port_vols[i] <- port_ret[2]*sqrt(per)
-      if(i %% 10==0){cat("iter:", i)}
+      if((i %% 100)==0){cat("iter:", i)}
     }
   }else{
     mu_regime <- mu
@@ -105,7 +106,7 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
       port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma)[c('port_mean_ret', 'port_vol')])
       port_means[i] <- port_ret[1]*per
       port_vols[i] <- port_ret[2]*sqrt(per)
-      if(i %% 10==0){cat("iter:", i)}
+      if((i %% 100)==0){cat("iter:", i)}
     }
   }
   ind_sol <- apply(w_optim_mat, 1, sum) != 0
