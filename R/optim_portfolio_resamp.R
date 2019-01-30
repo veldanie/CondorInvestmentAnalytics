@@ -23,7 +23,7 @@
 #' @export
 
 optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep(1, ncol(rets)), w_ini=NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = 0, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = FALSE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 36, dyn_mu = FALSE, q_sel = 0.2){
-
+  options('nloptr.show.inequality.warning'=FALSE)
   if(is.null(w_ini)){
     w_ini <- lb + (1-sum(lb))*(ub - lb)/sum(ub - lb)
     names(w_ini) <- colnames(rets)
@@ -120,29 +120,29 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
     w_optim_mat <- w_optim_mat[ind_sol,]
     w_optim_resamp <- apply(w_optim_mat, 2, mean)
     w_best_avg_ret <- w_optim_mat[which.max(as.numeric(apply(w_optim_mat %*% t(mu_mat),1,mean))),]
-    
-    #average solution when risk constraint. 
+
+    #average solution when risk constraint.
     w_avg_risk <- NULL
     if(!is.null(ineqfun)){
       q_vol <- quantile(port_vols, q_sel)
       sel_port_vol <- port_vols >= q_vol
-      
+
       #Option1: Average solutiom but selecting portafolios with higher volatility, i.e. closer to target.
       w_avg_risk <- apply(w_optim_mat[sel_port_vol,], 2, mean)
-      
+
       #Option 2: Selecto ports. with higher vol. and more diversified. Adjust weigths such that we enforce solution to be equal to target.
       #port_div <- -apply(w_optim_mat**2, 1, sum)
       #q_diver <- quantile(port_div, q_sel)
       #sel_port_div <- port_div >= q_diver
       #sel_port <- sel_port_vol & sel_port_div
-      
+
       #pond <- rep(1/sum(sel_port), sum(sel_port))
       #risk_target = function(pond)(as.numeric(sqrt((t(pond/sum(pond)) %*%w_optim_mat[sel_port,]) %*% Sigma %*% (t(w_optim_mat[sel_port,]) %*%(pond/sum(pond))))*sqrt(per)) - mean(port_vols[sel_port]))**2
       #pond_sol = nlminb(pond, risk_target,  lower = 0, upper = 1)$par
       #w_avg_risk <- apply(((pond_sol/sum(pond_sol)) %*% t(rep(1, ncol(w_optim_mat[sel_port,])))) * w_optim_mat[sel_port,], 2, sum)
     }
-    
-    
+
+
     w_optim_resamp_sd <- apply(w_optim_mat, 2, sd)
     z <- qnorm(conf_int + 0.5*(1 - conf_int))
     w_optim_lower <- sapply(w_optim_resamp - z * w_optim_resamp_sd, max, 0)
@@ -153,7 +153,7 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
       plot(100*x , y = 100*predict(ef_ss, x)$y, type = 'h', main = 'Efficient Frontier', xlab = 'Volatility', ylab = 'Returns', col = 'grey')
       port_ret <- 100*unlist(portfolio_return(w_optim, mu, Sigma)[c('port_mean_ret', 'port_vol')])
       points(x = port_ret[2], y = port_ret[1], col = 'red', pch = 3)
-      
+
       port_ret <- 100*unlist(portfolio_return(w_optim_resamp, mu, Sigma)[c('port_mean_ret', 'port_vol')])
       points(x = port_ret[2], y = port_ret[1], col = 'blue', pch = 3)
       legend('topleft', legend = c('Optimum Portfolio', 'Optimum Resampled Portfolio'), lty =1, col = c('red', 'blue'), bty = 'n')
