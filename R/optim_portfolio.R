@@ -42,7 +42,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
     }
   }else if (method == "GD" && !is.null(ineqfun)){
     sol <- auglag(x0 = w_ini, fn = fn, lower = lb, upper = ub,
-                  hin = function(w) ineqUB - ineqfun(w), heq = function(w) eqfun(w) - 1,
+                  hin = function(w) c(ineqfun(w) - ineqLB, ineqUB - ineqfun(w)), heq = function(w) eqfun(w) - 1,
                   localsolver = c("LBFGS"))
     if(sol$convergence > 0){
       w <- sol$par
