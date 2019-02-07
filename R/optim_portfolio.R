@@ -32,7 +32,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
   n_par <- length(w_ini)
   if (method == "GD" && is.null(ineqfun)){
     sol <- auglag(x0 = w_ini, fn = fn, lower = lb, upper = ub, heq = function(w) eqfun(w) - 1,
-                  localsolver = c("LBFGS"))
+                  localsolver = c("SLSQP"))
     if(!all(sol$par==w_ini)){
       w <- sol$par
       names(w) <- names(w_ini)
