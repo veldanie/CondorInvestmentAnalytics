@@ -7,7 +7,7 @@
 #' @return None.
 #' @export
 
-my_panel <- function(x, y, z, ...) {
+my_panel <- function(x, y, z, cex = 0.8, ...) {
   panel.levelplot(x,y,z,...)
-  panel.text(x, y, round(z,1))
+  panel.text(x, y, round(z,1), cex = cex)
 }
