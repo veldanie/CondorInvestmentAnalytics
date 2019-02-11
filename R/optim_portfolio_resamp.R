@@ -88,7 +88,12 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
       port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma)[c('port_mean_ret', 'port_vol')])
       port_means[i] <- port_ret[1]*per
       port_vols[i] <- port_ret[2]*sqrt(per)
-      if((i %% 100)==0){cat("iter:", i)}
+      if((i %% 100)==0){
+        if(i==100){
+          if(all(colSums(w_optim_mat[1:i,])==0)){break}
+        }
+        cat("\n iter:", i)
+      }
     }
   }else{
     mu_regime <- mu
@@ -106,7 +111,12 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
       port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma)[c('port_mean_ret', 'port_vol')])
       port_means[i] <- port_ret[1]*per
       port_vols[i] <- port_ret[2]*sqrt(per)
-      if((i %% 100)==0){cat("iter:", i)}
+      if((i %% 100)==0){
+        if(i==100){
+          if(all(colSums(w_optim_mat[1:i,])==0)){break}
+        }
+        cat("\n iter:", i)
+      }
     }
   }
   ind_sol <- apply(w_optim_mat, 1, sum) != 0

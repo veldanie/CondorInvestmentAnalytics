@@ -31,9 +31,9 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
   n_fn <- length(fn)
   n_par <- length(w_ini)
   if (method == "GD" && is.null(ineqfun)){
-    sol <- auglag(x0 = w_ini, fn = fn, lower = lb, upper = ub, heq = function(w) eqfun(w) - 1,
-                  localsolver = c("SLSQP"))
-    if(!all(sol$par==w_ini)){
+    sol <- try(auglag(x0 = w_ini, fn = fn, lower = lb, upper = ub, heq = function(w) eqfun(w) - 1,
+                  localsolver = c("SLSQP")), silent = TRUE)
+    if(class(sol)!="try-error" && sol$convergence> 0 && !all(sol$par==w_ini)){
       w <- sol$par
       names(w) <- names(w_ini)
     }else{
@@ -41,11 +41,12 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
       warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
     }
   }else if (method == "GD" && !is.null(ineqfun)){
-    sol <- auglag(x0 = w_ini, fn = fn, lower = lb, upper = ub,
+    sol <- try(auglag(x0 = w_ini, fn = fn, lower = lb, upper = ub,
                   hin = function(w) c(ineqfun(w) - ineqLB, ineqUB - ineqfun(w)), heq = function(w) eqfun(w) - 1,
-                  localsolver = c("LBFGS"))
-    if(sol$convergence > 0){
+                  localsolver = c("LBFGS")), silent = TRUE)
+    if(class(sol)!="try-error" && sol$convergence>0 && !all(sol$par==w_ini)){
       w <- sol$par
+      names(w) <- names(w_ini)
     }else{
       w <- rep(0, n_par)
       warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
