@@ -9,8 +9,12 @@
 #' @export
 
 portfolio_return <- function(weights, mean_returns, covar_mat) {
-  port_mean_ret <- as.numeric(t(weights) %*% mean_returns)
-  port_var <- as.numeric(t(weights) %*% covar_mat %*% weights)
-  port_vol <- sqrt(port_var)
+  if(sum(weights)==0){
+    port_mean_ret <- port_var <- port_vol <- 0
+  }else{
+    port_mean_ret <- as.numeric(t(weights) %*% mean_returns)
+    port_var <- as.numeric(t(weights) %*% covar_mat %*% weights)
+    port_vol <- sqrt(port_var)
+  }
   return(list(port_mean_ret = port_mean_ret, port_var = port_var, port_vol = port_vol))
 }

@@ -17,7 +17,7 @@ neg_rets_perc <- function(series, w, horizons = '12M') {
   for(i in 1:length(horizons)){
     h <- horizons[i]
     num_months <- as.numeric(gsub('M', '', h))
-
+    if(date_last %m+% -months(num_months) < date_ini){break}
     months_seq <- seq(date_ini, date_last %m+% -months(num_months), by = "months")
 
     series_t0 <- series[,names(w)][findInterval(months_seq, index(series))]
