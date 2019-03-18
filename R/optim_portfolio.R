@@ -37,7 +37,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
       w <- sol$par
       names(w) <- names(w_ini)
     }else{
-      w <- rep(0, n_par)
+      w <- w_ini#rep(0, n_par)
       warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
     }
   }else if (method == "GD" && !is.null(ineqfun)){
@@ -48,7 +48,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
       w <- sol$par
       names(w) <- names(w_ini)
     }else{
-      w <- rep(0, n_par)
+      w <- w_ini #rep(0, n_par)
       warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
     }
   }else if (method == "RI"){# Random Initialization:
@@ -58,7 +58,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
     if(sol$convergence == 0){
       w <- sol$pars
     }else{
-      w <- rep(0, n_par)
+      w <- w_ini #rep(0, n_par)
       warning('Convergence not achived. The problem might not have solution. Please modify the parameters and constraints.')
       }
   }else if (method == 'DE'){
@@ -83,7 +83,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
         w <- sol$optim$bestmem-(sum(sol$optim$bestmem)-1)*(sol$optim$bestmem-lb)/sum(sol$optim$bestmem-lb)
         #w <- sol$optim$bestmem/sum(sol$optim$bestmem)
       }else{
-        w <- rep(0, n_par)
+        w <- w_ini #rep(0, n_par)
       }
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
@@ -111,7 +111,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
         w <- sol$par-(sum(sol$par)-1)*(sol$par-lb)/sum(sol$par-lb)
         #w <- sol$par/sum(sol$par)
       }else{
-        w <- rep(0, n_par)
+        w <- w_ini #rep(0, n_par)
       }
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
@@ -139,7 +139,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
         #w <- sol$par/sum(sol$par)
         w <- sol$par-(sum(sol$par)-1)*(sol$par-lb)/sum(sol$par-lb)
       }else{
-        w <- rep(0, n_par)
+        w <- w_ini #rep(0, n_par)
       }
     } else {
       lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
@@ -167,7 +167,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
         w <- sol$sol-(sum(sol$sol)-1)*(sol$sol-lb)/sum(sol$sol-lb)
         #w <- sol$sol/sum(sol$sol)
       }else{
-        w <- rep(0, n_par)
+        w <- w_ini #rep(0, n_par)
       }
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}

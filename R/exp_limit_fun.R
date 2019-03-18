@@ -9,12 +9,11 @@
 #' @return Exposure limit function.
 #' @export
 
-exp_limit_fun <- function(f_const, ind_rel, pos_asset, ind_dur_rest) {
+exp_limit_fun <- function(f_const, ind_rel, pos_asset, ind_dur_rest=FALSE) {
   if(any(ind_rel) && !any(ind_dur_rest)){
     function(w){
       w_rest <- as.numeric(f_const %*% w)
       w_rest[ind_rel] <- (pos_asset %*% w) /w_rest[ind_rel]
-      w_rest[ind_dur_rest] <- w_rest[ind_dur_rest]/sum(w[f_const[ind_dur_rest,]>0])
       return(w_rest)
     }
   }else if(any(ind_rel) && any(ind_dur_rest)){

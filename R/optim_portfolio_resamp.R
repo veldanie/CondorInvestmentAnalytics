@@ -121,8 +121,12 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
   }
   ind_sol <- apply(w_optim_mat, 1, sum) != 0
   if(!any(ind_sol)){
-    w_sol <- rep(0, n_assets)
-    names(w_sol) <- colnames(rets)
+    w_sol <- if(is.null(w_ini)){
+      w_sol <- rep(0, n_assets)
+      names(w_sol) <- colnames(rets)
+    }else{
+      w_sol <- w_ini
+    }
     w_optim_resamp <- w_optim_resamp_sd <- w_optim_lower <- w_optim_upper <- w_best_avg_ret <- w_avg_risk <- w_sol
   }else{
     port_means <- port_means[ind_sol]
