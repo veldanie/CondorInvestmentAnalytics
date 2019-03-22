@@ -5,12 +5,12 @@
 #' @param series data frame series.
 #' @param w Portfolio weights.
 #' @param horizons Vector of horizons in number of months.
-#' @param type Type of returns: arithmetic (discrete) or log (continuous)
+#' @param lb Lower bound
 #' @return Negative returns percentage in horizon.
 #' @export
 
 
-neg_rets_perc <- function(series, w, horizons = '12M') {
+neg_rets_perc <- function(series, w, horizons = '12M', lb = 0) {
   date_ini <- index(series)[1]
   date_last <- tail(index(series),1)
   perc_neg_rets <- rep(0, length(horizons))
@@ -25,7 +25,7 @@ neg_rets_perc <- function(series, w, horizons = '12M') {
     n_obs <- nrow(series_t0)
     log_rets <- log(coredata(series_t1)/coredata(series_t0))
     log_rets[is.na(log_rets)] <- 0
-    perc_neg_rets[i] <- sum(as.numeric(log_rets %*% w) < 0)/n_obs
+    perc_neg_rets[i] <- sum(as.numeric(log_rets %*% w) < lb)/n_obs
   }
   names(perc_neg_rets) <- horizons
   return(perc_neg_rets)
