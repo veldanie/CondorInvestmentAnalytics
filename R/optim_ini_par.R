@@ -14,7 +14,7 @@
 #' @return Initial guess
 #' @export
 
-optim_ini_par <- function(lb, ub, f_const=NULL, ind_rel=NULL, pos_asset=NULL, f_const_lb=0, f_const_ub=Inf, risk_fun=NULL, risk_obj=100) {
+optim_ini_par <- function(lb, ub, f_const=NULL, ind_rel=NULL, pos_asset=NULL, f_const_lb=0, f_const_ub=Inf, risk_fun=NULL, risk_obj=100, iter = 3000) {
   n_par <- length(lb)
 
   E <- t(rep(1, n_par))
@@ -28,7 +28,7 @@ optim_ini_par <- function(lb, ub, f_const=NULL, ind_rel=NULL, pos_asset=NULL, f_
     h <- c(lb, -1*ub, f_const_lb[!ind_rel], -1*f_const_ub[!ind_rel])
   }
 
-  ws <- try(xsample(E=E, F=eq_const, G=G, H=h, iter = 10000)$X, silent = TRUE)
+  ws <- try(xsample(E=E, F=eq_const, G=G, H=h, iter = iter)$X, silent = TRUE)
   if(class(ws)=='try-error'){
     w0 <- lb + (1-sum(lb))*(ub - lb)/sum(ub - lb)
   }else{
@@ -69,9 +69,9 @@ optim_ini_par <- function(lb, ub, f_const=NULL, ind_rel=NULL, pos_asset=NULL, f_
       }
     }
     # Select initial point that complies the risk target and the other restrictions.
-    ws_valid_pre <- apply(ws, 1, function(x) all(x>lb) & all(x<ub))
+    ws_valid_pre <- ws_valid_exrisk <- apply(ws, 1, function(x) all(x>lb) & all(x<ub))
     if(!is.null(f_const) && !all(f_const==1)){
-      ws_valid_exrisk <- ws_valid_pre & apply(ws, 1, function(x) all(f_const[!ind_rel,]%*%x < f_const_ub[!ind_rel]) & all(f_const[!ind_rel,]%*%x > f_const_lb[!ind_rel]))
+      ws_valid_exrisk <- ws_valid <- ws_valid_pre & apply(ws, 1, function(x) all(f_const[!ind_rel,]%*%x < f_const_ub[!ind_rel]) & all(f_const[!ind_rel,]%*%x > f_const_lb[!ind_rel]))
     }
     if(!is.null(risk_fun)){
       risk_val <- apply(ws, 1, risk_fun)
