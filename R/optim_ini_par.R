@@ -42,7 +42,12 @@ optim_ini_par <- function(lb, ub, f_const=NULL, ind_rel=NULL, pos_asset=NULL, f_
         group_sums <- rowSums(ws[, ind_group, drop = FALSE])
         rel_w <- rowSums(ws[, ind_rel_w, drop = FALSE])/group_sums
         ind_valid_w <- rel_w <= f_const_ub[i] & rel_w >= f_const_lb[i]
-        if(sum(ind_valid_w)<100){
+
+        if(!any(ind_valid_w)){
+          w0 <- ws[base::sample(which(ws_valid_pre), 1),]
+          names(w0) <- names(lb)
+          return(w0)
+        }else if(sum(ind_valid_w)<100){
           ind_adjust_down <- rel_w > f_const_ub[i]
           ind_adjust_up <- rel_w < f_const_lb[i]
           if(any(ind_adjust_down)){
@@ -52,12 +57,12 @@ optim_ini_par <- function(lb, ub, f_const=NULL, ind_rel=NULL, pos_asset=NULL, f_
             ws[ind_adjust_down, setdiff(which(ind_group), which(ind_rel_w))] <- ws_ini_ex+adjust_val*ws_ini_ex/rowSums(ws_ini_ex)
           }
           if(any(ind_adjust_up)){
-            adjust_val <- f_const_ub[i]*group_sums[ind_adjust_down] - rowSums(ws[ind_adjust_up, ind_rel_w, drop = FALSE])
+            adjust_val <- f_const_lb[i]*group_sums[ind_adjust_up] - rowSums(ws[ind_adjust_up, ind_rel_w, drop = FALSE])
             ws_ini_ex <- ws[ind_adjust_up, setdiff(which(ind_group), which(ind_rel_w)), drop=FALSE]
-            ws[ind_adjust_up, ind_rel_w] <- f_const_lb[i]*group_sums[ind_adjust_down]*(ws[ind_adjust_up, ind_rel_w]/(rowSums(ws[ind_adjust_up, ind_rel_w, drop = FALSE] %*% rep(1, sum(ind_rel_w)))))
+            ws[ind_adjust_up, ind_rel_w] <- f_const_lb[i]*group_sums[ind_adjust_up]*(ws[ind_adjust_up, ind_rel_w]/(rowSums(ws[ind_adjust_up, ind_rel_w, drop = FALSE] %*% rep(1, sum(ind_rel_w)))))
             ws[ind_adjust_up, setdiff(which(ind_group), which(ind_rel_w))] <- ws_ini_ex-adjust_val*ws_ini_ex/rowSums(ws_ini_ex)
           }
-          rel_w <- ws[, which(ind_rel_w)]/group_sums
+          rel_w <- rowSums(ws[, which(ind_rel_w), drop=FALSE])/group_sums
           ind_valid_w <- rel_w <= (f_const_ub[i] + 1e-5) & rel_w >= f_const_lb[i]
         }
         ws <- ws[ind_valid_w,]
