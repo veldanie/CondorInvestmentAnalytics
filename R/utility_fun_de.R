@@ -59,7 +59,7 @@ utility_fun_de <- function(type = 'absolute', mu, Sigma, lambda, risk_fun = NULL
           w_act <- w_act-sum(w_act)*(w_act-lower_act)/sum(w_act-lower_act)
         }
         if(any(w_act<(lower_act-1e-7)) || any(w_act>(upper_act+1e-7)) || any((w_act + w_bench) < (lb-1e-7)) || any((w_act + w_bench)>(ub+1e-7)) || as.numeric(sqrt(t(w_act) %*% Sigma %*% w_act))>risk_obj || any(f_const_fun (w_act+w_bench) < f_const_lb) || any(f_const_fun(w_act+w_bench) > f_const_ub) || cond_drawdown(series, w_act+w_bench, dd_pers_end_ind, dd_pers_matrix, dd_quant) > dd_obj) {return(1000)}
-        util <- -(t(w_act+w_bench)%*%mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w_act)%*%Sigma%*%w_act)
+        util <- -(t(w_act+w_bench)%*%mu - 0.5 * lambda * t(w_act+w_bench) %*% Sigma %*% (w_act+w_bench))
         as.numeric(util)
       }
     }else{
@@ -70,7 +70,7 @@ utility_fun_de <- function(type = 'absolute', mu, Sigma, lambda, risk_fun = NULL
             w <- w-(sum(w)-1)*(w-lb)/sum(w-lb)
           }
           if(any(w<(lb-1e-7)) || any(w>(ub+1e-7)) || (as.numeric(sqrt(t(w) %*% Sigma %*% w)) - as.numeric(sqrt(t(w_bench) %*% Sigma_bench %*% w_bench)))>risk_obj || any(f_const_fun(w) < f_const_lb) || any(f_const_fun(w) > f_const_ub) || cond_drawdown(series, w, dd_pers_end_ind, dd_pers_matrix, dd_quant) > dd_obj) {return(1000)}
-          util <- -(t(w) %*% mu - 0.5 * lambda * (!is.finite(risk_obj)) * t(w) %*% Sigma %*% w)
+          util <- -(t(w) %*% mu - 0.5 * lambda * t(w) %*% Sigma %*% w)
           return(as.numeric(util))
         }
       }else{
