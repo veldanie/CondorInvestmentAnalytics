@@ -4,10 +4,12 @@
 #' @param mu Expected return
 #' @param Sigma Covariance matrix
 #' @param lambda Vector of risk aversion coefficients
+#' @param add_sigma Additional volatility points
+#' @param add_mu Additional mean points
 #' @return Vectors or portfolio means and volatilities for different levels of risk aversion, and smooth spline object.
 #' @export
 
-efficient_frontier <- function(mu, Sigma, lambda = seq(0.5, 3, 0.25)){
+efficient_frontier <- function(mu, Sigma, lambda = seq(0.5, 3, 0.25), add_sigma = NULL, add_mu = NULL) {
 
   n_assets <- length(mu)
   mean_vec <- sigma_vec <- rep(0, length(lambda))
@@ -24,6 +26,7 @@ efficient_frontier <- function(mu, Sigma, lambda = seq(0.5, 3, 0.25)){
     mean_vec[i] <- port_res$port_mean_ret
     sigma_vec[i] <- port_res$port_vol
   }
-  ef_ss <- smooth.spline(x = sigma_vec, y = mean_vec) #Efficient frontier smooth spline
-  return(list(mean_vec = mean_vec, sigma_vec = sigma_vec, ef_ss = ef_ss))
+  n_points <- length(unique(round(sigma_vec, 4)))
+  ef_ss <- smooth.spline(x = c(sigma_vec, add_sigma), y = c(mean_vec, add_mu)) #Efficient frontier smooth spline
+  return(list(mean_vec = c(mean_vec, add_mu), sigma_vec = c(sigma_vec, add_sigma), ef_ss = ef_ss, n_points = n_points))
 }
