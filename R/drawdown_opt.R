@@ -19,7 +19,7 @@ drawdown_opt <- function(series, w, horizon = '3M', quant = 0.9, type = 'log') {
     date_last <- tail(index(series),1)
     num_months <- as.numeric(gsub('M', '', horizon))
     months_seq <- seq(date_ini, date_last %m+% -months(num_months), by = "months")
-    per_last <- as.Date(sapply(months_seq, function(x) x %m+% months(num_months)))
+    per_last <- as_date(sapply(months_seq, function(x) x %m+% months(num_months)))
     per <- paste0(months_seq, "/", per_last)
     n_per <- length(per)
     pos_ini <- findInterval(months_seq,index(series), rightmost.closed = TRUE)
