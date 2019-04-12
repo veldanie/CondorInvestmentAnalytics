@@ -22,7 +22,7 @@ obj_dev_fun <- function(w, series, risk_target, ow_assets, uw_assets, per = 12, 
   w_new<- w
   neg_rets_ini <- -as.vector(series %*% w)
   var_ini <- quantile(neg_rets_ini, probs = quant)
-  cvar_ini <- mean(neg_rets_ini[neg_rets_ini > var])
+  cvar_ini <- mean(neg_rets_ini[neg_rets_ini > var_ini])
 
   n_ow_assets <- length(ow_assets)
   n_uw_assets <- length(uw_assets)
@@ -66,7 +66,6 @@ obj_dev_fun <- function(w, series, risk_target, ow_assets, uw_assets, per = 12, 
       )
     }
   }else if(substr(tolower(risk),1,4) == "cvar" || substr(tolower(risk),1,4) == "verc"){
-    cvar_ini <- dnorm(qnorm(quant))/(1 - quant) * vol_ini
     if(type=="unif"){
       return(function(x){
         w_new[ow_assets] <- w_ow + x/n_ow_assets
