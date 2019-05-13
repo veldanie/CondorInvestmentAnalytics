@@ -33,8 +33,12 @@ drawdown_opt <- function(series, w, horizon = '3M', quant = 0.9, type = 'log') {
 
     mean_dd <- mean(dd_obs)
     max_dd <- quantile(dd_obs, probs = quant)
-    cond_dd <- mean(dd_obs[dd_obs >= max_dd])
+    cond_dd_obs <- dd_obs[dd_obs >= max_dd]
+    cond_dd <- mean(cond_dd_obs)
     names(dd_obs) <- per
-    return(list(dd_obs = dd_obs, max_dd = max_dd, mean_dd = mean_dd, cond_dd = cond_dd))
+    cond_dd_dates <- per_last[dd_obs >= max_dd]
+    max_dd_obs <- max(dd_obs)
+    max_dd_date <- per_last[dd_obs == max_dd_obs]
+    return(list(dd_obs = dd_obs, max_dd = max_dd, mean_dd = mean_dd, cond_dd = cond_dd, max_dd_obs=max_dd_obs, cond_dd_obs=cond_dd_obs, max_dd_date=max_dd_date, cond_dd_dates=cond_dd_dates))
   }
 }
