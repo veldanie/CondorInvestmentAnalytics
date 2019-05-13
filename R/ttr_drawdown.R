@@ -4,12 +4,10 @@
 #' Estimates aproximate number of monthos to recover from drawdown.
 #' @param series data frame series.
 #' @param w Portfolio weights.
-#' @param horizon Drawdown horizon.
-#' @param quant Quantile.
-#' @param atribution Risk atribution
-#' @param type Type of returns: arithmetic (discrete) or log (continuous)
-#' @param ttr Indicator. Estimate time to recovery drawdown
-#' @return Drawdown distribution, and mean, max and conditional drawdown.
+#' @param dd_ret Drawdown return
+#' @param dd_date Drawdown date (lower bound).
+#' @param target_rec Target recovery perc.
+#' @return Time to Recovery in months target return(s).
 #' @export
 
 

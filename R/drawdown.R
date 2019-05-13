@@ -50,7 +50,7 @@ drawdown <- function(series, w, horizon = '12M', quant = 0.9, atribution = FALSE
       pers[i] <- paste(format(per_dates, '%b%Y'), collapse = '/')
       ttr_dates[i] <- per_dates[2]
     }
-    ttr_dates <- as.Date(as.numeric(ttr_dates))
+
     mean_dd <- mean(dd_obs)
     max_dd <- quantile(dd_obs, probs = quant)
     cond_dd <- mean(dd_obs[dd_obs >= max_dd])
@@ -70,6 +70,7 @@ drawdown <- function(series, w, horizon = '12M', quant = 0.9, atribution = FALSE
 
     rec_time <- NA
     if(ttr){
+      ttr_dates <- zoo::as.Date(as.numeric(ttr_dates))
       ref_date <- ttr_dates[ind_max_dd]
       target_ret <- (1-ref_dd*(1-target_rec))/(1-ref_dd)-1
       series_post <- series[paste0(c(ref_date, Sys.Date()), collapse = '/')]# series_w[per] # Segmentation according to period
