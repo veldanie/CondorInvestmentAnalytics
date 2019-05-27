@@ -26,11 +26,11 @@ neg_rets_perc <- function(series, w, horizons = '12M', lb = 0, conf_interv = 0.9
     series_t0 <- series[,names(w)][findInterval(months_seq, index(series))]
     series_t1 <- series[,names(w)][findInterval(months_seq %m+% months(num_months), index(series))]
     n_obs <- nrow(series_t0)
-    rets <- coredata(series_t1)/coredata(series_t0)-1
+    rets <- as.numeric((coredata(series_t1)/coredata(series_t0)-1) %*% w)
     rets[is.na(rets)] <- 0
     delta <- (1-conf_interv)/2
     conf_ints[i,] <- quantile(rets, c(delta, conf_interv+delta))
-    perc[i] <- sum(as.numeric(rets %*% w) < lb)/n_obs
+    perc[i] <- sum(rets < lb)/n_obs
   }
   names(perc) <- horizons
   summ_df = data.frame(HOR=horizons, PROB=perc, conf_ints)
