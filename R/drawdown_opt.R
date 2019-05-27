@@ -7,11 +7,12 @@
 #' @param horizon Drawdown horizon.
 #' @param quant Quantile.
 #' @param type Type of returns: arithmetic (discrete) or log (continuous)
+#' @param t_dd Indicator calculate T-drawdown.
 #' @return Drawdown distribution, and mean, max and conditional drawdown.
 #' @export
 
 
-drawdown_opt <- function(series, w, horizon = '3M', quant = 0.9, type = 'log') {
+drawdown_opt <- function(series, w, horizon = '3M', quant = 0.9, type = 'log', t_dd = FALSE) {
   if(is.null(series)){
     return(list(dd_obs = 0, dd_factor = 0, max_dd = 0, mean_dd = 0, cond_dd = 0, dd_marg = 0, dd_contrib = 0))
   }else{
@@ -38,7 +39,13 @@ drawdown_opt <- function(series, w, horizon = '3M', quant = 0.9, type = 'log') {
     names(dd_obs) <- per
     cond_dd_dates <- per_last[dd_obs >= max_dd]
     max_dd_obs <- max(dd_obs)
+    ind_dd_obs <- dd_obs == max_dd_obs
     max_dd_date <- per_last[dd_obs == max_dd_obs]
-    return(list(dd_obs = dd_obs, max_dd = max_dd, mean_dd = mean_dd, cond_dd = cond_dd, max_dd_obs=max_dd_obs, cond_dd_obs=cond_dd_obs, max_dd_date=max_dd_date, cond_dd_dates=cond_dd_dates))
+
+    series_max_dd <- series[per[ind_dd_obs]]
+    max_dd_ini_date <- index(series_max_dd)[which.max(max((series_max_dd/(rep(1, nrow(series_max_dd))%*% head(series_max_dd, 1))-1)%*%w))]
+    t_dd_obs <- as.numeric(max_dd_date - max_dd_ini_date)/30 ## Temporal dd observed
+
+    return(list(dd_obs = dd_obs, max_dd = max_dd, mean_dd = mean_dd, cond_dd = cond_dd, max_dd_obs=max_dd_obs, cond_dd_obs=cond_dd_obs, max_dd_date=max_dd_date, cond_dd_dates=cond_dd_dates, t_dd_obs))
   }
 }
