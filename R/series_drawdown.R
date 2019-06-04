@@ -15,30 +15,36 @@ series_drawdown <- function(series, horizon = '12M', quant = 0.9, type = 'arit')
   date_last <- tail(index(series),1)
 
   num_months <- as.numeric(gsub('M', '', horizon))
-
   months_seq <- seq(date_ini, date_last %m+% -months(num_months), by = "months")
-  n_per <- length(months_seq)
-  dd_obs <- rep(0, n_per)
-  pers <- rep('', n_per)
-  for (i in 1:n_per){ # For each period
-    per <- paste(c(months_seq[i], months_seq[i] %m+% months(num_months)), collapse = '/')
-    pers[i] <- paste(format(ymd(base::strsplit(per, '/')[[1]]), '%b%Y'), collapse = '/')
-    series_per <- series[per]# series_w[per] # Segmentation according to period
+  per_last <- as_date(sapply(months_seq, function(x) x %m+% months(num_months)))
+  if(num_months >= 12){ #Se incorporan periodos de menor plazo al inicio para no descartar datos relevantes.
+    months_seq <- c(rep(date_ini, num_months-1), months_seq)
+    per_last <- c(date_ini %m+% months(1:(num_months-1)), per_last)
+  }
 
-    if(type == 'log')
-      series_ret <- log(series_per/(rep(1, nrow(series_per)) %*% head(series[per], 1)))
-    else{
-      series_ret <- (series_per/(rep(1, nrow(series_per)) %*% head(series[per], 1)) - 1)
-    }
-    series_ret[is.na(series_ret)] <- 0
-    dd_obs[i] <- max(series_ret) - tail(series_ret,1)
+  pos_ini <- findInterval(months_seq,index(series), rightmost.closed = TRUE)
+  pos_last <- findInterval(per_last,index(series), rightmost.closed = FALSE)
+  n_per <- length(months_seq)
+  per <- paste0(months_seq, "/", per_last)
+
+  if(type == 'log'){
+    dd_obs <- sapply(1:n_per, function(i) -min(log(as.numeric(series[pos_last[i]])/as.numeric(series[per[i]]))))
+  }else{
+    dd_obs <- sapply(1:n_per, function(i) -min(as.numeric(series[pos_last[i]])/as.numeric(series[per[i]])-1))
   }
 
   mean_dd <- mean(dd_obs)
   max_dd <- quantile(dd_obs, probs = quant)
   cond_dd <- mean(dd_obs[dd_obs >= max_dd])
+  names(dd_obs) <- per
+  max_dd_per <- per[dd_obs == max(dd_obs)]
 
-  names(dd_obs) <- pers
-  max_dd_per <- pers[dd_obs == max(dd_obs)]
-  return(list(dd_obs = dd_obs, max_dd = max_dd, mean_dd = mean_dd, cond_dd = cond_dd, max_dd_per = max_dd_per))
+  max_dd_obs <- max(dd_obs)
+  ind_dd_obs <- dd_obs == max_dd_obs
+  max_dd_date <- per_last[ind_dd_obs]
+  series_max_dd <- series[per[ind_dd_obs]]
+  max_dd_ini_date <- index(series_max_dd)[which.max(series_max_dd/ head(series_max_dd, 1)-1)]
+  t_dd_obs <- round(as.numeric(max_dd_date - max_dd_ini_date)/30, 2) ## Temporal dd observed
+
+  return(list(dd_obs = dd_obs, max_dd = max_dd, mean_dd = mean_dd, cond_dd = cond_dd, max_dd_per = max_dd_per, max_dd_obs = max_dd_obs, max_dd_date = max_dd_date, max_dd_ini_date = max_dd_ini_date, t_dd_obs = t_dd_obs))
 }
