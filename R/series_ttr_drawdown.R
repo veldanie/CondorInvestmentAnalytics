@@ -37,6 +37,6 @@ series_ttr_drawdown <- function(series, dd_ret, dd_date, target_rec = 1) {
       }
       rec_time <- round(mean(rec_times, na.rm=TRUE), 2)
     }
-    return(list(rec_time = rec_time, target_ret = target_ret, rec_time = rec_time, rec_date = rec_date))
+    return(list(rec_time = rec_time, target_ret = target_ret, rec_date = rec_date))
   }
 }
