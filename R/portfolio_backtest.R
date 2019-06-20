@@ -13,10 +13,11 @@
 #' @param slippage Slippage basis points.
 #' @param commission Commission basis points.
 #' @param invest_assets Investable asset. By default: Index. It can be set to ETF or IA (investable asset).
+#' @param fixed_tickers Fixed tickers vector.
 #' @return Backtesting results.
 #' @export
 
-portfolio_backtest <- function(weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, slippage = 5, commission = 5, invest_assets = NULL) {
+portfolio_backtest <- function(weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, slippage = 5, commission = 5, invest_assets = NULL, fixed_tickers = NULL) {
 
   hold_per_days <- switch(hold_per, '1D' = 1, '1M' = 30, '3M' = 90, '1Y' = 360)
   n_assets <- length(weights)
@@ -26,9 +27,13 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
     index_curr <- asset_data$CurrencyETF[match(asset_univ, asset_data$Asset)]
   }else if (!is.null(invest_assets) && invest_assets == 'IA'){
     index_curr <- asset_data$CurrencyIA[match(asset_univ, asset_data$Asset)]
+    if(!is.null(fixed_tickers)){
+      index_curr[match(names(fixed_tickers), asset_univ)] <- asset_data$Currency[match(names(fixed_tickers), asset_data$Asset)]
+    }
   }else{
     index_curr <- asset_data$Currency[match(asset_univ, asset_data$Asset)]
   }
+
 
   currencies <- unique(index_curr)
   lcurr <- length(currencies)

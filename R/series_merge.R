@@ -11,10 +11,11 @@
 #' @param convert_to_ref Indicator to define if series are converted to ref_curr.
 #' @param ref_per_unit_foreign Indicator if currencies are converted to Base (ref) currency per unit of foreign currency.
 #' @param invest_assets Investable asset. By default: Index. It can be set to ETF or IA (investable asset).
+#' @param fixed_tickers Fixed tickers vector.
 #' @return xts series.
 #' @export
 
-series_merge <- function(series_list, dates, asset_data, ref_curr, assets, currencies = NULL, convert_to_ref = FALSE, ref_per_unit_foreign = FALSE, invest_assets = NULL) {
+series_merge <- function(series_list, dates, asset_data, ref_curr, assets, currencies = NULL, convert_to_ref = FALSE, ref_per_unit_foreign = FALSE, invest_assets = NULL, fixed_tickers = NULL) {
   n_assets <- length(assets)
   n_curr <- length(currencies)
 
@@ -22,6 +23,9 @@ series_merge <- function(series_list, dates, asset_data, ref_curr, assets, curre
     ticker <- asset_data$TickerETF[match(assets, asset_data$Asset)]
   }else if (!is.null(invest_assets) && invest_assets == 'IA'){
     ticker <- asset_data$TickerInvestAsset[match(assets, asset_data$Asset)]
+    if(!is.null(fixed_tickers)){
+      ticker[match(names(fixed_tickers), assets)] <- fixed_tickers
+    }
   }else{
     ticker <- asset_data$TickerBenchmark[match(assets, asset_data$Asset)]
   }

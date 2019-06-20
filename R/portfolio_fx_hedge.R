@@ -13,11 +13,12 @@
 #' @param group.by Set of assets that share the same hedging ratio. By default the grouping is per currency. c("All", "Asset_Class", "Asset", "Currency", "Country")
 #' @param bounded Hedge ratio bounded to the range 0-1.
 #' @param invest_assets Investable asset. By default: Index. It can be set to ETF or IA (investable asset).
+#' @param fixed_tickers Fixed tickers vector.
 #' @return Fx hedge returns.
 #' @export
 
 
-portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfwd_list, dates, hold_per = '1M', exp_ret = 0, group.by = 'Asset', bounded = TRUE, invest_assets = NULL) {
+portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfwd_list, dates, hold_per = '1M', exp_ret = 0, group.by = 'Asset', bounded = TRUE, invest_assets = NULL, fixed_tickers = NULL) {
 
   if(!(hold_per %in% c('1M', '3M'))){stop('Holding period not supported!')}
   per <- switch(hold_per, '1M' = 'monthly', '3M' = 'quarterly')
@@ -28,6 +29,9 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
     index_curr <- asset_data$CurrencyETF[match(asset_univ, asset_data$Asset)]
   }else if (!is.null(invest_assets) && invest_assets == 'IA'){
     index_curr <- asset_data$CurrencyIA[match(asset_univ, asset_data$Asset)]
+    if(!is.null(fixed_tickers)){
+      index_curr[match(names(fixed_tickers), asset_univ)] <- asset_data$Currency[match(names(fixed_tickers), asset_data$Asset)]
+    }
   }else{
     index_curr <- asset_data$Currency[match(asset_univ, asset_data$Asset)]
   }
