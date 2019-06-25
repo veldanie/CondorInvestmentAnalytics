@@ -38,9 +38,9 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
     avg_bench <- mean(rets_bench)
 
     te <- sd(rets_port - rets_bench)
-    active_ret <- round(avg_port - avg_bench, 3)
+    active_ret <- round(100*(avg_port - avg_bench) * freq, 3)
     ann_te <- round(te*sqrt(freq)*100,3)
-    info_ratio <- round(active_ret/te,3)
+    info_ratio <- round(active_ret/ann_te,3)
   }
 
   summ_df <- t(c(ann_avg_port, ann_vol_port, sharpe_port, active_ret, ann_te, info_ratio))
