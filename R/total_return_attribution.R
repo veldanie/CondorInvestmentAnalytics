@@ -11,7 +11,7 @@
 #' @return Performance attribution df.
 #' @export
 
-total_return_attribution <- function(w_port, w_bench, efec_ret_assets_port, efec_ret_assets_bench, efec_ret_port, efec_ret_bench, header_df = c("Activo", "Portafolio", "Benchmark", "AA", "SS", "INT", "TOTAL")) {
+total_return_attribution <- function(w_port, w_bench, efec_ret_assets_port, efec_ret_assets_bench, efec_ret_port, efec_ret_bench, header_df = c("Portafolio", "Benchmark", "AA", "SS", "INT", "TOTAL")) {
   asset_names <- unique(c(names(w_bench), names(w_port)))
   w1 <- w_bench[asset_names]
   w2 <- w_port[asset_names]
@@ -29,7 +29,8 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_assets_port, efec
   ss <- w1 * (ret2 - ret1)
   inter <- (w2 - w1) * (ret2 - ret1)
   total <- aa + ss + inter
-  summ_df <- data.frame(asset_names, round(100*cbind(w2, w1, aa, ss, inter, total), 3))
+  summ_df <- data.frame(round(100*cbind(w2, w1, aa, ss, inter, total), 3))
   colnames(summ_df) <- header_df
+  rownames(summ_df) <- asset_names
   return(summ_df)
 }
