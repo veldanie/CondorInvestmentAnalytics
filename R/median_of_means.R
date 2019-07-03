@@ -3,7 +3,7 @@
 #' Median of means.
 #' @param rets Returns series.
 #' @param k Number of groups.
-#' @param pers Number of periods per group.
+#' @param size Number of periods per group.
 #' @return Median of means.
 #' @export
 
