@@ -28,6 +28,10 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_assets_port, efec
   aa <- (w2 - w1) * (ret1 - efec_ret_bench)
   ss <- w1 * (ret2 - ret1)
   inter <- (w2 - w1) * (ret2 - ret1)
+
+  aa[is.na(aa)] <- 0
+  ss[is.na(ss)] <- 0
+  inter[is.na(inter)] <- 0
   total <- aa + ss + inter
   summ_df <- data.frame(round(100*cbind(w2, w1, aa, ss, inter, total), 3))
   colnames(summ_df) <- header_df
