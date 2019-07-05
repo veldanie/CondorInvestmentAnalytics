@@ -82,9 +82,9 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
     series_assets <- series_backtest[,asset_univ][paste0(c(date_ini,date_last), collapse = '/')]
     cum_diff_index <- apply(diff(series_assets)[-1,], 2, cumsum) + (transaction_costs(0, series_assets[-1], slippage = slippage, purchase = FALSE)$exec_price - series_assets[-1])
   }else{
-    dec_dates <- c(date_ini, rebal_dates, date_last)
+    dec_dates <- unique(c(date_ini, rebal_dates, date_last))
     cum_diff_index <- series_backtest[,asset_univ][paste0(c(date_ini,date_last), collapse = '/')][-1,]
-    for(k in 1:(length(rebal_dates)+1)){
+    for(k in 1:(length(dec_dates)-1)){
       series_backtest_temp <- series_backtest[,asset_univ][paste0(c(dec_dates[k],dec_dates[k+1]), collapse = '/')]
       cum_diff_index[which(index(cum_diff_index) > dec_dates[k] & index(cum_diff_index) <= dec_dates[k+1]),] <- apply(diff(series_backtest_temp)[-1,], 2, cumsum) +
                                                                                                                 (transaction_costs(0, series_backtest_temp[-1], slippage = slippage, purchase = FALSE)$exec_price - series_backtest_temp[-1])
@@ -139,7 +139,7 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
     colnames(cash_full_conv_all) <- colnames(diff_cash_assets) <- colnames(cum_diff_index)
     capital_prev <- capital
 
-    for(k in 1:(length(rebal_dates)+1)){
+    for(k in 1:(length(dec_dates)-1)){
       spot_ser <- series_backtest[,index_curr, drop = FALSE][index(series_backtest) > dec_dates[k] & index(series_backtest) <= dec_dates[k+1]]
       cum_diff_index_temp <- cum_diff_index[index(cum_diff_index) > dec_dates[k] & index(cum_diff_index) <= dec_dates[k+1]]
       ret_cash <- cum_diff_index_temp * (rep(1, nrow(cum_diff_index_temp)) %*% t(index_units))
