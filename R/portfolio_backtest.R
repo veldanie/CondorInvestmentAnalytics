@@ -10,6 +10,7 @@
 #' @param fx_hedge_asset Forward hedge ratio per asset.
 #' @param fwd_prem forward premium corresponding to holding period (hold_per).
 #' @param rebal_per_in_months Rebalancing period in months.
+#' @param weights_xts Weigths xts ordered by rebalancing dates..
 #' @param slippage Slippage basis points.
 #' @param commission Commission basis points.
 #' @param invest_assets Investable asset. By default: Index. It can be set to ETF or IA (investable asset).
@@ -17,7 +18,7 @@
 #' @return Backtesting results.
 #' @export
 
-portfolio_backtest <- function(weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, slippage = 5, commission = 5, invest_assets = NULL, fixed_tickers = NULL) {
+portfolio_backtest <- function(weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, weights_xts = NULL, slippage = 5, commission = 5, invest_assets = NULL, fixed_tickers = NULL) {
 
   hold_per_days <- switch(hold_per, '1D' = 1, '1M' = 30, '3M' = 90, '1Y' = 360)
   n_assets <- length(weights)
@@ -45,11 +46,37 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
   date_ini <- index(series_backtest)[1]
   date_last <- tail(index(series_backtest),1)
 
-  rebal_dates <- NA
-  if(!is.na(rebal_per_in_months)){
+  if(!is.null(weights_xts)){
+    weights <- as.vector(weights_xts[findInterval(date_ini, index(weights_xts)),])
+    names(weights) <- colnames(weights_xts)
+    weights_xts <- weights_xts[index(weights_xts)>date_ini,]
+  }
+
+  if(!is.null(weights_xts) && nrow(weights_xts)>0){
+    rebal_dates <- index(weights_xts)
+    rebal_dates <- index(series_backtest)[findInterval(rebal_dates, index(series_backtest))]
+    index(weights_xts) <- rebal_dates
+  }else if(!is.na(rebal_per_in_months)){
     rebal_dates <- seq(from = date_ini, to = date_last, by = paste(rebal_per_in_months, "months"))[-1]
     rebal_dates <- index(series_backtest)[findInterval(rebal_dates, index(series_backtest))]
+    weights_xts <- xts(rep(1, length(rebal_dates)) %*% t(weights), order.by = rebal_dates)
+  }else{
+    rebal_dates <- NA
   }
+
+  if(is.na(rebal_dates)){
+    series_assets <- series_backtest[,asset_univ][paste0(c(date_ini,date_last), collapse = '/')]
+    cum_diff_index <- apply(diff(series_assets)[-1,], 2, cumsum) + (transaction_costs(0, series_assets[-1], slippage = slippage, purchase = FALSE)$exec_price - series_assets[-1])
+  }else{
+    dec_dates <- unique(c(date_ini, rebal_dates, date_last))
+    cum_diff_index <- series_backtest[,asset_univ][paste0(c(date_ini,date_last), collapse = '/')][-1,]
+    for(k in 1:(length(dec_dates)-1)){
+      series_backtest_temp <- series_backtest[,asset_univ][paste0(c(dec_dates[k],dec_dates[k+1]), collapse = '/')]
+      cum_diff_index[which(index(cum_diff_index) > dec_dates[k] & index(cum_diff_index) <= dec_dates[k+1]),] <- apply(diff(series_backtest_temp)[-1,], 2, cumsum) +
+        (transaction_costs(0, series_backtest_temp[-1], slippage = slippage, purchase = FALSE)$exec_price - series_backtest_temp[-1])
+    }
+  }
+
 
   fx_ini <- as.numeric(series_backtest[,index_curr][date_ini])
   index_val_ini <- as.numeric(series_backtest[,asset_univ][date_ini])
@@ -74,28 +101,13 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
   # Transaction costs,
   index_units <- cash_ini/index_val_ini # Number of units depend on execution price.
   tc <- transaction_costs(index_units, index_val_ini, slippage = slippage, commission = commission)
-
   index_units <- cash_ini/tc$exec_price # Number of units depend on execution price.
-
-
-  if(is.na(rebal_per_in_months)){
-    series_assets <- series_backtest[,asset_univ][paste0(c(date_ini,date_last), collapse = '/')]
-    cum_diff_index <- apply(diff(series_assets)[-1,], 2, cumsum) + (transaction_costs(0, series_assets[-1], slippage = slippage, purchase = FALSE)$exec_price - series_assets[-1])
-  }else{
-    dec_dates <- unique(c(date_ini, rebal_dates, date_last))
-    cum_diff_index <- series_backtest[,asset_univ][paste0(c(date_ini,date_last), collapse = '/')][-1,]
-    for(k in 1:(length(dec_dates)-1)){
-      series_backtest_temp <- series_backtest[,asset_univ][paste0(c(dec_dates[k],dec_dates[k+1]), collapse = '/')]
-      cum_diff_index[which(index(cum_diff_index) > dec_dates[k] & index(cum_diff_index) <= dec_dates[k+1]),] <- apply(diff(series_backtest_temp)[-1,], 2, cumsum) +
-                                                                                                                (transaction_costs(0, series_backtest_temp[-1], slippage = slippage, purchase = FALSE)$exec_price - series_backtest_temp[-1])
-    }
-  }
 
   fx_hedge_ind <- fx_hedge_asset != 0 # Indicator of assets that are hedged.
   fx_conv_ind <- index_curr != currency# Indicator of assets with index_curr != ref_curr
   fx_nhedge_conv <- !fx_hedge_ind & fx_conv_ind # Indicator of non-hedged assets with index_curr != ref_curr.
 
-  if(is.na(rebal_per_in_months)){
+  if(is.na(rebal_dates)){
     spot_ser <- series_backtest[,index_curr, drop = FALSE][-1,]
     ret_cash <- cum_diff_index * (rep(1, nrow(cum_diff_index)) %*% t(index_units))
     cash_full <- ret_cash + (rep(1, nrow(ret_cash)) %*% t(cash_ini))
@@ -186,20 +198,21 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
       capital_update <- as.numeric(tail(ret_cash_port[ind_per],1)) + capital_prev
 
       ##Rebalancing
-      cash_ini_ref_update <- weights[asset_univ] * capital_update
-      fx_ini <- as.numeric(series_backtest[,index_curr][dec_dates[k+1]])
-      index_val_ini <- as.numeric(series_backtest[,asset_univ][dec_dates[k+1]])
+      if(k < length(dec_dates)-1){
+        cash_ini_ref_update <- as.vector(weights_xts[dec_dates[k+1],asset_univ]) * capital_update
+        fx_ini <- as.numeric(series_backtest[,index_curr][dec_dates[k+1]])
+        index_val_ini <- as.numeric(series_backtest[,asset_univ][dec_dates[k+1]])
 
-      cash_ini <- mapply(cash_conv, cash_in = cash_ini_ref_update, spot = fx_ini, spot_id = quotes_curr, MoreArgs = list(curr_in = currency))
-      cash_ini_hedge <- cash_ini * fx_hedge_asset[names(cash_ini)]
+        cash_ini <- mapply(cash_conv, cash_in = cash_ini_ref_update, spot = fx_ini, spot_id = quotes_curr, MoreArgs = list(curr_in = currency))
+        cash_ini_hedge <- cash_ini * fx_hedge_asset[names(cash_ini)]
 
-      # Transaction costs,
-      index_units <- cash_ini/index_val_ini # Number of units depend on execution price.
-      tc <- transaction_costs(index_units, index_val_ini, slippage = slippage, commission = commission)
+        # Transaction costs,
+        index_units <- cash_ini/index_val_ini # Number of units depend on execution price.
+        tc <- transaction_costs(index_units, index_val_ini, slippage = slippage, commission = commission)
 
-      index_units <- cash_ini/tc$exec_price # Number of units depend on execution price.
-
+        index_units <- cash_ini/tc$exec_price # Number of units depend on execution price.
       }
+    }
   }
   cash_port <- xts(c(capital, apply(cash_full_conv_all, 1, sum)), order.by = c(date_ini, index(ret_cash_port)))
   weights_port <- cash_full_conv_all / (cash_port[-1] %*% t(rep(1, n_assets)))
