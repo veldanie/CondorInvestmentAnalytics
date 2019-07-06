@@ -64,7 +64,7 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
     rebal_dates <- NA
   }
 
-  if(is.na(rebal_dates)){
+  if(any(is.na(rebal_dates))){
     series_assets <- series_backtest[,asset_univ][paste0(c(date_ini,date_last), collapse = '/')]
     cum_diff_index <- apply(diff(series_assets)[-1,], 2, cumsum) + (transaction_costs(0, series_assets[-1], slippage = slippage, purchase = FALSE)$exec_price - series_assets[-1])
   }else{
@@ -107,7 +107,7 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
   fx_conv_ind <- index_curr != currency# Indicator of assets with index_curr != ref_curr
   fx_nhedge_conv <- !fx_hedge_ind & fx_conv_ind # Indicator of non-hedged assets with index_curr != ref_curr.
 
-  if(is.na(rebal_dates)){
+  if(any(is.na(rebal_dates))){
     spot_ser <- series_backtest[,index_curr, drop = FALSE][-1,]
     ret_cash <- cum_diff_index * (rep(1, nrow(cum_diff_index)) %*% t(index_units))
     cash_full <- ret_cash + (rep(1, nrow(ret_cash)) %*% t(cash_ini))
