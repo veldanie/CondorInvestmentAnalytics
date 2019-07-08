@@ -10,7 +10,8 @@
 #' @param fx_hedge_asset Forward hedge ratio per asset.
 #' @param fwd_prem forward premium corresponding to holding period (hold_per).
 #' @param rebal_per_in_months Rebalancing period in months.
-#' @param weights_xts Weigths xts ordered by rebalancing dates..
+#' @param weights_xts Weigths xts ordered by rebalancing dates.
+#' @param rebal_dates Rebalancing dates.
 #' @param slippage Slippage basis points.
 #' @param commission Commission basis points.
 #' @param invest_assets Investable asset. By default: Index. It can be set to ETF or IA (investable asset).
@@ -18,7 +19,7 @@
 #' @return Backtesting results.
 #' @export
 
-portfolio_backtest <- function(weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, weights_xts = NULL, slippage = 5, commission = 5, invest_assets = NULL, fixed_tickers = NULL) {
+portfolio_backtest <- function(weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, weights_xts = NULL, rebal_dates = NULL, slippage = 5, commission = 5, invest_assets = NULL, fixed_tickers = NULL) {
 
   hold_per_days <- switch(hold_per, '1D' = 1, '1M' = 30, '3M' = 90, '1Y' = 360)
   n_assets <- length(weights)
@@ -56,6 +57,9 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
     rebal_dates <- index(weights_xts)
     rebal_dates <- index(series_backtest)[findInterval(rebal_dates, index(series_backtest))]
     index(weights_xts) <- rebal_dates
+  }else if(!is.null(rebal_dates)){
+    rebal_dates <- index(series_backtest)[findInterval(rebal_dates[rebal_dates>date_ini], index(series_backtest))]
+    weights_xts <- xts(rep(1, length(rebal_dates)) %*% t(weights), order.by = rebal_dates)
   }else if(!is.na(rebal_per_in_months)){
     rebal_dates <- seq(from = date_ini, to = date_last, by = paste(rebal_per_in_months, "months"))[-1]
     rebal_dates <- index(series_backtest)[findInterval(rebal_dates, index(series_backtest))]
