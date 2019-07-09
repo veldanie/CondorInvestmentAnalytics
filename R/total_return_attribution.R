@@ -17,6 +17,8 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_assets_port, efec
   names(w1) <- names(w2) <- names(ra1) <- names(ra2) <- asset_names
   w1[names(w_bench)] <- w_bench
   w2[names(w_port)] <- w_port
+  ra1[names(efec_ret_assets_bench)] <- efec_ret_assets_bench
+  ra2[names(efec_ret_assets_port)] <- efec_ret_assets_port
 
   diff_assets1 <- setdiff(names(w_port), names(w_bench))
   diff_assets2 <- setdiff(names(w_bench), names(w_port))
@@ -40,11 +42,10 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_assets_port, efec
   rets1 <- returns(xts(rowSums(cash_assets_bench), order.by = index(cash_assets_bench)))
   aa <- apply((weights_port[, asset_names] - weights_bench[, asset_names]) * (rets_assets1[, asset_names] - rets1 %*% t(rep(1,length(asset_names)))),2, function(x) prod(1+x)) - 1
   ss <- apply(weights_bench[, asset_names] * (rets_assets2[, asset_names] - rets_assets1[, asset_names]), 2, function(x) prod(1+x)) - 1
-  inter <- apply((weights_port[, asset_names] - weights_bench[, asset_names]) * (rets_assets2[, asset_names] - rets_assets1[, asset_names]), 2, function(x) prod(1+x)) - 1
+  #inter <- apply((weights_port[, asset_names] - weights_bench[, asset_names]) * (rets_assets2[, asset_names] - rets_assets1[, asset_names]), 2, function(x) prod(1+x)) - 1
+  total_asset_ret <- ra2[asset_names] - ra1[asset_names]
+  inter <- total_asset_ret - aa - ss
 
-  aa[is.na(aa)] <- 0
-  ss[is.na(ss)] <- 0
-  inter[is.na(inter)] <- 0
   total <- aa + ss + inter
   summ_df <- data.frame(round(100*cbind(w2, w1, aa, ss, inter, total), 3))
   colnames(summ_df) <- header_df
