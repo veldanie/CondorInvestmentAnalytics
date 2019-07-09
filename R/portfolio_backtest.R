@@ -213,7 +213,6 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
         # Transaction costs,
         index_units <- cash_ini/index_val_ini # Number of units depend on execution price.
         tc <- transaction_costs(index_units, index_val_ini, slippage = slippage, commission = commission)
-
         index_units <- cash_ini/tc$exec_price # Number of units depend on execution price.
       }
     }

@@ -16,7 +16,9 @@ returns <- function(series, dates = NULL, period = 'daily', type = 'arithmetic')
   rets <- periodReturn(series[,1], period = period, type = type, leading  = FALSE)
   if(nvar > 1){
     for (i in 2:nvar){
-      rets  <- merge.xts(rets, periodReturn(series[,i], period = period, type = type, leading = FALSE))
+      rets_i <- periodReturn(series[,i], period = period, type = type, leading = FALSE)
+      rets_i[is.na(rets_i)] = 0
+      rets  <- merge.xts(rets, rets_i)
     }
   }
   rets <- rets[!apply(is.na(rets), 1, any)]
