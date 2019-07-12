@@ -10,14 +10,14 @@
 #' @return Drawdown distribution, and mean, max and conditional drawdown.
 #' @export
 
-series_drawdown <- function(series, horizon = '12M', quant = 0.9, type = 'arit') {
+series_drawdown <- function(series, horizon = '12M', quant = 0.9, type = 'arit', lb_months = 3) {
   date_ini <- index(series)[1]
   date_last <- tail(index(series),1)
 
   num_months <- as.numeric(gsub('M', '', horizon))
   months_seq <- seq(date_ini, date_last %m+% -months(num_months), by = "months")
   per_last <- as_date(sapply(months_seq, function(x) x %m+% months(num_months)))
-  if(num_months >= 12){ #Se incorporan periodos de menor plazo al inicio para no descartar datos relevantes.
+  if(num_months >= lb_months){ #Se incorporan periodos de menor plazo al inicio para no descartar datos relevantes.
     months_seq <- c(rep(date_ini, num_months-1), months_seq)
     per_last <- c(date_ini %m+% months(1:(num_months-1)), per_last)
   }
