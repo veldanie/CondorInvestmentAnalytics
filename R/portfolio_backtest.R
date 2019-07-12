@@ -67,7 +67,7 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
   }else{
     rebal_dates <- NA
   }
-
+  dec_dates <- c(date_ini, date_last)
   if(any(is.na(rebal_dates))){
     series_assets <- series_backtest[,asset_univ][paste0(c(date_ini,date_last), collapse = '/')]
     cum_diff_index <- apply(diff(series_assets)[-1,], 2, cumsum) + (transaction_costs(0, series_assets[-1], slippage = slippage, purchase = FALSE)$exec_price - series_assets[-1])
@@ -222,6 +222,6 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
   ret_port <- ret_cash_port/capital
   cash_assets <- rbind(xts(t(cash_ini_ref), order.by = date_ini), cash_full_conv_all)
 
-  return(list(ret_cash_port = ret_cash_port, ret_port = ret_port, cash_port = cash_port, cash_assets = cash_assets, diff_cash_assets = diff_cash_assets, weights_port = weights_port, rebal_dates = rebal_dates))
+  return(list(ret_cash_port = ret_cash_port, ret_port = ret_port, cash_port = cash_port, cash_assets = cash_assets, diff_cash_assets = diff_cash_assets, weights_port = weights_port, dec_dates = dec_dates))
 }
 

@@ -11,7 +11,7 @@
 #' @return Performance attribution df.
 #' @export
 
-total_return_attribution <- function(w_port, w_bench, efec_ret_assets_port, efec_ret_assets_bench, efec_ret_port, efec_ret_bench, cash_assets_port, cash_assets_bench, weights_port, weights_bench, header_df = c("Portafolio", "Benchmark", "AA", "SS", "INT", "TOTAL")) {
+total_return_attribution <- function(w_port, w_bench, efec_ret_assets_port, efec_ret_assets_bench, efec_ret_port, efec_ret_bench, cash_assets_port, cash_assets_bench, weights_port, weights_bench, dec_dates_port = NA, dec_dates_bench = NA, header_df = c("Portafolio", "Benchmark", "AA", "SS", "INT", "TOTAL")) {
   asset_names <- unique(c(names(w_bench), names(w_port)))
   w1 <- w2 <- ra1 <- ra2 <- rep(0, length(asset_names))
   names(w1) <- names(w2) <- names(ra1) <- names(ra2) <- asset_names
@@ -23,8 +23,13 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_assets_port, efec
   diff_assets1 <- setdiff(names(w_port), names(w_bench))
   diff_assets2 <- setdiff(names(w_bench), names(w_port))
 
+  ref_dates <- sort(unique(c(dec_dates_bench, dec_dates_port)))
+  cash_assets_bench <- cash_assets_bench[ref_dates]
+  cash_assets_port <- cash_assets_port[ref_dates]
   rets_assets1 <- returns(cash_assets_bench)
   rets_assets2 <- returns(cash_assets_port)
+  weights_bench <- weights_bench[index(rets_assets1)]
+  weights_port <- weights_port[index(rets_assets2)]
 
   if(length(diff_assets1)>0){
     asset_names_temp <- colnames(rets_assets1)
