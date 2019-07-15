@@ -202,8 +202,9 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
       capital_update <- as.numeric(tail(ret_cash_port[ind_per],1)) + capital_prev
 
       ##Rebalancing
-      if(k < length(dec_dates)-1){
+      if(k < (length(dec_dates)-1)){
         cash_ini_ref_update <- as.vector(weights_xts[dec_dates[k+1],asset_univ]) * capital_update
+        cash_full_conv_all[dec_dates[k+1], ] <- cash_ini_ref_update
         fx_ini <- as.numeric(series_backtest[,index_curr][dec_dates[k+1]])
         index_val_ini <- as.numeric(series_backtest[,asset_univ][dec_dates[k+1]])
 
@@ -218,10 +219,10 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
     }
   }
   cash_port <- xts(c(capital, apply(cash_full_conv_all, 1, sum)), order.by = c(date_ini, index(ret_cash_port)))
-  weights_port <- cash_full_conv_all / (cash_port[-1] %*% t(rep(1, n_assets)))
+  weights_port <- rbind(xts(t(weights[colnames(cash_full_conv_all)]), order.by = date_ini), cash_full_conv_all / (cash_port[-1] %*% t(rep(1, n_assets))))
   ret_port <- ret_cash_port/capital
   cash_assets <- rbind(xts(t(cash_ini_ref), order.by = date_ini), cash_full_conv_all)
 
-  return(list(ret_cash_port = ret_cash_port, ret_port = ret_port, cash_port = cash_port, cash_assets = cash_assets, diff_cash_assets = diff_cash_assets, weights_port = weights_port, dec_dates = dec_dates))
+  return(list(ret_cash_port = ret_cash_port, ret_port = ret_port, cash_port = cash_port, cash_assets = cash_assets, diff_cash_assets = diff_cash_assets, weights_port = weights_port, dec_dates = dec_dates, weights_xts = weights_xts))
 }
 
