@@ -14,7 +14,8 @@ complete_index_series <- function(series, backup_series){
     comp_series <- series
   }else{
     rets <- as.vector(returns(backup_series, type='log')[paste0(c(date_ini, date_ser), collapse = '/')])
-    series_ini <- xts(as.numeric(series[date_ser])*rev(cumprod(rev(exp(-rets)))), order.by=index(backup_series[paste0(c(date_ini, date_ser-1), collapse = '/')]))
+    series_ini_index <- index(backup_series[paste0(c(date_ini, date_ser), collapse = '/')])[1:length(rets)]
+    series_ini <- xts(as.numeric(series[date_ser])*rev(cumprod(rev(exp(-rets)))), order.by=series_ini_index)
     comp_series <- rbind(series_ini, series)
   }
   return(comp_series)
