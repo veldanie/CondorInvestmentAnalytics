@@ -50,7 +50,7 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
   if(!is.null(weights_xts)){
     weights <- as.vector(weights_xts[max(1,findInterval(date_ini, index(weights_xts))),])
     names(weights) <- colnames(weights_xts)
-    weights_xts <- weights_xts[index(weights_xts)>date_ini,]
+    weights_xts <- weights_xts[index(weights_xts)>date_ini & index(weights_xts)<date_last,]
   }
 
   if(!is.null(weights_xts) && nrow(weights_xts)>0){
