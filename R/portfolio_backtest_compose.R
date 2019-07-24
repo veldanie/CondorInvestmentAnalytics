@@ -40,7 +40,7 @@ portfolio_backtest_compose <- function(capital, weights_xts, currency, asset_dat
     dec_dates <- c(dec_dates, pb_i$dec_dates)
     capital <- as.numeric(tail(ret_cash_port, 1)) + capital
   }
-  dec_dates <- as.Date(unique(dec_dates))
+  dec_dates <- zoo::as.Date(unique(dec_dates))
   ret_port <- ret_cash_port/capital_ini
   cash_port <- rbind(xts(as.numeric(capital_ini), order.by = dec_dates[1]), ret_cash_port + capital_ini)
   return(list(ret_cash_port = ret_cash_port, ret_port = ret_port, cash_port = cash_port, diff_cash_assets = diff_cash_assets, weights_port = weights_port, dec_dates = dec_dates))
