@@ -15,12 +15,15 @@ series_drawdown <- function(series, horizon = '12M', quant = 0.9, type = 'arit',
   date_last <- tail(index(series),1)
 
   num_months <- as.numeric(gsub('M', '', horizon))
-  months_seq <- seq(date_ini, date_last %m+% -months(num_months), by = "months")
-  per_last <- as_date(sapply(months_seq, function(x) x %m+% months(num_months)))
-  if(num_months >= lb_months){ #Se incorporan periodos de menor plazo al inicio para no descartar datos relevantes.
+  months_seq_all <- seq(date_ini, date_last, by = "months")
+  n_months_seq <- length(months_seq_all)
+  months_seq <- months_seq_all[1:(n_months_seq - num_months)]
+  per_last <- as_date(sapply(1:length(months_seq), function(x) months_seq_all[x + num_months]))
+  if(num_months >= 12){ #Se incorporan periodos de menor plazo al inicio para no descartar datos relevantes.
     months_seq <- c(rep(date_ini, num_months-1), months_seq)
-    per_last <- c(date_ini %m+% months(1:(num_months-1)), per_last)
+    per_last <- c(months_seq_all[2:num_months], per_last)
   }
+
 
   pos_ini <- findInterval(months_seq,index(series), rightmost.closed = TRUE)
   pos_last <- findInterval(per_last,index(series), rightmost.closed = FALSE)
