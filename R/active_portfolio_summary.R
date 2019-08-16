@@ -17,11 +17,12 @@
 #' @param fixed_tickers Tickers.
 #' @param weights_tac Tactical weights xts.
 #' @param sync_dates Bool, sync. dates.
+#' @param fund_complete Bool, indicates if benchmark funds are used.
 #' @param header_df DF headers.
 #' @return Active summary data frame.
 #' @export
 
-active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, sync_dates = NULL, total_ret = FALSE, header_df = c("Ret Total Bench", "Ret Total Port", "Ret Prom Bench", "Ret Prom Port", "Vol", "Sharpe", "Alpha", "TE", "RI", "AA", "SS/INTER")) {
+active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, header_df = c("Ret Total Bench", "Ret Total Port", "Ret Prom Bench", "Ret Prom Port", "Vol", "Sharpe", "Alpha", "TE", "RI", "AA", "SS/INTER")) {
 
   freq <- switch(per, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4)
   if(is.null(w_port) & is.null(w_bench)){ stop("Null portafolios. Check weights!")}
@@ -44,7 +45,19 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
   }
   port_curr <- unique(port_curr)
   series_back <- series_merge(series_list, ref_dates, asset_data, currency, asset_names, port_curr, convert_to_ref = FALSE, invest_assets = invest_assets, fixed_tickers = fixed_tickers)
-  port_back <- portfolio_backtest(w_port, capital, currency, asset_data, series_back[,c(names(w_port), port_curr)], rebal_per_in_months = rebal_per, weights_xts = weights_tac, slippage = slippage, commission = commission, invest_assets = invest_assets, fixed_tickers = fixed_tickers)
+
+  # the date 01012000 is added when completing with benchmark
+  if(fund_complete && !is.null(weights_tac) && !is.null(invest_assets) && index(weights_tac)[1]==dmy("01012000")){
+    series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, port_curr, convert_to_ref = FALSE)
+    series_back_list <- list(series_bench, series_back)
+    names(series_back_list) <- index(weights_tac)[1:2]
+    invest_assets_list <- list(NULL, invest_assets)
+    fixed_tickers_list <- list(NULL, fixed_tickers)
+    port_back <- portfolio_backtest_compose(capital, weights_tac, currency, asset_data, series_back_list, rebal_per_in_months = rebal_per,  rebal_dates = NULL, slippage = slippage, commission = commission, invest_assets_list = invest_assets_list, fixed_tickers_list = fixed_tickers_list)
+  }else{
+    port_back <- portfolio_backtest(w_port, capital, currency, asset_data, series_back[,c(names(w_port), port_curr)], rebal_per_in_months = rebal_per, weights_xts = weights_tac, slippage = slippage, commission = commission, invest_assets = invest_assets, fixed_tickers = fixed_tickers)
+  }
+
   total_port <- round(100*as.numeric(tail(port_back$ret_port,1)), 3)
   rets_port <- periodReturn(port_back$cash_port, period = per)
   avg_port <- mean(rets_port)
@@ -95,10 +108,11 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
       #ann_avg_port <- round(avg_port_aa*freq*100, 3)
       if(total_ret){
         active_ret_aa <- round(total_port_aa - total_bench, 3)
+        active_ret_ss <- active_total_ret - active_ret_aa
       }else{
         active_ret_aa <- round(100*(avg_port_aa - avg_bench) * freq, 3)
+        active_ret_ss <- active_ret - active_ret_aa
       }
-      active_ret_ss <- active_ret - active_ret_aa
     }else{
       active_ret_ss <- 0
     }
