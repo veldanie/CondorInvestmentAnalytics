@@ -22,7 +22,7 @@ returns <- function(series, dates = NULL, period = 'daily', type = 'arithmetic',
       rets  <- merge.xts(rets, rets_i)
     }
   }
-  rets <- rets[-1]
+  rets <- na.omit(rets)#rets[-1]
   names(rets) <- names(series)
   return(rets)
 }
