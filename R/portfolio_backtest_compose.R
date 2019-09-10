@@ -21,6 +21,8 @@
 
 portfolio_backtest_compose <- function(capital, weights_xts, currency, asset_data, series_backtest_list, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, rebal_dates = NULL, slippage = 5, commission = 5, invest_assets_list = NULL, fixed_tickers_list = NULL) {
   ref_dates <- names(series_backtest_list)
+  valid_dates_ind <- sapply(1:2, function(i) ref_dates[i] < tail(index(series_backtest_list[[i]]),1))
+  ref_dates <- ref_dates[valid_dates_ind]
   capital_ini <- capital
   ret_cash_port <- diff_cash_assets <- weights_port <- dec_dates <- NULL
   lw <- 0
