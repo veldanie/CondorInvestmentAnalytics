@@ -9,24 +9,60 @@
 #' @return Vectors or portfolio means and volatilities for different levels of risk aversion, and smooth spline object.
 #' @export
 
-efficient_frontier <- function(mu, Sigma, lambda = seq(0.5, 3, 0.25), add_sigma = NULL, add_mu = NULL) {
+efficient_frontier <- function(mu, Sigma, lb = rep(0, ncol(Sigma)), ub = rep(1, ncol(Sigma)), lambda = NULL, add_sigma = NULL, add_mu = NULL) {
 
   n_assets <- length(mu)
   mean_vec <- sigma_vec <- rep(0, length(lambda))
-  for (i in 1:length(lambda)){
+  w_ini <- lb + (1 - sum(lb)) * (ub - lb)/sum(ub - lb)
 
-    obj_fun <- function(w){
-      util <- -(t(w)%*%mu - 0.5 * lambda[i] * t(w)%*%Sigma%*%w)
-      as.numeric(util)
+
+  if(!is.null(lambda)){
+    w_mat <- matrix(0, nrow = n_assets, ncol = length(lambda))
+    for (i in 1:length(lambda)){
+
+      obj_fun <- function(w){
+        util <- -(t(w)%*%mu - 0.5 * lambda[i] * t(w)%*%Sigma%*%w)
+        as.numeric(util)
+      }
+      weights <- try(optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
+                                    eqfun = sum_weigths, eqB = 1, method = "GD"),
+                     silent = TRUE)
+      if(class(weights)!="try-error"){
+        port_res <- portfolio_return(weights, mu, Sigma)
+        mean_vec[i] <- port_res$port_mean_ret
+        sigma_vec[i] <- port_res$port_vol
+      }
     }
-    weights <- optim_portfolio(w_ini = rep(1/n_assets, n_assets), fn = obj_fun, lb = rep(0,n_assets), ub = rep(1, n_assets),
-                                  eqfun = sum_weigths, eqB = 1, method = "GD")
+  }else{
+    obj_fun <- utility_fun(type = 'absolute', mu = mu, Sigma = Sigma,lambda = 0)
+    asset_vols <- sqrt(diag(Sigma))
+    vols <- seq(min(asset_vols), max(asset_vols), length = 5)
+    risk_function <- risk_fun(Sigma = Sigma)
+    w_mat <- matrix(0, nrow = n_assets, ncol = length(vols))
 
-    port_res <- portfolio_return(weights, mu, Sigma)
-    mean_vec[i] <- port_res$port_mean_ret
-    sigma_vec[i] <- port_res$port_vol
+    for (i in 1:length(vols)){
+      weights <- try(optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
+                                     eqfun = sum_weigths, eqB = 1, ineqfun = risk_function,
+                                     ineqLB = 0, ineqUB = vols[i], method = "GD"),
+                     silent = TRUE)
+      if(class(weights)!="try-error"){
+        port_res <- portfolio_return(weights, mu, Sigma)
+        mean_vec[i] <- port_res$port_mean_ret
+        sigma_vec[i] <- port_res$port_vol
+        w_mat[, i] <- weights
+      }
+    }
   }
-  n_points <- length(unique(round(sigma_vec, 4)))
+  valid_pos <- sigma_vec > 0
+  mean_vec_front <- mean_vec[valid_pos]
+  sigma_vec_front <- sigma_vec[valid_pos]
+  w_mat <- w_mat[, valid_pos]
+  ports_id <- paste0("Port_", 1:length(mean_vec_front))
+  colnames(w_mat) <- ports_id
+
+  rr_df <- data.frame(Port=ports_id, Ret=mean_vec_front, Vol=sigma_vec_front)
+  w_df <- data.frame(Asset=names(mu), w_mat, check.names = FALSE)
+  n_points <- length(unique(round(c(sigma_vec, add_sigma), 4)))
   ef_ss <- smooth.spline(x = c(sigma_vec, add_sigma), y = c(mean_vec, add_mu)) #Efficient frontier smooth spline
-  return(list(mean_vec = c(mean_vec, add_mu), sigma_vec = c(sigma_vec, add_sigma), ef_ss = ef_ss, n_points = n_points))
+  return(list(mean_vec = c(mean_vec, add_mu), sigma_vec = c(sigma_vec, add_sigma), mean_vec_front=mean_vec_front, sigma_vec_front=sigma_vec_front, ef_ss = ef_ss, n_points = n_points, w_df = w_df, rr_df = rr_df))
 }
