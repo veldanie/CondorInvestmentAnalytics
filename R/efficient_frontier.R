@@ -9,7 +9,7 @@
 #' @return Vectors or portfolio means and volatilities for different levels of risk aversion, and smooth spline object.
 #' @export
 
-efficient_frontier <- function(mu, Sigma, lb = rep(0, ncol(Sigma)), ub = rep(1, ncol(Sigma)), lambda = NULL, add_sigma = NULL, add_mu = NULL, n_nodes = 10) {
+efficient_frontier <- function(mu, Sigma, lb = rep(0, ncol(Sigma)), ub = rep(1, ncol(Sigma)), lambda = NULL, vols = NULL, add_sigma = NULL, add_mu = NULL, n_nodes = 10) {
 
   n_assets <- length(mu)
   w_ini <- lb + (1 - sum(lb)) * (ub - lb)/sum(ub - lb)
@@ -35,8 +35,10 @@ efficient_frontier <- function(mu, Sigma, lb = rep(0, ncol(Sigma)), ub = rep(1, 
     }
   }else{
     obj_fun <- utility_fun(type = 'absolute', mu = mu, Sigma = Sigma,lambda = 0)
-    asset_vols <- sqrt(diag(Sigma))
-    vols <- seq(min(asset_vols), max(asset_vols), length = n_nodes)
+    if(is.null(vols)){
+      asset_vols <- sqrt(diag(Sigma))
+      vols <- seq(min(asset_vols), max(asset_vols), length = n_nodes)
+    }
     risk_function <- risk_fun(Sigma = Sigma)
     w_mat <- matrix(0, nrow = n_assets, ncol = length(vols))
     mean_vec <- sigma_vec <- rep(0, length(vols))
