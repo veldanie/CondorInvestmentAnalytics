@@ -12,10 +12,11 @@
 #' @param ref_per_unit_foreign Indicator if currencies are converted to Base (ref) currency per unit of foreign currency.
 #' @param invest_assets Investable asset. By default: Index. It can be set to ETF or IA (investable asset).
 #' @param fixed_tickers Fixed tickers vector.
+#' @param join inner or outer.
 #' @return xts series.
 #' @export
 
-series_merge <- function(series_list, dates, asset_data, ref_curr, assets, currencies = NULL, convert_to_ref = FALSE, ref_per_unit_foreign = FALSE, invest_assets = NULL, fixed_tickers = NULL) {
+series_merge <- function(series_list, dates, asset_data, ref_curr, assets, currencies = NULL, convert_to_ref = FALSE, ref_per_unit_foreign = FALSE, invest_assets = NULL, fixed_tickers = NULL, join = 'inner') {
   n_assets <- length(assets)
   n_curr <- length(currencies)
 
@@ -49,33 +50,33 @@ series_merge <- function(series_list, dates, asset_data, ref_curr, assets, curre
         }
         if(i_curr == ref_curr){
           # Case 1: No currency issue.
-          series_out <- merge.xts(series_out, series_list[[ind]][paste0(dates, collapse = '/')], join = 'inner')
+          series_out <- merge.xts(series_out, series_list[[ind]][paste0(dates, collapse = '/')], join = join)
         } else {
           if(any(c(i_curr, ref_curr) == 'USD')){
             # Case 2: Convert series to reference currency.
             i_curr_temp <- c(i_curr, ref_curr)[c(i_curr, ref_curr)!= "USD"]
-            series_temp <- merge.xts(series_list[[ind]],  series_list[[i_curr_temp]], join = 'inner')
+            series_temp <- merge.xts(series_list[[ind]],  series_list[[i_curr_temp]], join = join)
             series_conv <- xts(x = as.vector(mapply(cash_conv, cash_in = series_temp[,1], spot = series_temp[,2], MoreArgs = list(curr_in = i_curr, spot_id = iso_quote(i_curr_temp)))),
                               order.by = index(series_temp))
-            series_out <- merge.xts(series_out, series_conv[paste0(dates, collapse = '/')], join = 'inner') #Merge con serie convertida a moneda de referencia.
+            series_out <- merge.xts(series_out, series_conv[paste0(dates, collapse = '/')], join = join) #Merge con serie convertida a moneda de referencia.
           } else { # Se crean tasas cruzadas si se requiere
             # Case 3: Convert series to reference currency using cross rate.
             iso_cross <- paste0(ref_curr, i_curr)
-            series_temp_fx <- merge.xts(series_list[[ind]],  merge.xts(series_list[[ref_curr]], series_list[[i_curr]], join = 'inner'), join = 'inner')
+            series_temp_fx <- merge.xts(series_list[[ind]],  merge.xts(series_list[[ref_curr]], series_list[[i_curr]], join = join), join = join)
             series_fx_cross <- xts(x = as.vector(mapply(fx_cross, fx_base = series_temp_fx[,2], fx_ref = series_temp_fx[,3],
                                                         MoreArgs = list(base_curr = ref_curr, ref_curr = i_curr,
                                                                         curr_mkt_base = iso_quote(ref_curr),
                                                                         curr_mkt_ref = iso_quote(i_curr)))), order.by = index(series_temp_fx))
-            series_temp <- merge.xts(series_list[[ind]],  series_fx_cross, join = 'inner')
+            series_temp <- merge.xts(series_list[[ind]],  series_fx_cross, join = join)
             series_conv <- xts(x = as.vector(mapply(cash_conv, cash_in = series_temp[,1], spot = series_temp[,2], MoreArgs = list(curr_in = i_curr, spot_id = iso_cross))),
                                order.by = index(series_temp))
-            series_out <- merge.xts(series_out, series_conv[paste0(dates, collapse = '/')], join = 'inner') #Merge con serie convertida a moneda de referencia.
+            series_out <- merge.xts(series_out, series_conv[paste0(dates, collapse = '/')], join = join) #Merge con serie convertida a moneda de referencia.
           }
         }
       }
     }else{
       for(i in 1:n_assets){
-        series_out<-merge.xts(series_out, series_list[[ticker[i]]][paste0(dates, collapse = '/')], join = "inner")
+        series_out<-merge.xts(series_out, series_list[[ticker[i]]][paste0(dates, collapse = '/')], join = join)
       }
     }
 }
@@ -88,13 +89,13 @@ series_merge <- function(series_list, dates, asset_data, ref_curr, assets, curre
             i_curr_temp <- c(currencies[i], ref_curr)[c(currencies[i], ref_curr)!= "USD"]
              #Currrency as base per unit of foreign:
             if(ref_per_unit_foreign && substr(iso_quote(i_curr_temp),1,3)==ref_curr){
-              series_out <- merge.xts(series_out, 1/series_list[[i_curr_temp]][paste0(dates, collapse = '/')], join = "inner")
+              series_out <- merge.xts(series_out, 1/series_list[[i_curr_temp]][paste0(dates, collapse = '/')], join = join)
             }else{
-              series_out <- merge.xts(series_out, series_list[[i_curr_temp]][paste0(dates, collapse = '/')], join = "inner")
+              series_out <- merge.xts(series_out, series_list[[i_curr_temp]][paste0(dates, collapse = '/')], join = join)
             }
         }else{#Se construye tasa cruzada.
           iso_cross <- paste0(currencies[i], ref_curr) #In this case cross rates are built as ref currency per unit of foreign.
-          series_temp_fx <- merge.xts(series_list[[currencies[i]]], series_list[[ref_curr]], join = 'inner')
+          series_temp_fx <- merge.xts(series_list[[currencies[i]]], series_list[[ref_curr]], join = join)
           series_fx_cross <- xts(x = as.vector(mapply(fx_cross, fx_base = series_temp_fx[,1], fx_ref = series_temp_fx[,2],
                                                       MoreArgs = list(base_curr = substr(iso_cross,1,3), ref_curr = substr(iso_cross,4,6),
                                                                       curr_mkt_base = iso_quote(substr(iso_cross,1,3)),
