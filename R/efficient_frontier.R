@@ -64,10 +64,10 @@ efficient_frontier <- function(mu, Sigma, lb = rep(0, ncol(Sigma)), ub = rep(1, 
       sigma_vec <- 0
     }
   }
-  valid_pos <- sigma_vec > 0
-  if(sum(valid_pos)>0){
-    mean_vec_front <- unique(mean_vec[valid_pos])
-    sigma_vec_front <- unique(sigma_vec[valid_pos])
+  valid_pos <- intersect(which(sigma_vec > 0), match(unique(sigma_vec), sigma_vec))
+  if(length(valid_pos)>0){
+    mean_vec_front <- mean_vec[valid_pos]
+    sigma_vec_front <- sigma_vec[valid_pos]
     w_mat <- w_mat[, valid_pos, drop = FALSE]
     ports_id <- 1:length(mean_vec_front)
     colnames(w_mat) <- paste0(port_id_pref, ports_id)
