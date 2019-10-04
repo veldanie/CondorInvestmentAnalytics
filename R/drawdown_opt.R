@@ -8,22 +8,28 @@
 #' @param quant Quantile.
 #' @param type Type of returns: arithmetic (discrete) or log (continuous)
 #' @param t_dd Indicator calculate T-drawdown.
+#' @param lb_months Lower bound months
+#' @param end_of_month Indicatio. Use end-of-month dates to estimate drawdown.
 #' @return Drawdown distribution, and mean, max and conditional drawdown.
 #' @export
 
 
-drawdown_opt <- function(series, w, horizon = '3M', quant = 0.9, type = 'log', t_dd = FALSE) {
+drawdown_opt <- function(series, w, horizon = '3M', quant = 0.9, type = 'log', t_dd = FALSE, lb_months = 12, end_of_month = FALSE) {
   if(is.null(series)){
     return(list(dd_obs = 0, dd_factor = 0, max_dd = 0, mean_dd = 0, cond_dd = 0, dd_marg = 0, dd_contrib = 0))
   }else{
     date_ini <- index(series)[1]
     date_last <- tail(index(series),1)
     num_months <- as.numeric(gsub('M', '', horizon))
-    months_seq_all <- seq(date_ini, date_last, by = "months")
+    if(end_of_month){
+      months_seq_all <- unique(c(date_ini, seq(ceiling_date(date_ini, "month")-1, date_last, by = "months"), date_last))
+    }else{
+      months_seq_all <- seq(date_ini, date_last, by = "months")
+    }
     n_months_seq <- length(months_seq_all)
     months_seq <- months_seq_all[1:(n_months_seq - num_months)]
     per_last <- as_date(sapply(1:length(months_seq), function(x) months_seq_all[x + num_months]))
-    if(num_months >= 12){ #Se incorporan periodos de menor plazo al inicio para no descartar datos relevantes.
+    if(num_months >= lb_months){ #Se incorporan periodos de menor plazo al inicio para no descartar datos relevantes.
      months_seq <- c(rep(date_ini, num_months-1), months_seq)
      per_last <- c(months_seq_all[2:num_months], per_last)
     }
