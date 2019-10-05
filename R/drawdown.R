@@ -9,11 +9,13 @@
 #' @param atribution Risk atribution
 #' @param type Type of returns: arithmetic (discrete) or log (continuous)
 #' @param ttr Indicator. Estimate time to recovery drawdown
+#' @param lb_months Lower bound months
+#' @param end_of_month Indicatio. Use end-of-month dates to estimate drawdown.
 #' @return Drawdown distribution, and mean, max and conditional drawdown.
 #' @export
 
 
-drawdown <- function(series, w, horizon = '12M', quant = 0.9, atribution = FALSE, type = 'log', ttr = FALSE, target_rec = 1) {
+drawdown <- function(series, w, horizon = '12M', quant = 0.9, atribution = FALSE, type = 'log', ttr = FALSE, target_rec = 1, lb_months = 12, end_of_month = FALSE) {
   if(is.null(series)){
     return(list(dd_obs = 0, dd_factor = 0, max_dd = 0, mean_dd = 0, cond_dd = 0, dd_marg = 0, dd_contrib = 0))
   }else{
@@ -21,14 +23,26 @@ drawdown <- function(series, w, horizon = '12M', quant = 0.9, atribution = FALSE
     date_last <- tail(index(series),1)
 
     num_months <- as.numeric(gsub('M', '', horizon))
-
-    months_seq <- seq(date_ini, date_last %m+% -months(num_months), by = "months")
+    if(end_of_month){
+      months_seq_all <- unique(c(date_ini, seq(ceiling_date(date_ini, "month")-1, date_last, by = "months"), date_last))
+    }else{
+      months_seq_all <- seq(date_ini, date_last, by = "months")
+    }
+    n_months_seq <- length(months_seq_all)
+    months_seq <- months_seq_all[1:(n_months_seq - num_months)]
+    per_last <- as_date(sapply(1:length(months_seq), function(x) months_seq_all[x + num_months]))
+    if(num_months >= lb_months){ #Se incorporan periodos de menor plazo al inicio para no descartar datos relevantes.
+      months_seq <- c(rep(date_ini, num_months-1), months_seq)
+      per_last <- c(months_seq_all[2:num_months], per_last)
+    }
+    #months_seq <- seq(date_ini, date_last %m+% -months(num_months), by = "months") # last version
     n_per <- length(months_seq)
     dd_obs <- rep(0, n_per)
     dd_factor <- matrix(0, nrow = n_per, ncol = length(w))
     pers <- ttr_dates <- rep('', n_per)
     for (i in 1:n_per){ # For each period
-      per_dates <- c(months_seq[i], months_seq[i] %m+% months(num_months))
+      #per_dates <- c(months_seq[i], months_seq[i] %m+% months(num_months)) # last version
+      per_dates <- c(months_seq[i], per_last[i])
       per <- paste(per_dates, collapse = '/')
       series_per <- series[per]# series_w[per] # Segmentation according to period
       w_mat <- rep(1, nrow(series_per)) %*% t(w)
