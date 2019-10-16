@@ -15,11 +15,11 @@
 #' @param slippage Slippage basis points.
 #' @param commission Commission basis points.
 #' @param invest_assets Investable asset. By default: Index. It can be set to ETF or IA (investable asset).
-#' @param fixed_tickers Fixed tickers vector.
+#' @param fixed_curr Fixed tickers currency vector.
 #' @return Backtesting results.
 #' @export
 
-portfolio_backtest <- function(weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, weights_xts = NULL, rebal_dates = NULL, slippage = 5, commission = 5, invest_assets = NULL, fixed_tickers = NULL) {
+portfolio_backtest <- function(weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, weights_xts = NULL, rebal_dates = NULL, slippage = 5, commission = 5, invest_assets = NULL, fixed_curr = NULL) {
 
   hold_per_days <- switch(hold_per, '1D' = 1, '1M' = 30, '3M' = 90, '1Y' = 360)
   n_assets <- length(weights)
@@ -29,8 +29,8 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
     index_curr <- asset_data$CurrencyETF[match(asset_univ, asset_data$Asset)]
   }else if (!is.null(invest_assets) && invest_assets == 'IA'){
     index_curr <- asset_data$CurrencyIA[match(asset_univ, asset_data$Asset)]
-    if(!is.null(fixed_tickers)){
-      index_curr[match(names(fixed_tickers), asset_univ)] <- asset_data$Currency[match(names(fixed_tickers), asset_data$Asset)]
+    if(!is.null(fixed_curr)){
+      index_curr[match(names(fixed_curr), asset_univ)] <- fixed_curr
     }
   }else{
     index_curr <- asset_data$Currency[match(asset_univ, asset_data$Asset)]
@@ -80,7 +80,6 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
         (transaction_costs(0, series_backtest_temp[-1], slippage = slippage, purchase = FALSE)$exec_price - series_backtest_temp[-1])
     }
   }
-
 
   fx_ini <- as.numeric(series_backtest[,index_curr][date_ini])
   index_val_ini <- as.numeric(series_backtest[,asset_univ][date_ini])
@@ -137,11 +136,13 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
 
       cash_full_conv[,fx_hedge_ind] <- cash_hedged_conv + cash_not_hedged_conv
     }
+
     if(any(fx_nhedge_conv)){
       cash_full_conv[,fx_nhedge_conv] <- matrix(mapply(cash_in = as.vector(t(cash_full[,fx_nhedge_conv])), spot = as.vector(t(spot_ser[,fx_nhedge_conv])),
                                                        curr_in = rep(index_curr[fx_nhedge_conv], n_dates), spot_id = rep(quotes_curr[fx_nhedge_conv], n_dates), cash_conv),
                                                 ncol = sum(fx_nhedge_conv), byrow = TRUE)
     }
+
     ret_cash_matrix <- cash_full_conv - (rep(1, nrow(cash_full_conv)) %*% t(cash_ini_ref))
     ret_cash_port <- xts(apply(ret_cash_matrix,1,sum), ymd(rownames(cum_diff_index)))
     cash_full_conv_all <- cash_full_conv
