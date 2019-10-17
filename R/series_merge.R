@@ -89,7 +89,12 @@ series_merge <- function(series_list, dates, asset_data, ref_curr, assets, curre
   if (!is.null(currencies)){
     for(i in 1:n_curr){
       if(currencies[i]==ref_curr){
-        series_out <- merge.xts(series_out, 1)
+        if(is.null(series_out)){
+          seq_dates_all <- seq(dates[1], dates[2], by="day")
+          series_out <- xts(rep(1, length(seq_dates_all)), order.by = seq_dates_all)
+        }else{
+          series_out <- merge.xts(series_out, 1)
+        }
       }else{
         if(any(c(currencies[i], ref_curr) == 'USD')){
             i_curr_temp <- c(currencies[i], ref_curr)[c(currencies[i], ref_curr)!= "USD"]
