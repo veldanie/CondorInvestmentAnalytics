@@ -19,7 +19,7 @@
 #' @return Performance attribution df.
 #' @export
 
-total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_bench, cash_port, cash_bench, diff_cash_assets_port, diff_cash_assets_bench, weights_port, weights_bench, dec_dates_port = NA, dec_dates_bench = NA, header_df = c("Portafolio", "Benchmark", "AA", "SS", "INT", "TOTAL")) {
+total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_bench, cash_port, cash_bench, diff_cash_assets_port, diff_cash_assets_bench, weights_port, weights_bench, dec_dates_port = NA, dec_dates_bench = NA, header_df = c("Portafolio", "Benchmark", "AA", "SS", "INT", "TOTAL"), ret_ini_capital=FALSE) {
   asset_names <- unique(c(names(w_bench), names(w_port)))
   w1 <- w2 <- rep(0, length(asset_names))
   names(w1) <- names(w2) <- asset_names
@@ -42,10 +42,6 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_be
   weights_bench <- weights_bench[ref_dates[-n_dates]]
   weights_port <- weights_port[ref_dates[-n_dates]]
 
-
-  #cash_assets_bench <- cash_assets_bench[ref_dates]
-  #cash_assets_port <- cash_assets_port[ref_dates]
-  #cash_bench <- cash_bench[ref_dates]
   rets1 <- returns(cash_bench[ref_dates])
 
   rets_assets1 <- xts(matrix(0, nrow = n_dates-1, ncol = ncol(diff_cash_assets_bench)), order.by = ref_dates[-1])

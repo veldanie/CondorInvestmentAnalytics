@@ -14,7 +14,7 @@
 #' @param commission Commission.
 #' @param port_name Portfolio name.
 #' @param invest_assets Invest assets.
-#' @param fixed_tickers Tickers.
+#' @param fixed_tickers Fixed tickers list (dates and tickers per asset).
 #' @param weights_tac Tactical weights xts.
 #' @param sync_dates Bool, sync. dates.
 #' @param fund_complete Bool, indicates if benchmark funds are used.
@@ -40,22 +40,31 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
   }else if (!is.null(invest_assets) && invest_assets == 'IA'){
     port_curr <- asset_data$CurrencyIA[match(asset_names, asset_data$Asset)]
     if(!is.null(fixed_tickers)){
-      port_curr[match(names(fixed_tickers), asset_names)] <- asset_data$Currency[match(names(fixed_tickers), asset_data$Asset)]
+      port_curr[match(names(fixed_tickers), asset_names)] <- asset_data$Currency[match(sapply(names(fixed_tickers), function(x) get_asset(tail(fixed_tickers[[x]]$tk), asset_data)), asset_data$Asset)]
     }
   }
   port_curr <- unique(port_curr)
-  series_back <- series_merge(series_list, ref_dates, asset_data, currency, asset_names, port_curr, convert_to_ref = FALSE, invest_assets = invest_assets, fixed_tickers = fixed_tickers)
+  asset_names_diff <- setdiff(asset_names, names(fixed_tickers))
+  series_back <- series_merge(series_list, ref_dates, asset_data, currency, asset_names_diff, port_curr, convert_to_ref = FALSE, invest_assets = invest_assets, fixed_tickers =  NULL)
+
+  if(!is.null(fixed_tickers)){
+    series_comp <- series_compose(series_list, asset_data, fixed_tickers, ref_dates, ref_curr=NULL, join = 'inner')
+    series_back <- merge.xts(series_back, series_comp$series, join = "inner")
+    colnames(series_back) <- c(asset_names_diff, port_curr, names(fixed_tickers))
+    series_back <- series_back[, c(asset_names, port_curr)]
+    fixed_curr <- series_comp$currs
+  }
 
   # the date 01012000 is added when completing with benchmark
+  series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE)
   if(fund_complete && !is.null(weights_tac) && !is.null(invest_assets) && index(weights_tac)[1]==dmy("01012000")){
-    series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, port_curr, convert_to_ref = FALSE)
     series_back_list <- list(series_bench, series_back)
     names(series_back_list) <- index(weights_tac)[1:2]
     invest_assets_list <- list(NULL, invest_assets)
-    fixed_tickers_list <- list(NULL, fixed_tickers)
-    port_back <- portfolio_backtest_compose(capital, weights_tac, currency, asset_data, series_back_list, rebal_per_in_months = rebal_per,  rebal_dates = NULL, slippage = slippage, commission = commission, invest_assets_list = invest_assets_list, fixed_tickers_list = fixed_tickers_list)
+    fixed_curr_list <- list(NULL, fixed_curr)
+    port_back <- portfolio_backtest_compose(capital, weights_tac, currency, asset_data, series_back_list, rebal_per_in_months = rebal_per,  rebal_dates = NULL, slippage = slippage, commission = commission, invest_assets_list = invest_assets_list, fixed_curr_list = fixed_curr_list)
   }else{
-    port_back <- portfolio_backtest(w_port, capital, currency, asset_data, series_back[,c(names(w_port), port_curr)], rebal_per_in_months = rebal_per, weights_xts = weights_tac, slippage = slippage, commission = commission, invest_assets = invest_assets, fixed_tickers = fixed_tickers)
+    port_back <- portfolio_backtest(w_port, capital, currency, asset_data, series_back[,c(names(w_port), port_curr)], rebal_per_in_months = rebal_per, weights_xts = weights_tac, slippage = slippage, commission = commission, invest_assets = invest_assets, fixed_curr = fixed_curr)
   }
 
   total_port <- round(100*as.numeric(tail(port_back$ret_port,1)), 3)
@@ -68,14 +77,11 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
 
   te <- active_ret <- ann_te <- info_ratio <- NA
   if(!is.null(w_bench)){
-    if(!is.null(invest_assets)){
-      series_back <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, port_curr, convert_to_ref = FALSE)
-    }
     rebal_dates <- NULL
     if(sync_dates){
       rebal_dates <- index(weights_tac)
     }
-    bench_back <- portfolio_backtest(w_bench, capital, currency, asset_data, series_back[,c(names(w_bench), bench_curr)], rebal_per_in_months = rebal_per, weights_xts = NULL,
+    bench_back <- portfolio_backtest(w_bench, capital, currency, asset_data, series_bench[,c(names(w_bench), bench_curr)], rebal_per_in_months = rebal_per, weights_xts = NULL,
                                      rebal_dates = rebal_dates, slippage = slippage, commission = commission)
 
     total_bench <- round(100*as.numeric(tail(bench_back$ret_port,1)), 3)
