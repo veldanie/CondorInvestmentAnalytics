@@ -54,9 +54,9 @@ series_drawdown <- function(series, horizon = '12M', quant = 0.9, type = 'arit',
   max_dd_per <- per[dd_obs == max(dd_obs)]
 
   max_dd_obs <- max(dd_obs)
-  ind_dd_obs <- dd_obs == max_dd_obs
-  max_dd_date <- per_last[ind_dd_obs]
-  series_max_dd <- series[per[ind_dd_obs]]
+  pos_dd_obs <- tail(which(dd_obs == max_dd_obs),1)
+  max_dd_date <- per_last[pos_dd_obs]
+  series_max_dd <- series[per[pos_dd_obs]]
   max_dd_ini_date <- index(series_max_dd)[which.max(as.numeric(series_max_dd)/as.numeric(tail(series_max_dd, 1))-1)]
   t_dd_obs <- round(as.numeric(max_dd_date - max_dd_ini_date)/30, 2) ## Temporal dd observed
 
