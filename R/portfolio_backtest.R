@@ -25,6 +25,9 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
   n_assets <- length(weights)
   asset_univ <- names(weights)
 
+  if(is.null(names(fx_hedge_asset))){
+    names(fx_hedge_asset) <- asset_univ
+  }
   if(!is.null(invest_assets) && invest_assets == 'ETF'){
     index_curr <- asset_data$CurrencyETF[match(asset_univ, asset_data$Asset)]
   }else if (!is.null(invest_assets) && invest_assets == 'IA'){
@@ -35,7 +38,6 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
   }else{
     index_curr <- asset_data$Currency[match(asset_univ, asset_data$Asset)]
   }
-
 
   currencies <- unique(index_curr)
   lcurr <- length(currencies)
@@ -106,7 +108,7 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
   tc <- transaction_costs(index_units, index_val_ini, slippage = slippage, commission = commission)
   index_units <- cash_ini/tc$exec_price # Number of units depend on execution price.
 
-  fx_hedge_ind <- fx_hedge_asset != 0 # Indicator of assets that are hedged.
+  fx_hedge_ind <- fx_hedge_asset[asset_univ] != 0 # Indicator of assets that are hedged.
   fx_conv_ind <- index_curr != currency# Indicator of assets with index_curr != ref_curr
   fx_nhedge_conv <- !fx_hedge_ind & fx_conv_ind # Indicator of non-hedged assets with index_curr != ref_curr.
 

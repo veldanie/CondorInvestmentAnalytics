@@ -58,7 +58,17 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
   # the date 01012000 is added when completing with benchmark
   series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE)
   if(fund_complete && !is.null(weights_tac) && !is.null(invest_assets) && index(weights_tac)[1]==dmy("01012000")){
-    series_back_list <- list(series_bench, series_back)
+    col_bench <- colnames(series_bench)
+    add_asset <- setdiff(colnames(weights_tac), col_bench)
+    if(length(add_asset)>0){
+      index_series_bench <- index(series_bench)
+      series_bench_ext <- merge.xts(series_bench, xts(rep(0, length(index_series_bench)), order.by = index_series_bench), join = "inner")
+      colnames(series_bench_ext) <- c(col_bench, add_asset)
+    }else{
+      series_bench_ext <- series_bench
+    }
+
+    series_back_list <- list(series_bench_ext, series_back)
     names(series_back_list) <- index(weights_tac)[1:2]
     invest_assets_list <- list(NULL, invest_assets)
     fixed_curr_list <- list(NULL, fixed_curr)

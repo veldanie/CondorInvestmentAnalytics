@@ -53,10 +53,10 @@ drawdown_opt <- function(series, w, horizon = '3M', quant = 0.9, type = 'log', t
     names(dd_obs) <- per
     cond_dd_dates <- per_last[dd_obs >= max_dd]
     max_dd_obs <- max(dd_obs)
-    ind_dd_obs <- dd_obs == max_dd_obs
-    max_dd_date <- per_last[dd_obs == max_dd_obs]
+    pos_dd_obs <- tail(which(dd_obs == max_dd_obs),1)
+    max_dd_date <- per_last[pos_dd_obs]
 
-    series_max_dd <- series[per[ind_dd_obs]]
+    series_max_dd <- series[per[pos_dd_obs]]
     max_dd_ini_date <- index(series_max_dd)[which.max((series_max_dd/(rep(1, nrow(series_max_dd))%*% tail(series_max_dd, 1))-1)%*%w)]
 
     t_dd_obs <- as.numeric(max_dd_date - max_dd_ini_date)/30 ## Temporal dd observed

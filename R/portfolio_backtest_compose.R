@@ -19,7 +19,7 @@
 #' @return Backtesting results.
 #' @export
 
-portfolio_backtest_compose <- function(capital, weights_xts, currency, asset_data, series_backtest_list, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, rebal_dates = NULL, slippage = 5, commission = 5, invest_assets_list = NULL, fixed_curr_list = NULL){
+portfolio_backtest_compose <- function(capital, weights_xts, currency, asset_data, series_backtest_list, fx_hedge_asset = rep(0, ncol(weights_xts)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, rebal_dates = NULL, slippage = 5, commission = 5, invest_assets_list = NULL, fixed_curr_list = NULL){
   ref_dates <- names(series_backtest_list)
   valid_dates_ind <- sapply(1:2, function(i) ref_dates[i] < tail(index(series_backtest_list[[i]]),1))
   ref_dates <- ref_dates[valid_dates_ind]
@@ -33,6 +33,7 @@ portfolio_backtest_compose <- function(capital, weights_xts, currency, asset_dat
     range_dates <- ref_dates[i:(i+1)]
     range_dates[is.na(range_dates)] <- ""
     series_back <- series_backtest_list[[date_i]][paste0(range_dates, collapse = "/")]
+
     pb_i <- portfolio_backtest(weights, capital, currency, asset_data, series_back, fx_hedge_asset = fx_hedge_asset, fwd_prem = fwd_prem, hold_per = hold_per, rebal_per_in_months = rebal_per_in_months, weights_xts = weights_xts, rebal_dates = rebal_dates, slippage = slippage, commission = commission, invest_assets = invest_assets_list[[i]], fixed_curr = fixed_curr_list[[i]])
     ret_cash_port <- rbind(ret_cash_port, pb_i$ret_cash_port + capital - capital_ini)
     diff_cash_assets <- rbind(diff_cash_assets, pb_i$diff_cash_assets)
