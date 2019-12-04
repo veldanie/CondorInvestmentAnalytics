@@ -14,13 +14,15 @@ risk_atrib <- function(series, w, quant, normal = FALSE) {
 
   risk <- var_cvar (series, w, quant, normal)
 
-  c_ip <- sapply(1:length(w), function(x) (w[x]*risk$covar_mat[x,x] + sum(w[-x] * risk$covar_mat[,x][-x])))
-
-  vol_contrib <- w * c_ip / risk$port_vol ^ 2
+  #c_ip <- sapply(1:length(w), function(x) (w[x]*risk$covar_mat[x,x] + sum(w[-x] * risk$covar_mat[,x][-x])))
+  c_ip <- w * (t(w) %*% risk$covar_mat)
   vol_marg <- c_ip / risk$port_vol
+  vol_contrib <- vol_marg / risk$port_vol
+  # vol_contrib <- w * c_ip / risk$port_vol ^ 2
+  # vol_marg <- c_ip / risk$port_vol
 
   var_marg <- qnorm(quant) * vol_marg
-  #var_contrib <- w * var_marg / risk$cvar
+  var_contrib <- w * var_marg / risk$cvar
 
   ind_es <- risk$port_neg_rets > risk$cvar
   es_marg <- apply((rep(-1, sum(ind_es)) %*% t(w)) * series[ind_es], 2, mean)

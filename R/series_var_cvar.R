@@ -9,15 +9,19 @@
 #' @export
 
 series_var_cvar <- function(series, quant, normal = FALSE) {
-  neg_rets <- -1 * series
-  vol <- sd(series)
+  if(nrow(series) > 1){
+    neg_rets <- -1 * series
+    vol <- sd(series)
 
-  if(normal){
-    var <- qnorm(quant) * vol
-    cvar <- dnorm(qnorm(quant))/(1-quant) * vol
+    if(normal){
+      var <- qnorm(quant) * vol
+      cvar <- dnorm(qnorm(quant))/(1-quant) * vol
+    }else{
+      var <- quantile(neg_rets, probs = quant)
+      cvar <- sapply(var, function(x) mean(neg_rets[neg_rets > x]))
+    }
   }else{
-    var <- quantile(neg_rets, probs = quant)
-    cvar <- sapply(var, function(x) mean(neg_rets[neg_rets > x]))
+    neg_rets <- vol <- var <- cvar <- NA
   }
   return(list(neg_rets = neg_rets, vol = vol, var = var, cvar = cvar))
 }

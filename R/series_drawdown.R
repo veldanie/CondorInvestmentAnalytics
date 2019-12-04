@@ -29,7 +29,7 @@ series_drawdown <- function(series, horizon = '12M', quant = 0.9, type = 'arit',
   }else{
     per_last <- tail(months_seq_all,1)
   }
-  if(num_months >= lb_months){ #Se incorporan periodos de menor plazo al inicio para no descartar datos relevantes.
+  if(num_months >= lb_months && n_months_seq > 2){ #Se incorporan periodos de menor plazo al inicio para no descartar datos relevantes.
     num_months_valid <- min(num_months, n_months_seq - 1)
     months_seq <- c(rep(date_ini, num_months_valid-1), months_seq)
     per_last <- c(months_seq_all[2:num_months_valid], per_last)
