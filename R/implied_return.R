@@ -12,7 +12,7 @@
 
 implied_return <- function(lambda, Sigma, w, per = 12, rfr = 0) {
   w_sort <- w[match(names(w), colnames(Sigma))]
-  implied_ret <- as.vector((lambda * Sigma %*% w))
+  implied_ret <- as.vector((lambda * Sigma %*% w_sort))
   names(implied_ret) <- names(w_sort)
   implied_ret_annual <- rfr + implied_ret * per
 
