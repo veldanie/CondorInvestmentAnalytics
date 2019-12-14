@@ -32,7 +32,7 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
   }
 
   asset_names <- unique(names(c(w_port, w_bench)))
-
+  fixed_curr <- NULL
   bench_curr <- unique(asset_data$Currency[match(asset_names, asset_data$Asset)])
   port_curr <- bench_curr
   if(!is.null(invest_assets) && invest_assets == 'ETF'){
