@@ -3,6 +3,8 @@
 #' Optimal Portfolio. Assuming returns
 #' @param rets Returns series.
 #' @param per Returns period
+#' @param mu_ann Annualized mean returns used to generate samples
+#' @param Sigma_ann Annualized cov matrix used to generate samples
 #' @param lb Lower bound.
 #' @param ub Upper bound.
 #' @param lambda Risk aversion coefficient.
@@ -22,44 +24,50 @@
 #' @return Optimal weights, mean resampled optimal weights, matrix of sampled weights.
 #' @export
 
-optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep(1, ncol(rets)), w_ini=NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = 0, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = FALSE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 36, dyn_mu = FALSE, q_sel = 0.2){
+optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, lb=rep(0, ncol(rets)), ub=rep(1, ncol(rets)), w_ini=NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = 0, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = FALSE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 36, dyn_mu = FALSE, q_sel = 0.2){
   options('nloptr.show.inequality.warning'=FALSE)
   options(warn=-1)
   if(is.null(w_ini)){
     w_ini <- lb + (1-sum(lb))*(ub - lb)/sum(ub - lb)
     names(w_ini) <- colnames(rets)
   }
-  date_ini <- index(rets)[1]
-  date_last <- tail(index(rets), 1)
-  months_seq <- seq(date_ini, date_last %m+% -months(len_window), by = "months")
 
-  mu_all <- apply(rets, 2, mean)
-  if(mom | dyn_mu){
-    if(length(k)==0){
-      k <- round(as.numeric((date_last - date_ini)/365)/(len_window/12))
-    }
-    n_rows <- nrow(rets)
-    size <- ceiling(n_rows/k)
-    sample_means <- matrix(0, nrow=k, ncol=ncol(rets))
-    for (i in 1:k){
-      if(i==k){
-        sample_means[i,] <- apply(rets[(1+size*(i-1)):nrow(rets)],2,mean)
-      }else{
-        sample_means[i,] <- apply(rets[(1+size*(i-1)):(size*i)],2,mean)
+  if(is.null(mu_ann) || is.null(Sigma_ann)){
+    date_ini <- index(rets)[1]
+    date_last <- tail(index(rets), 1)
+
+    mu_all <- apply(rets, 2, mean)
+    if(mom | dyn_mu){
+      if(length(k)==0){
+        k <- round(as.numeric((date_last - date_ini)/365)/(len_window/12))
       }
-    }
-    if(dyn_mu){
-      mu <- rbind(sample_means, mu_all)
-      colnames(mu) <- colnames(rets)
+      n_rows <- nrow(rets)
+      size <- ceiling(n_rows/k)
+      sample_means <- matrix(0, nrow=k, ncol=ncol(rets))
+      for (i in 1:k){
+        if(i==k){
+          sample_means[i,] <- apply(rets[(1+size*(i-1)):nrow(rets)],2,mean)
+        }else{
+          sample_means[i,] <- apply(rets[(1+size*(i-1)):(size*i)],2,mean)
+        }
+      }
+      if(dyn_mu){
+        mu <- rbind(sample_means, mu_all)
+        colnames(mu) <- colnames(rets)
+      }else{
+        mu <- apply(sample_means,2,median)
+        names(mu) <- colnames(rets)
+      }
     }else{
-      mu <- apply(sample_means,2,median)
-      names(mu) <- colnames(rets)
+      mu <- mu_all
     }
+    Sigma <- covar(rets, shrink = shrink_cov)$cov_matrix
   }else{
-    mu <- mu_all
+    dyn_mu <- sample_window <- FALSE
+    mu <- mu_ann/per
+    Sigma <- Sigma_ann/per
   }
 
-  Sigma <- covar(rets, shrink = shrink_cov)$cov_matrix
   if(is.null(ineqfun) & (!is.null(ineqUB) | ineqLB>0)){
     ineqfun <- risk_fun(Sigma = covar(rets, per=per, shrink = FALSE)$cov_matrix_ann, type = 'vol') # Assumes volatility restriction
   }
@@ -73,6 +81,7 @@ optim_portfolio_resamp <- function(rets, per = 12, lb=rep(0, ncol(rets)), ub=rep
   port_means <- port_vols <- rep(0, M)
 
   if(sample_window){
+    months_seq <- seq(date_ini, date_last %m+% -months(len_window), by = "months")
     for (i in 1:M){
       m_ini <- sample(months_seq, size = 1, replace = TRUE)
       m_last <- m_ini %m+% months(len_window)
