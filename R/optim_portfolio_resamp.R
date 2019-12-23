@@ -31,12 +31,12 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
     w_ini <- lb + (1-sum(lb))*(ub - lb)/sum(ub - lb)
     names(w_ini) <- colnames(rets)
   }
-
+  mu_all <- apply(rets, 2, mean)
+  Sigma_all <- covar(rets, per=per, shrink = FALSE)
   if(is.null(mu_ann) || is.null(Sigma_ann)){
     date_ini <- index(rets)[1]
     date_last <- tail(index(rets), 1)
 
-    mu_all <- apply(rets, 2, mean)
     if(mom | dyn_mu){
       if(length(k)==0){
         k <- round(as.numeric((date_last - date_ini)/365)/(len_window/12))
@@ -69,7 +69,7 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
   }
 
   if(is.null(ineqfun) & (!is.null(ineqUB) | ineqLB>0)){
-    ineqfun <- risk_fun(Sigma = covar(rets, per=per, shrink = FALSE)$cov_matrix_ann, type = 'vol') # Assumes volatility restriction
+    ineqfun <- risk_fun(Sigma = Sigma_all$cov_matrix_ann, type = 'vol') # Assumes volatility restriction
   }
 
   mu_mat <- matrix(0, ncol = ncol(rets), nrow = M)
@@ -94,7 +94,7 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
       w_optim_mat[i,] <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
                                          eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, method = method, n.restarts = n.restarts, n.sim = n.sim,
                                          outer.iter = 10, inner.iter = 10)
-      port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma)[c('port_mean_ret', 'port_vol')])
+      port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma_all$cov_matrix)[c('port_mean_ret', 'port_vol')])
       port_means[i] <- port_ret[1]*per
       port_vols[i] <- port_ret[2]*sqrt(per)
       if((i %% 100)==0){
@@ -117,7 +117,7 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
       w_optim_mat[i,] <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
                                          eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, method = method, n.restarts = n.restarts, n.sim = n.sim,
                                          outer.iter = 10, inner.iter = 10)
-      port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma)[c('port_mean_ret', 'port_vol')])
+      port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma_all$cov_matrix)[c('port_mean_ret', 'port_vol')])
       port_means[i] <- port_ret[1]*per
       port_vols[i] <- port_ret[2]*sqrt(per)
       if((i %% 100)==0){
