@@ -14,7 +14,7 @@ disagg_portfolio <- function(w, benchmarks) {
     w_funds <- c()
     for(fi in funds){
       w_fund_df <- benchmarks %>% filter(Benchmark==fi) %>% dplyr::select(Asset, Weight)
-      w_fund <- w[fi] * as.numeric(w_df$Weight)
+      w_fund <- w[fi] * as.numeric(w_fund_df$Weight)
       names(w_fund) <- w_fund_df$Asset
       w_funds <- c(w_funds, w_fund)
     }
