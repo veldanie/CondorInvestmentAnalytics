@@ -23,7 +23,6 @@
 #' @export
 
 active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, header_df = c("Ret Total Bench", "Ret Total Port", "Ret Prom Bench", "Ret Prom Port", "Vol", "Sharpe", "Alpha", "TE", "RI", "AA", "SS/INTER")) {
-
   freq <- switch(per, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4)
   if(is.null(w_port) & is.null(w_bench)){ stop("Null portafolios. Check weights!")}
 
@@ -99,7 +98,7 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
     avg_bench <- mean(rets_bench)
     ann_avg_bench <- round(avg_bench*freq*100, 3)
 
-    te <- sd(rets_port - rets_bench)
+    te <- ifelse(nrow(rets_port)>1, sd(rets_port - rets_bench), 0)
 
     active_ret <- round(100*(avg_port - avg_bench) * freq, 3)
     active_total_ret <- round(total_port - total_bench, 3)
