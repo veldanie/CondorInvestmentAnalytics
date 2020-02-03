@@ -79,7 +79,7 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
     }
 
     total_port <- round(100*as.numeric(tail(port_back$ret_port,1)), 3)
-    rets_port <- periodReturn(port_back$cash_port, period = per)
+    rets_port <- returns(port_back$cash_port, period = per, leading = FALSE)
     avg_port <- mean(rets_port)
     vol_port <- sd(rets_port)
     ann_avg_port <- round(avg_port*freq*100, 3)
@@ -96,7 +96,7 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
                                        rebal_dates = rebal_dates, slippage = slippage, commission = commission)
 
       total_bench <- round(100*as.numeric(tail(bench_back$ret_port,1)), 3)
-      rets_bench <- periodReturn(bench_back$cash_port, period = per)
+      rets_bench <- returns(bench_back$cash_port, period = per, leading = FALSE)
       avg_bench <- mean(rets_bench)
       ann_avg_bench <- round(avg_bench*freq*100, 3)
 
@@ -120,7 +120,7 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
         series_back_aa <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE)
         port_back_aa <- portfolio_backtest(w_port, capital, currency, asset_data, series_back_aa[,c(names(w_port), bench_curr)], rebal_per_in_months = rebal_per, weights_xts = weights_tac, slippage = slippage, commission = commission)
         total_port_aa <- round(100*as.numeric(tail(port_back_aa$ret_port,1)), 3)
-        rets_port_aa <- periodReturn(port_back_aa$cash_port, period = per)
+        rets_port_aa <- returns(port_back_aa$cash_port, period = per, leading = FALSE)
         avg_port_aa <- mean(rets_port_aa)
         #ann_avg_port <- round(avg_port_aa*freq*100, 3)
         if(total_ret){
