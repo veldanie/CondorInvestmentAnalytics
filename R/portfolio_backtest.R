@@ -146,7 +146,7 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
     }
 
     ret_cash_matrix <- cash_full_conv - (rep(1, nrow(cash_full_conv)) %*% t(cash_ini_ref))
-    ret_cash_port <- xts(apply(ret_cash_matrix,1,sum), ymd(rownames(cum_diff_index)))
+    ret_cash_port <- xts(apply(ret_cash_matrix,1,sum), ymd(index(cum_diff_index)))
     cash_full_conv_all <- cash_full_conv
     diff_cash_assets <- rbind(xts(ret_cash_matrix[1,]), diff(ret_cash_matrix)[-1,])
     colnames(diff_cash_assets) <- colnames(cum_diff_index)
