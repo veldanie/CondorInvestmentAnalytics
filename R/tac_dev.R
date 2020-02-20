@@ -18,16 +18,24 @@ tac_dev <- function(w, ow_assets, uw_assets, val_dev = 0,  min_dev_asset = 0.01,
 
   if(val_dev>0){
     if(substr(tolower(type), 1,4)=="unif" || any(w_new[ow_assets]==0)){
-      w_dev_ow <- rep(val_dev/length(ow_assets), length(ow_assets))
-      w_dev_uw <- rep(val_dev/length(uw_assets), length(uw_assets))
+      if(!is.null(ow_assets)){
+        w_dev_ow <- rep(val_dev/length(ow_assets), length(ow_assets))
+      }
+      if(!is.null(uw_assets)){
+        w_dev_uw <- rep(val_dev/length(uw_assets), length(uw_assets))
+      }
     }else{
-      w_dev_ow <- val_dev*w_new[ow_assets]/sum(w_new[ow_assets])
-      w_dev_uw <- val_dev*w_new[uw_assets]/sum(w_new[uw_assets])
+      if(!is.null(ow_assets)){
+        w_dev_ow <- val_dev*w_new[ow_assets]/sum(w_new[ow_assets])
+      }
+      if(!is.null(uw_assets)){
+        w_dev_uw <- val_dev*w_new[uw_assets]/sum(w_new[uw_assets])
+      }
     }
     if(any(w_dev_ow < min_dev_asset) || any(w_dev_uw < min_dev_asset)){
       pos_0_ow <- w_dev_ow < min_dev_asset
       pos_0_uw <- w_dev_uw < min_dev_asset
-      if(all(pos_0_ow) || all(pos_0_ow)){
+      if(((!is.null(ow_assets) & !is.null(uw_assets)) & (all(pos_0_ow) || all(pos_0_uw))) || (all(pos_0_ow) & all(pos_0_uw))){
         return(list(w_new = w_new, w_devs = w_devs))
       }else{
         dev_adj_ow <- sum(w_dev_ow[pos_0_ow])
