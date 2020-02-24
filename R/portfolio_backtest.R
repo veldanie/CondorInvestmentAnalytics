@@ -207,6 +207,7 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
       ##Rebalancing
       if(k < (length(dec_dates)-1)){
         cash_ini_ref_update <- as.vector(weights_xts[dec_dates[k+1],asset_univ]) * capital_update
+        names(cash_ini_ref_update) <- colnames(weights_xts)
         cash_full_conv_all[dec_dates[k+1], ] <- cash_ini_ref_update
         fx_ini <- as.numeric(series_backtest[,index_curr][dec_dates[k+1]])
         index_val_ini <- as.numeric(series_backtest[,asset_univ][dec_dates[k+1]])
