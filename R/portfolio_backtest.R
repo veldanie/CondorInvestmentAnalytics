@@ -170,7 +170,7 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
       if(any(fx_hedge_ind)){
         ind_fwd_per<- index(fwd_prem) > dec_dates[k]
         fwd_prem_temp <- rbind(xts(t(rep(0, ncol(fwd_prem))), order.by = dec_dates[k]), fwd_prem[ind_fwd_per,])
-        fwd_prem_temp[2,] <- fwd_prem[2,] * as.numeric(index(fwd_prem_temp)[2]-dec_dates[k])/hold_per_days
+        fwd_prem_temp[2,] <- fwd_prem_temp[2,] * as.numeric(index(fwd_prem_temp)[2]-dec_dates[k])/hold_per_days
 
 
         fwd_outright <- xts((rep(1, nrow(fwd_prem_temp)) %*% t(fx_ini[match(substr(names(fwd_prem),1,3), index_curr)])) * apply(1 + fwd_prem_temp,2, cumprod),
