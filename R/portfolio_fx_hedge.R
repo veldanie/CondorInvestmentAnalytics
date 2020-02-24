@@ -214,5 +214,5 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
   port_ret_summ <- apply(port_hp_returns, 2, function(x) c(mean(x), sd(x), min(x), max(x)))
   rownames(port_ret_summ) <- c('Mean', 'Std_Dev', 'Min', 'Max')
 
-  return(list(port_hp_returns = port_hp_returns, port_ret_summ = port_ret_summ, hedge_tab = asset_group, fwd_prem = series_fwd_prem))
+  return(list(port_hp_returns = port_hp_returns, port_ret_summ = port_ret_summ, hedge_tab = asset_group, fwd_prem = series_fwd_prem, h_asset_univ=h_asset_univ))
 }
