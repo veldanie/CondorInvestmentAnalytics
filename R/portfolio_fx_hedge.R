@@ -18,7 +18,7 @@
 #' @export
 
 
-portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfwd_list, dates, hold_per = '1M', exp_ret = 0, group.by = 'Asset', bounded = TRUE, invest_assets = NULL, fixed_curr = NULL) {
+portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfwd_list, dates, hold_per = '1M', exp_ret = 0, group.by = 'Asset', bounded = TRUE, invest_assets = NULL, fixed_curr = NULL, hedge_target=NULL) {
 
   if(!(hold_per %in% c('1M', '3M'))){stop('Holding period not supported!')}
   per <- switch(hold_per, '1M' = 'monthly', '3M' = 'quarterly')
@@ -175,30 +175,33 @@ portfolio_fx_hedge <- function(w, ref_curr, asset_data, series_list, series_fxfw
     names(e_f_factors) <- names(w_fact) <- factors
   }
 
-
-  hedge <- rep(0, n_assets)#Hedge vector per asset
-
+  #hedge <- rep(0, n_assets)#Hedge vector per asset
   #Portfolio hedged return:
   rets_pu <- xts(rets_ref %*% w[asset_univ], order.by = index(rets_ref))
 
-  # Option 1. Regress all factor. Problem of multicol. It might not allow us to separate the hedge ratio of each factor if they have the same currency.
-  # fit <- lm(rets_pu ~ ., data = e_f_factors)
-  # coeff <- fit$coefficients[-1]
-  # names(coeff) <- gsub("`", "", names(coeff))
+  if(is.null(hedge_target)){
+    # Option 1. Regress all factor. Problem of multicol. It might not allow us to separate the hedge ratio of each factor if they have the same currency.
+    # fit <- lm(rets_pu ~ ., data = e_f_factors)
+    # coeff <- fit$coefficients[-1]
+    # names(coeff) <- gsub("`", "", names(coeff))
 
-  # Option 2. Run a regression for each factor.
+    # Option 2. Run a regression for each factor.
 
-  coeff <- NULL
-  for (fi in 1:length(factors)){
-    fit <- lm(rets_pu ~ e_f_factors[,fi])
-    coeff <- c(coeff, fit$coefficients[-1])
-  }
-  names(coeff) <- factors
-  hedge_ratio <- coeff/w_fact[names(coeff)]
-  hedge_ratio[is.infinite(hedge_ratio)] <- 0
+    coeff <- NULL
+    for (fi in 1:length(factors)){
+      fit <- lm(rets_pu ~ e_f_factors[,fi])
+      coeff <- c(coeff, fit$coefficients[-1])
+    }
+    names(coeff) <- factors
+    hedge_ratio <- coeff/w_fact[names(coeff)]
+    hedge_ratio[is.infinite(hedge_ratio)] <- 0
 
-  if (bounded){
-    hedge_ratio <- hedge_ratio * (!(hedge_ratio < 0 | hedge_ratio > 1)) + 1*(hedge_ratio > 1)
+    if (bounded){
+      hedge_ratio <- hedge_ratio * (!(hedge_ratio < 0 | hedge_ratio > 1)) + 1*(hedge_ratio > 1)
+    }
+  }else{
+    hedge_ratio <- rep(hedge_target, length(factors))
+    names(hedge_ratio) <- factors
   }
 
   asset_group <- asset_data %>% filter(Asset %in% asset_univ)  %>% dplyr::select_(~Asset, group.by) %>% mutate(Hedge = 0)
