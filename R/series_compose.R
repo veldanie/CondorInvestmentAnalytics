@@ -41,8 +41,8 @@ series_compose <- function(series_list, asset_data, assets_list, dates, ref_curr
 
     rets <- NULL
     if(length(dates_tk)>1){
-      for(i in 1:(length(dates_tk)-1)){
-        rets <- rbind(rets, returns(series_merge(series_list = series_list, dates = c(dates_tk[i], dates_tk[i+1]), asset_data = asset_data, ref_curr = currs[i], assets = assets[i], currencies = NULL, convert_to_ref = TRUE), leading = FALSE))
+      for(j in 1:(length(dates_tk)-1)){
+        rets <- rbind(rets, returns(series_merge(series_list = series_list, dates = c(dates_tk[j], dates_tk[j+1]), asset_data = asset_data, ref_curr = currs[i], assets = assets[j], currencies = NULL, convert_to_ref = TRUE), leading = FALSE))
       }
       backup_series <- xts(100 * cumprod(1 + as.vector(rets)), order.by = index(rets))
       if(length(series_tail) > 0){
