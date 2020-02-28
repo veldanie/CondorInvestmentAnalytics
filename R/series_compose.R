@@ -19,8 +19,11 @@ series_compose <- function(series_list, asset_data, assets_list, dates, ref_curr
   currs <- rep("", n_list)
   for(i in 1:n_list){
     id <- ids[i]
-    tickers <- assets_list[[id]]$tk
-    dates_tk <- assets_list[[id]]$dates
+    tickers_unordered <- assets_list[[id]]$tk
+    dates_tk_unordered <- assets_list[[id]]$dates
+    dates_tk <- dates_tk_unordered[order(dates_tk_unordered)]
+    tickers <- tickers_unordered[order(dates_tk_unordered)]
+
     n_tk <- length(tickers)
     assets <- sapply(tickers, get_asset, asset_data)
     missing_ticker <- !(tickers %in% names(series_list))
