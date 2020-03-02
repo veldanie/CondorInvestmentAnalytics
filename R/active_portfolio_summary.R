@@ -18,11 +18,12 @@
 #' @param weights_tac Tactical weights xts.
 #' @param sync_dates Bool, sync. dates.
 #' @param fund_complete Bool, indicates if benchmark funds are used.
+#' @param index_df Custom index dataframe
 #' @param header_df DF headers.
 #' @return Active summary data frame.
 #' @export
 
-active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, header_df = c("Ret Total Bench", "Ret Total Port", "Ret Prom Bench", "Ret Prom Port", "Vol", "Sharpe", "Alpha", "TE", "RI", "AA", "SS/INTER")) {
+active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, index_df=NULL, header_df = c("Ret Total Bench", "Ret Total Port", "Ret Prom Bench", "Ret Prom Port", "Vol", "Sharpe", "Alpha", "TE", "RI", "AA", "SS/INTER")) {
   freq <- switch(per, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4)
   if(is.null(w_port) & is.null(w_bench)){ stop("Null portafolios. Check weights!")}
 
@@ -39,7 +40,18 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
   }else if (!is.null(invest_assets) && invest_assets == 'IA'){
     port_curr <- asset_data$CurrencyIA[match(asset_names, asset_data$Asset)]
     if(!is.null(fixed_tickers)){
-      port_curr[match(names(fixed_tickers), asset_names)] <- asset_data$Currency[match(sapply(names(fixed_tickers), function(x) get_asset(tail(fixed_tickers[[x]]$tk), asset_data)), asset_data$Asset)]
+      ref_tk <- unlist(sapply(names(fixed_tickers), function(x) tail(fixed_tickers[[x]]$tk,1)))
+      if(!is.null(index_df)){
+        custom_tk_ind <- ref_tk %in% (index_df %>% pull(Ticker))
+      }else{
+        custom_tk_ind <- rep(FALSE, length(ref_tk))
+      }
+      if(any(!custom_tk_ind)){
+        port_curr[match(names(fixed_tickers)[!custom_tk_ind], asset_names)] <- asset_data$Currency[match(unlist(sapply(ref_tk[!custom_tk_ind], get_asset, asset_data)), asset_data$Asset)]
+      }
+      if(any(custom_tk_ind)){
+        port_curr[match(names(fixed_tickers)[custom_tk_ind], asset_names)] <- currency
+      }
     }
   }
   port_curr <- unique(port_curr)
@@ -49,7 +61,7 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
     summ_df <- t(rep(0, length(header_df)))
   }else{
     if(!is.null(fixed_tickers)){
-      series_comp <- series_compose(series_list, asset_data, fixed_tickers, ref_dates, ref_curr=NULL, join = 'inner')
+      series_comp <- series_compose(series_list, asset_data, fixed_tickers, ref_dates, ref_curr=currency, join = 'inner', index_df=index_df)
       series_back <- merge.xts(series_back, series_comp$series, join = "inner")
       colnames(series_back) <- c(asset_names_diff, port_curr, names(fixed_tickers))
       series_back <- series_back[, c(asset_names, port_curr)]
