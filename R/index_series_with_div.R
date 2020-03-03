@@ -8,7 +8,7 @@
 #' @return index series
 #' @export
 
-index_series_with_div <- function(series, backup_series, threshold=0, ref_years='2005/2020', discard_zeros=TRUE){
+index_series_with_div <- function(series, backup_series, threshold=0, ref_years='2005/2020', discard_zeros=TRUE, complete_method_rets=TRUE){
   n_row <- nrow(series)
   diff_pr <- diff(as.vector(series))
   if (discard_zeros){
@@ -30,7 +30,11 @@ index_series_with_div <- function(series, backup_series, threshold=0, ref_years=
   }else{
     series_index <- index(backup_series[paste0(c(index(index_monthly)[1], tail(index(series),1)), collapse = "/")])
     index_dayly <- na.approx(index_monthly, xout = series_index)
-    series_out <- rets_complete_index_series(index_dayly, backup_series, "2000/2020")[ref_years]
+    if(complete_method_rets){
+      series_out <- rets_complete_index_series(index_dayly, backup_series, "2000/2020")[ref_years]
+    }else{
+      series_out <- complete_index_series(index_dayly, backup_series)[ref_years]
+    }
   }
   return(series_out)
 }

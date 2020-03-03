@@ -9,7 +9,7 @@
 #' @return index series
 #' @export
 
-index_series_with_jumps <- function(series, backup_series, threshold=0, ref_years='2005/2020'){
+index_series_with_jumps <- function(series, backup_series, threshold=0, ref_years='2005/2020', complete_method_rets=TRUE){
   n_row <- nrow(series)
   diff_pr <- diff(as.vector(series))
   pos_jump <- which(diff_pr>threshold)
@@ -27,7 +27,11 @@ index_series_with_jumps <- function(series, backup_series, threshold=0, ref_year
     }
   }
   if (!is.null(backup_series)) {
-    series_out <- rets_complete_index_series(series_out, backup_series, "2000/2020")[ref_years]
+    if(complete_method_rets){
+      series_out <- rets_complete_index_series(series_out, backup_series, "2000/2020")[ref_years]
+    }else{
+      series_out <- complete_index_series(series_out, backup_series)[ref_years]
+    }
   }
   return(series_out)
 }
