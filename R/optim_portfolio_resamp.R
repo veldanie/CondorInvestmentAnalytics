@@ -130,7 +130,7 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
   }
   ind_sol <- apply(w_optim_mat, 1, sum) != 0
   if(!any(ind_sol)){
-    w_sol <- if(is.null(w_ini)){
+    if(is.null(w_ini)){
       w_sol <- rep(0, n_assets)
       names(w_sol) <- colnames(rets)
     }else{
