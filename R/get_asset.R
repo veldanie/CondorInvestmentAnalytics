@@ -8,6 +8,6 @@
 #' @export
 
 get_asset <- function(ticker, asset_data) {
-  id <- asset_data$Asset[asset_data$TickerBenchmark==ticker]
+  id <- asset_data$Asset[asset_data$TickerBenchmark==ticker][1]
   return(id)
 }
