@@ -24,28 +24,31 @@
 #' @return Optimal weights, mean resampled optimal weights, matrix of sampled weights.
 #' @export
 
-optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, util_type="absolute", lb=rep(0, ncol(rets)), ub=rep(1, ncol(rets)), w_ini=NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = 0, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = FALSE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 36, dyn_mu = FALSE, q_sel = 0.2, same_assets_bench = TRUE){
+optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, util_type="absolute", lb=rep(0, ncol(rets)), ub=rep(1, ncol(rets)), w_ini=NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = 0, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = FALSE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 36, dyn_mu = FALSE, q_sel = 0.2, same_assets_bench = TRUE, w_bench=NULL){
   options('nloptr.show.inequality.warning'=FALSE)
   options(warn=-1)
   if(is.null(w_ini) & util_type=="relative"){
     stop("Benchmark not available for relative utility function.")
   }
-  if(util_type=="relative"){
-    if (same_assets_bench){
-      w_bench <- w_ini
-      w_ini <- rep(0, length(w_bench))
-      sum_weigths <- function(w){return(sum(w)+1)}
-    }else{
-      w_bench <- w_ini
-    }
+  if(util_type=="relative" && same_assets_bench){
+    sum_weigths <- function(w){return(sum(w)+1)}
+  }
+  if(util_type=="relative" && !same_assets_bench && is.null(w_ini)){
+    stop("Relative resampling: Please provide w_ini!")
+  }else{
+    asset_names <- names(w_ini)
   }
   if(is.null(w_ini)){
     w_ini <- lb + (1-sum(lb))*(ub - lb)/sum(ub - lb)
-    names(w_ini) <- colnames(rets)
+    asset_names <- colnames(rets)
+    names(w_ini) <- asset_names
+  }else{
+    asset_names <- names(w_ini)
   }
-  mu_all <- apply(rets, 2, mean)
   Sigma_all <- covar(rets, per=per, shrink = FALSE)
+  mu_all <- apply(rets, 2, mean)
   if(is.null(mu_ann) || is.null(Sigma_ann)){
+    Sigma <- Sigma_all$cov_matrix
     date_ini <- index(rets)[1]
     date_last <- tail(index(rets), 1)
 
@@ -55,25 +58,24 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
       }
       n_rows <- nrow(rets)
       size <- ceiling(n_rows/k)
-      sample_means <- matrix(0, nrow=k, ncol=ncol(rets))
+      sample_means <- matrix(0, nrow=k, ncol=lenght(w_ini))
       for (i in 1:k){
         if(i==k){
-          sample_means[i,] <- apply(rets[(1+size*(i-1)):nrow(rets)],2,mean)
+          sample_means[i,] <- colMeans(rets[(1+size*(i-1)):nrow(rets)])
         }else{
-          sample_means[i,] <- apply(rets[(1+size*(i-1)):(size*i)],2,mean)
+          sample_means[i,] <- colMeans(rets[(1+size*(i-1)):(size*i)])
         }
       }
       if(dyn_mu){
         mu <- rbind(sample_means, mu_all)
-        colnames(mu) <- colnames(rets)
+        colnames(mu) <- names(w_ini)
       }else{
         mu <- apply(sample_means,2,median)
-        names(mu) <- colnames(rets)
+        names(mu) <- asset_names
       }
     }else{
       mu <- mu_all
     }
-    Sigma <- covar(rets, shrink = shrink_cov)$cov_matrix
   }else{
     dyn_mu <- sample_window <- FALSE
     mu <- mu_ann/per
@@ -84,11 +86,11 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
     ineqfun <- risk_fun(Sigma = Sigma_all$cov_matrix_ann, type = 'vol') # Assumes volatility restriction
   }
 
-  mu_mat <- matrix(0, ncol = ncol(rets), nrow = M)
-  n_assets <- ncol(rets)
+  mu_mat <- matrix(0, ncol = length(w_ini), nrow = M)
+  n_assets <- length(w_ini)
 
   w_optim_mat <- matrix(0, nrow = M, ncol = n_assets)
-  colnames(w_optim_mat) <- colnames(rets)
+  colnames(w_optim_mat) <- asset_names
 
   port_means <- port_vols <- rep(0, M)
 

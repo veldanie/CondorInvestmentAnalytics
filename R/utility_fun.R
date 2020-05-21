@@ -19,9 +19,16 @@ utility_fun <- function(type = 'absolute', mu, Sigma, lambda, w_bench = NULL, mi
         as.numeric(util)
       }
     }else{
-      function(w){
-        util <- -(t(w)%*%mu - 0.5 * lambda * t(w)%*%Sigma%*%w)
-        as.numeric(util)
+      if (lambda==0){
+        function(w){
+          util <- -t(w)%*%mu
+          as.numeric(util)
+        }
+      }else{
+        function(w){
+          util <- -(t(w)%*%mu - 0.5 * lambda * t(w)%*%Sigma%*%w)
+          as.numeric(util)
+        }
       }
     }
   }else if(type == 'relative'){
