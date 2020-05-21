@@ -24,16 +24,20 @@
 #' @return Optimal weights, mean resampled optimal weights, matrix of sampled weights.
 #' @export
 
-optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, util_type="absolute", lb=rep(0, ncol(rets)), ub=rep(1, ncol(rets)), w_ini=NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = 0, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = FALSE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 36, dyn_mu = FALSE, q_sel = 0.2){
+optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, util_type="absolute", lb=rep(0, ncol(rets)), ub=rep(1, ncol(rets)), w_ini=NULL, lambda = 1, N = 2e2, M = 1e3, plot_ef = FALSE, spar = 0, ineqfun = NULL, ineqLB = 0, ineqUB = NULL, method = 'GD', n.restarts = 10, n.sim = 20000, conf_int = 0.9, shrink_cov = FALSE, mom = FALSE, k = NULL, sample_window = FALSE, len_window = 36, dyn_mu = FALSE, q_sel = 0.2, same_assets_bench = TRUE){
   options('nloptr.show.inequality.warning'=FALSE)
   options(warn=-1)
   if(is.null(w_ini) & util_type=="relative"){
     stop("Benchmark not available for relative utility function.")
   }
   if(util_type=="relative"){
-    w_bench <- w_ini
-    w_ini <- rep(0, length(w_bench))
-    sum_weigths <- function(w){return(sum(w)+1)}
+    if (same_assets_bench){
+      w_bench <- w_ini
+      w_ini <- rep(0, length(w_bench))
+      sum_weigths <- function(w){return(sum(w)+1)}
+    }else{
+      w_bench <- w_ini
+    }
   }
   if(is.null(w_ini)){
     w_ini <- lb + (1-sum(lb))*(ub - lb)/sum(ub - lb)
@@ -98,7 +102,7 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
       mu_mat[i,] <- mu_i
       Sigma_i <- covar(sample_i)$cov_matrix
       if(!is.null(ineqUB)){lambda <- 0}
-      obj_fun <- utility_fun(type = util_type, mu = mu_i, Sigma = Sigma_i, lambda = lambda, w_bench=w_bench)
+      obj_fun <- utility_fun(type = util_type, mu = mu_i, Sigma = Sigma_i, lambda = lambda, w_bench=w_bench, same_assets_bench = same_assets_bench)
       w_optim_mat[i,] <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
                                          eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, method = method, n.restarts = n.restarts, n.sim = n.sim,
                                          outer.iter = 10, inner.iter = 10)
@@ -121,7 +125,7 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
       mu_mat[i,] <- mu_i
       Sigma_i <- covar(sample_i)$cov_matrix
       if(!is.null(ineqUB)){lambda <- 0}
-      obj_fun <- utility_fun(type = util_type, mu = mu_i, Sigma = Sigma_i, lambda = lambda, w_bench=w_bench)
+      obj_fun <- utility_fun(type = util_type, mu = mu_i, Sigma = Sigma_i, lambda = lambda, w_bench=w_bench, same_assets_bench = same_assets_bench)
       w_optim_mat[i,] <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
                                          eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB,
                                          method = method, n.restarts = n.restarts, n.sim = n.sim,

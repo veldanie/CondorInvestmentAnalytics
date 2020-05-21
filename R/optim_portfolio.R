@@ -76,7 +76,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
                          #packages = c("")), # load package for fn)
                          )
 
-    if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
+    if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench)) | length(w_ini)!=length(w_bench)) {
       if(any(lb > ub)){w <- rep(0, n_par); names(w) <- names(w_ini); return(w)}
       sol <- DEoptim(fn = fn, lower = lb-1e-7, upper = ub+1e-7, control = control_list)
       if(sol$optim$bestval<1000){
@@ -87,8 +87,10 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
       }
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
-      lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
-      upper_act <- mapply(min, sapply(ub - w_bench, max, 0), ub_act)
+
+      lower_act <- -mapply(min, w_bench[names(w_ini)] - lb, abs(lb_act))
+      upper_act <- mapply(min, sapply(ub - w_bench[names(w_ini)], max, 0), ub_act)
+
       if(any(lower_act > upper_act)){w <- rep(0, n_par); names(w) <- names(w_ini); return(w)}
       sol <- DEoptim(fn = fn, lower = lower_act-1e-7, upper = upper_act+1e-7, control = control_list)
       if(sol$optim$bestval<1000){
@@ -104,7 +106,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
   }else if(method == 'GE'){
     # Genetic Optim. using Derivatives
 
-    if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
+    if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench)) | length(w_ini)!=length(w_bench)) {
       if(any(lb > ub)){w <- rep(0, n_par); names(w) <- names(w_ini); return(w)}
       sol <- genoud(fn = fn, nvar = length(lb), Domains = cbind(lb-1e-7, ub+1e-7), wait.generations=50)
       if(fn(sol$par)<1000){
@@ -115,8 +117,8 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
       }
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
-      lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
-      upper_act <- mapply(min, sapply(ub - w_bench, max, 0), ub_act)
+      lower_act <- -mapply(min, w_bench[names(w_ini)] - lb, abs(lb_act))
+      upper_act <- mapply(min, sapply(ub - w_bench[names(w_ini)], max, 0), ub_act)
 
       sol <- genoud(fn = fn, Domains = cbind(lower_act, upper_act), wait.generations=50)
       if(fn(sol$par)<1000){
@@ -132,7 +134,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
   }else if(method == 'SA'){
     # Generalized Simulating Annealing
 
-    if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
+    if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench)) | length(w_ini)!=length(w_bench)) {
       if(any(lb > ub)){w <- rep(0, n_par); names(w) <- names(w_ini); return(w)}
       sol <- GenSA(par = w_ini, fn = fn, lower = lb-1e-7, upper =  ub+1e-7, control = list(max.time = max.time, nb.stop.improvement=100, verbose=TRUE, smooth=FALSE))
       if(sol$value<1000){
@@ -142,8 +144,9 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
         w <- w_ini #rep(0, n_par)
       }
     } else {
-      lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
-      upper_act <- mapply(min, sapply(ub - w_bench, max, 0), ub_act)
+      lower_act <- -mapply(min, w_bench[names(w_ini)] - lb, abs(lb_act))
+      upper_act <- mapply(min, sapply(ub - w_bench[names(w_ini)], max, 0), ub_act)
+
       w_act_ini <- rep(0, n_par)
       names(w_act_ini) <- names(w_ini)
       sol <- GenSA(par = w_act_ini, fn = fn, lower = lower_act-1e-7, upper = upper_act+1e-7, control = list(max.time = max.time, nb.stop.improvement=10, verbose=TRUE, smooth=FALSE))
@@ -160,7 +163,7 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
   }else if(method == 'MALS'){
     # Memetic with local search
 
-    if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench))) {
+    if (type == 'absolute' | !all(names(w_ini) %in% names(w_bench)) | length(w_ini)!=length(w_bench)) {
       if(any(lb > ub)){w <- rep(0, n_par); names(w) <- names(w_ini); return(w)}
       sol <- malschains(fn = fn, lower = lb-1e-7, upper =  ub+1e-7)
       if(sol$fitness<1000){
@@ -171,8 +174,9 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
       }
     } else {
       if(is.null(w_bench)){stop('w_bench cannot be NULL. Please add a benchmark portfolio.')}
-      lower_act <- -mapply(min, w_bench - lb, abs(lb_act))
-      upper_act <- mapply(min, sapply(ub - w_bench, max, 0), ub_act)
+
+      lower_act <- -mapply(min, w_bench[names(w_ini)] - lb, abs(lb_act))
+      upper_act <- mapply(min, sapply(ub - w_bench[names(w_ini)], max, 0), ub_act)
 
       sol <- malschains(fn = fn, lower = lower_act, upper = upper_act)
       if(sol$fitness<1000){
