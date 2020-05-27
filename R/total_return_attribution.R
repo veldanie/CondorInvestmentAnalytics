@@ -15,11 +15,13 @@
 #' @param dec_dates_port Dec. dates port.
 #' @param dec_dates_bench Dec. dates bench.
 #' @param header_df Header.
+#' @param factor Factor name.
+#' @param asset_data Assets dataframe.
 
 #' @return Performance attribution df.
 #' @export
 
-total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_bench, cash_port, cash_bench, diff_cash_assets_port, diff_cash_assets_bench, weights_port, weights_bench, dec_dates_port = NA, dec_dates_bench = NA, header_df = c("Portafolio", "Benchmark", "Desv. Prom.", "AA", "SS", "INT", "TOTAL"), ret_ini_capital=FALSE) {
+total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_bench, cash_port, cash_bench, diff_cash_assets_port, diff_cash_assets_bench, weights_port, weights_bench, dec_dates_port = NA, dec_dates_bench = NA, header_df = c("Portafolio", "Benchmark", "Desv. Prom.", "AA", "SS", "INT", "TOTAL"), ret_ini_capital=FALSE, factor=NULL, asset_data=NULL) {
   asset_names <- unique(c(names(w_bench), names(w_port)))
   w1 <- w2 <- rep(0, length(asset_names))
   names(w1) <- names(w2) <- asset_names
@@ -84,5 +86,19 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_be
   summ_df <- data.frame(round(100*cbind(w2, w1, avg_dev, aa, ss, inter, total), 3))
   colnames(summ_df) <- header_df
   rownames(summ_df) <- asset_names
-  return(summ_df)
+  summ_factor_df <- NULL
+  if (!is.null(factor)){
+    if (is.null(asset_data)){stop("If factor is not NULL, asset_data cannot be NULL.")}
+    factor_data <- asset_data[match(asset_names,asset_data$Asset),] %>% dplyr::select(Asset,factor)
+    factor_names <- unique(factor_data %>% pull(factor))
+    n_factors <- length(factor_names)
+    summ_factor_df <- matrix(0, nrow = n_factors, ncol = ncol(summ_df))
+    for (i in 1:n_factors){
+      ind_assets <- factor_data[,2]== factor_names[i]
+      summ_factor_df[i,] <- colSums(summ_df[ind_assets,])
+    }
+    colnames(summ_factor_df) <- header_df
+    rownames(summ_factor_df) <- factor_names
+  }
+  return(list(summ_df=summ_df, summ_factor_df=summ_factor_df))
 }
