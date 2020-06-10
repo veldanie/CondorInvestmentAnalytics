@@ -141,7 +141,11 @@ optim_portfolio <- function(w_ini, fn, lb, ub, eqfun, eqB, w_bench = NULL, lb_ac
         #w <- sol$par/sum(sol$par)
         w <- sol$par-(sum(sol$par)-1)*(sol$par-lb)/sum(sol$par-lb)
       }else{
-        w <- w_ini #rep(0, n_par)
+        if (type == 'relative'){
+          w <- rep(0, n_par)
+        }else{
+          w <- w_ini
+        }
       }
     } else {
       lower_act <- -mapply(min, w_bench[names(w_ini)] - lb, abs(lb_act))
