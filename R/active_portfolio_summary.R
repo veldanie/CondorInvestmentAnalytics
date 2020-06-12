@@ -16,6 +16,7 @@
 #' @param invest_assets Invest assets.
 #' @param fixed_tickers Fixed tickers list (dates and tickers per asset).
 #' @param weights_tac Tactical weights xts.
+#' @param weights_bench Benchmark weights xts.
 #' @param sync_dates Bool, sync. dates.
 #' @param fund_complete Bool, indicates if benchmark funds are used.
 #' @param index_df Custom index dataframe
@@ -23,7 +24,7 @@
 #' @return Active summary data frame.
 #' @export
 
-active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, index_df=NULL, header_df = c("Ret Total Bench", "Ret Total Port", "Ret Prom Bench", "Ret Prom Port", "Vol", "Sharpe", "Alpha", "TE", "RI", "AA", "SS/INTER")) {
+active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, weights_bench = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, index_df=NULL, header_df = c("Ret Total Bench", "Ret Total Port", "Ret Prom Bench", "Ret Prom Port", "Vol", "Sharpe", "Alpha", "TE", "RI", "AA", "SS/INTER")) {
   freq <- switch(per, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4)
   if(is.null(w_port) & is.null(w_bench)){ stop("Null portafolios. Check weights!")}
 
@@ -70,7 +71,12 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
 
     # the date 01012000 is added when completing with benchmark
     series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE)
-    if(fund_complete && !is.null(weights_tac) && !is.null(invest_assets) && index(weights_tac)[1]==dmy("01012000")){
+    intersect_dates <- as.Date(intersect(index(series_bench), index(series_back)))
+    series_bench <- series_bench[intersect_dates]
+    series_back <- series_back[intersect_dates]
+
+    if(fund_complete && !is.null(weights_tac) && !is.null(invest_assets) &&
+       index(weights_tac)[2] > ref_dates[1] && index(weights_tac)[1]==dmy("01012000")){
       col_bench <- colnames(series_bench)
       add_asset <- setdiff(colnames(weights_tac), col_bench)
       if(length(add_asset)>0){
@@ -101,10 +107,28 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
     te <- active_ret <- ann_te <- info_ratio <- NA
     if(!is.null(w_bench)){
       rebal_dates <- NULL
-      if(sync_dates){
-        rebal_dates <- index(weights_tac)
+      if(sync_dates && !is.null(weights_tac)){
+        tac_dates <- index(weights_tac)
+        n_dates <- length(tac_dates)
+        if (!is.null(weights_bench) && nrow(weights_bench)>0){
+          weights_temp = xts(matrix(0, nrow=n_dates, ncol=ncol(weights_bench)), order.by = tac_dates)
+          colnames(weights_temp) <- colnames(weights_bench)
+          for (k in 1:n_dates){
+            dif_days <- as.numeric(tac_dates[k] - index(weights_bench))
+            if (any(dif_days>-3)){ # 3 days dif limit
+              pos_port <- which.min(replace(dif_days, dif_days<(-3), NA))
+            }else{
+              pos_port <- which.max(dif_days)
+            }
+            weights_temp[k,] <- as.vector(weights_bench[pos_port,])
+          }
+          weights_bench <- weights_temp
+        }else{
+          weights_bench <- NULL
+          rebal_dates <- index(weights_tac)
+        }
       }
-      bench_back <- portfolio_backtest(w_bench, capital, currency, asset_data, series_bench[,c(names(w_bench), bench_curr)], rebal_per_in_months = rebal_per, weights_xts = NULL,
+      bench_back <- portfolio_backtest(w_bench, capital, currency, asset_data, series_bench[,c(names(w_bench), bench_curr)], rebal_per_in_months = rebal_per, weights_xts = weights_bench,
                                        rebal_dates = rebal_dates, slippage = slippage, commission = commission)
 
       total_bench <- round(100*as.numeric(tail(bench_back$ret_port,1)), 3)
