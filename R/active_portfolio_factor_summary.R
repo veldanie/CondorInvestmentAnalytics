@@ -73,7 +73,7 @@ active_portfolio_factor_summary <- function(capital, currency, w_port, w_bench, 
 
     # the date 01012000 is added when completing with benchmark
     series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE)
-    intersect_dates <- as.Date(intersect(index(series_bench), index(series_back)))
+    intersect_dates <- zoo::as.Date(intersect(index(series_bench), index(series_back)))
     series_bench <- series_bench[intersect_dates]
     series_back <- series_back[intersect_dates]
 
