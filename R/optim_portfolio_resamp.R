@@ -58,7 +58,7 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
       }
       n_rows <- nrow(rets)
       size <- ceiling(n_rows/k)
-      sample_means <- matrix(0, nrow=k, ncol=lenght(w_ini))
+      sample_means <- matrix(0, nrow=k, ncol=length(w_ini))
       for (i in 1:k){
         if(i==k){
           sample_means[i,] <- colMeans(rets[(1+size*(i-1)):nrow(rets)])
