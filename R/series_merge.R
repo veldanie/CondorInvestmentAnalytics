@@ -111,7 +111,7 @@ series_merge <- function(series_list, dates, asset_data, ref_curr, assets, curre
                                                       MoreArgs = list(base_curr = substr(iso_cross,1,3), ref_curr = substr(iso_cross,4,6),
                                                                       curr_mkt_base = iso_quote(substr(iso_cross,1,3)),
                                                                       curr_mkt_ref = iso_quote(substr(iso_cross,4,6))))), order.by = index(series_temp_fx))
-          series_out <- merge.xts(series_out, series_fx_cross[paste0(dates, collapse = '/')], join = "inner")
+          series_out <- merge.xts(series_out, series_fx_cross[paste0(dates, collapse = '/')], join = join)
         }
       }
     }
