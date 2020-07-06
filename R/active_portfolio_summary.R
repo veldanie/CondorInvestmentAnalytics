@@ -175,5 +175,5 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
   }
   colnames(summ_df) <- header_df
   rownames(summ_df) <- port_name
-  return(summ_df)
+  return(list(summ_df=summ_df, bench_series=bench_back$cash_port, port_series=port_back$cash_port))
 }
