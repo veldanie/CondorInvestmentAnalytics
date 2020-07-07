@@ -9,8 +9,8 @@
 
 rebuild_series <- function(series_rebuild, series_list, ticker){
   real_series <- series_list[[ticker]]
-  forecasted_series <- xts(x = series_rebuild[, which(colnames(series_rebuild) == ticker) + 1],
-                           order.by = as.Date(series_rebuild[, which(colnames(series_rebuild) == ticker)], 
+  forecasted_series <- xts(x = series_rebuild[, which(colnames(series_rebuild) == ticker) + 1][!(is.na(series_rebuild[, which(colnames(series_rebuild) == ticker) + 1]))],
+                           order.by = as.Date(series_rebuild[, which(colnames(series_rebuild) == ticker)][!(is.na(as.Date(series_rebuild[, which(colnames(series_rebuild) == ticker)])))], 
                                               format = '%d/%m/%Y'))
   real_series <- returns(real_series, type = 'arithmetic')[toString(paste0(tail(index(forecasted_series), 1), '/')), ]
   real_series <- real_series[!(index(real_series) %in% index(forecasted_series)), ]
