@@ -31,7 +31,7 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
     stop("Benchmark not available for relative utility function.")
   }
   if(util_type=="relative" && same_assets_bench){
-    sum_weigths <- function(w){return(sum(w)+1)}
+    sum_weights <- function(w){return(sum(w)+1)}
   }
   if(util_type=="relative" && !same_assets_bench && is.null(w_ini)){
     stop("Relative resampling: Please provide w_ini!")
@@ -106,7 +106,7 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
       if(!is.null(ineqUB)){lambda <- 0}
       obj_fun <- utility_fun(type = util_type, mu = mu_i, Sigma = Sigma_i, lambda = lambda, w_bench=w_bench, same_assets_bench = same_assets_bench)
       w_optim_mat[i,] <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
-                                         eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, method = method, n.restarts = n.restarts, n.sim = n.sim,
+                                         eqfun = sum_weights, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB, method = method, n.restarts = n.restarts, n.sim = n.sim,
                                          outer.iter = 10, inner.iter = 10)
       port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma_all$cov_matrix)[c('port_mean_ret', 'port_vol')])
       port_means[i] <- port_ret[1]*per
@@ -129,7 +129,7 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
       if(!is.null(ineqUB)){lambda <- 0}
       obj_fun <- utility_fun(type = util_type, mu = mu_i, Sigma = Sigma_i, lambda = lambda, w_bench=w_bench, same_assets_bench = same_assets_bench)
       w_optim_mat[i,] <- optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
-                                         eqfun = sum_weigths, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB,
+                                         eqfun = sum_weights, eqB = 1, ineqfun = ineqfun, ineqLB = ineqLB, ineqUB = ineqUB,
                                          method = method, n.restarts = n.restarts, n.sim = n.sim,
                                          outer.iter = 10, inner.iter = 10)
       port_ret <- unlist(portfolio_return(w_optim_mat[i,], mu_all, Sigma_all$cov_matrix)[c('port_mean_ret', 'port_vol')])
