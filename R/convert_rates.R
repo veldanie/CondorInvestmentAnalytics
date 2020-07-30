@@ -23,3 +23,4 @@ conv_tasas <- function(tasa_inicial, t, tipo_inicial, tipo_final) {
   } else {
     print("No ha ingresado correctamente los parámetros, los tipos de tasa deben ser: Nominal, Efectiva o Continua")
   }
+}

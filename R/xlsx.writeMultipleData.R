@@ -12,9 +12,11 @@ xlsx.writeMultipleData <- function (file, sep, ...)
   objnames <- as.character(fargs)[-c(1, 2)]
   nobjects <- length(objects)
   for (i in 1:nobjects) {
-    if (i == 1)
+    if (i == 1){
       write.xlsx(objects[[i]], file, sheetName = objnames[i], sep = sep)
-    else write.xlsx(objects[[i]], file, sheetName = objnames[i],
-                    append = TRUE, sep = sep)
+    }else{
+      write.xlsx(objects[[i]], file, sheetName = objnames[i],
+                 append = TRUE, sep = sep) 
+    }
   }
 }
