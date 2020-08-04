@@ -1,6 +1,6 @@
 
 
-conv_tasas <- function(tasa_inicial, t, tipo_inicial, tipo_final) {
+convert_rates <- function(tasa_inicial, t, tipo_inicial, tipo_final) {
   stopifnot(tipo_inicial != tipo_final) # Detiene la función si tipo_inicial == tipo_final
   if (tipo_inicial == 'Efectiva') {
     if (tipo_final == 'Continua') {
