@@ -53,15 +53,3 @@ index_with_div_yield <- function(ticker, asset_cf, fund_data, shift_values = NUL
   return(fund_series)
 }
 
-asset_cf <- read.csv('D:/Inversiones Internacionales Grupo Sura S.A/Daniel Velasquez Vergara - Proyecto Inception/shinyApp/data/asset_series_cf.csv', check.names = FALSE)
-asset_series_fix <- read.csv('D:/Inversiones Internacionales Grupo Sura S.A/Daniel Velasquez Vergara - Proyecto Inception/shinyApp/data/asset_series_fix.csv', check.names = FALSE)
-
-prlat <- index_with_div_yield("FPRLAT PE Equity", asset_cf, series_list[['FPRLAT PE Equity']], as_div_yield = TRUE,
-                               since_date = '2018-12-31', series_list = TRUE)
-freglob <- index_with_div_yield('FREGLOB PE Equity', asset_cf, asset_series_fix, as_div_yield = FALSE, 
-                                series_list = FALSE, shift_values = 9)
-
-freglob2 <- index_series_with_jumps(freglob, series_list[["NPNCRE Index"]], threshold=50, ref_years='2005/2020', complete_method_rets = FALSE)
-
-coredata(freglob2['2020-03-31']) / coredata(freglob2['2019-09-30']) - 1
-
