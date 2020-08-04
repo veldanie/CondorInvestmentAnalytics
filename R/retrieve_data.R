@@ -9,7 +9,7 @@
 #' output_file_name = name of the .csv output file
 #' file_type = timeseries or cross_section
 #' @param output_path path to which the output should be exported. If NULL, returns dataframe.
-#' @return dataframe 
+#' @return dataframe
 #' @export
 
 retrieve_data <- function(target_data, output_path = NULL){
@@ -19,8 +19,8 @@ retrieve_data <- function(target_data, output_path = NULL){
   library(dbplyr)
   library(dplyr)
   library(purrr)
-  # Crea conexión a DataLicense
-  db <- try(DBI::dbConnect(odbc::odbc(), Driver = "SQL Server", UID='user_sura', PWD='Sur4dano.', 
+  # Crea conexi?n a DataLicense
+  db <- try(DBI::dbConnect(odbc::odbc(), Driver = "SQL Server", UID='user_sura', PWD='Sur4dano.',
                            Server='169.61.38.18', database = 'DataLicense', Port = 1433))
   # Tabla que trae los datos partickers y campos, por ejemplo: TOT_RETURN_INDEX_GROSS_DVDS para un determinado ETF
   df_series <- db %>%
@@ -34,12 +34,12 @@ retrieve_data <- function(target_data, output_path = NULL){
   df_fields <- db %>%
     tbl("tbl_Campo") %>%
     select(id, vchNombre)
-  
-  # Tickers y campos requeridos para la aplicación
+
+  # Tickers y campos requeridos para la aplicaci?n
   req_tickers <- unique(target_data$ticker)
   req_fields <- unique(target_data$field)
-  
-  # IDs de campos requeridos 
+
+  # IDs de campos requeridos
   existing_fields <- unique(as.vector(pull(df_fields, 2))[as.vector(pull(df_fields, 2)) %in% req_fields])
   field_ids <- which(as.vector(pull(df_fields, 2)) %in% existing_fields)
   names(field_ids) <- existing_fields
@@ -52,13 +52,13 @@ retrieve_data <- function(target_data, output_path = NULL){
   # Filtrar tabla para dejar solo tickers que existen en DataLicense
   target_data <- target_data %>%
     filter(ticker %in% existing_tickers)
-  # Asignar códigos de identificación a tickers y campos 
+  # Asignar c?digos de identificaci?n a tickers y campos
   target_data$field_id <- field_ids[match(target_data$field, names(field_ids))]
   target_data$ticker_id <- ticker_ids[match(target_data$ticker, names(ticker_ids))]
   target_data$aux <- paste0(target_data$field_id, '|', target_data$ticker_id)
-  
+
   print(paste("The following ticker was not found in the DB: ", missing_tickers))
-  # Extracción de datos
+  # Extracci?n de datos
   for(output_file in unique(target_data$output_file_name)){
     file_data <- target_data %>% filter(output_file_name == output_file)
     if(length(unique(file_data$file_type)) != 1){
@@ -66,15 +66,15 @@ retrieve_data <- function(target_data, output_path = NULL){
     }
     if(unique(file_data$file_type == 'timeseries')){
       output_data <- data.frame(df_series %>%
-                                  filter(id_Ticker %in% !!file_data$ticker_id & 
+                                  filter(id_Ticker %in% !!file_data$ticker_id &
                                            id_Campo %in% !!file_data$field_id) %>%
                                   mutate(aux = concat(id_Campo, '|', id_Ticker)) %>%
                                   filter(aux %in% !!file_data$aux & !(is.na(intValor))) %>%
                                   arrange(id_Ticker, dtmFecha))
       all_data <- list()
       for(element in unique(output_data$aux)){
-        all_data[[element]] <- output_data %>% 
-          filter(aux == element) %>% 
+        all_data[[element]] <- output_data %>%
+          filter(aux == element) %>%
           select(dtmFecha, intValor)
       }
       list_names <- strsplit(names(all_data), split = '|', fixed = TRUE)
@@ -100,7 +100,7 @@ retrieve_data <- function(target_data, output_path = NULL){
       }
     }else if(unique(file_data$file_type) == 'cross_section'){
       output_data <- data.frame(df_series %>%
-                                  filter(id_Ticker %in% !!file_data$ticker_id & 
+                                  filter(id_Ticker %in% !!file_data$ticker_id &
                                            id_Campo %in% !!file_data$field_id) %>%
                                   mutate(aux = concat(id_Campo, '|', id_Ticker)) %>%
                                   filter(aux %in% !!file_data$aux & !(is.na(vchValor))))
@@ -112,4 +112,3 @@ retrieve_data <- function(target_data, output_path = NULL){
     }
   }
 }
-
