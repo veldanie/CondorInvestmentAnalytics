@@ -19,7 +19,7 @@ retrieve_data <- function(target_data, output_path = NULL){
   library(dbplyr)
   library(dplyr)
   library(purrr)
-  # Crea conexi?n a DataLicense
+  # Crea conexión a DataLicense
   db <- try(DBI::dbConnect(odbc::odbc(), Driver = "SQL Server", UID='user_sura', PWD='Sur4dano.',
                            Server='169.61.38.18', database = 'DataLicense', Port = 1433))
   # Tabla que trae los datos partickers y campos, por ejemplo: TOT_RETURN_INDEX_GROSS_DVDS para un determinado ETF
