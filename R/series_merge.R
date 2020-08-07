@@ -16,7 +16,7 @@
 #' @return xts series.
 #' @export
 
-series_merge <- function(series_list, dates, asset_data, ref_curr, assets, currencies = NULL, convert_to_ref = FALSE, ref_per_unit_foreign = FALSE, invest_assets = NULL, fixed_tickers = NULL, join = 'inner') {
+series_merge <- function(series_list, dates, asset_data, ref_curr, assets, currencies = NULL, convert_to_ref = FALSE, ref_per_unit_foreign = FALSE, invest_assets = NULL, fixed_tickers = NULL, index_df = NULL, join = 'inner') {
   n_assets <- length(assets)
   n_curr <- length(currencies)
 
@@ -25,11 +25,28 @@ series_merge <- function(series_list, dates, asset_data, ref_curr, assets, curre
   }else if (!is.null(invest_assets) && invest_assets == 'IA'){
     ticker <- asset_data$TickerInvestAsset[match(assets, asset_data$Asset)]
     if(!is.null(fixed_tickers)){
-      ticker[match(names(fixed_tickers), assets)] <- fixed_tickers
+      pos_assets <- match(assets, names(fixed_tickers))
+      ticker[pos_assets[!is.na(pos_assets)]] <- fixed_tickers[pos_assets[!is.na(pos_assets)]]
     }
   }else{
     ticker <- asset_data$TickerBenchmark[match(assets, asset_data$Asset)]
   }
+
+  ###Custom Ticker
+  if(!is.null(index_df)){
+    custom_index_ind <- ticker %in% index_df$Ticker
+    custom_tickers <- NULL
+    if(any(custom_index_ind)){
+      custom_tickers <- ticker[custom_index_ind]
+      for (tk in custom_tickers){
+        index_w <- as.data.frame(index_df %>% filter(Ticker==tk))
+        w <- index_w %>% pull(Weight)
+        names(w) <- index_w %>% pull(Asset)
+        series_list[[tk]] <- index_series(series_list, w, c(dmy('01012000'),Sys.Date()),val_ini = 100, ref_curr = ref_curr, invest_assets = NULL, anual_cost = 0)
+      }
+    }
+  }
+  ###
 
   missing_ticker <- !(ticker %in% names(series_list))
   if(any(missing_ticker)){
@@ -45,7 +62,11 @@ series_merge <- function(series_list, dates, asset_data, ref_curr, assets, curre
           i_curr <- asset_data$CurrencyETF[match(ind, asset_data$TickerETF)]
         }else if (!is.null(invest_assets) && invest_assets == 'IA'){
           if(ind %in% fixed_tickers){
-            i_curr <- asset_data$Currency[match(ind, asset_data$TickerBenchmark)]
+            if(ind %in% custom_tickers){
+              i_curr <- ref_curr
+            }else{
+              i_curr <- asset_data$Currency[match(ind, asset_data$TickerBenchmark)]
+            }
           }else{
             i_curr <- asset_data$CurrencyIA[match(ind, asset_data$TickerInvestAsset)]
           }
