@@ -15,9 +15,13 @@
 index_series <- function(series_list, weights, dates, val_ini = 100, ref_curr = "USD", invest_assets = NULL, anual_cost = 0){
   series_sync <- series_merge(series_list = series_list, dates = dates, asset_data = asset_data, ref_curr = ref_curr, assets = names(weights), currencies = NULL,
                               convert_to_ref = TRUE, invest_assets = invest_assets)
-  rets <- returns(series_sync)
-  cost_factor <- (1 - anual_cost)^(1/252)
-  cum_rets <- c(1, cumprod((1 + as.numeric(rets %*% weights[names(series_sync)]))*cost_factor))
-  index <- xts(val_ini * cum_rets, order.by = c(index(series_sync)[1], index(rets)))
+  if(length(series_sync)>1){
+    rets <- returns(series_sync)
+    cost_factor <- (1 - anual_cost)^(1/252)
+    cum_rets <- c(1, cumprod((1 + as.numeric(rets %*% weights[names(series_sync)]))*cost_factor))
+    index <- xts(val_ini * cum_rets, order.by = c(index(series_sync)[1], index(rets)))
+  }else{
+    index <- NULL
+  }
   return(index)
 }
