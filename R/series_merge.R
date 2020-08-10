@@ -31,11 +31,10 @@ series_merge <- function(series_list, dates, asset_data, ref_curr, assets, curre
   }else{
     ticker <- asset_data$TickerBenchmark[match(assets, asset_data$Asset)]
   }
-
+  custom_tickers <- NULL
   ###Custom Ticker
   if(!is.null(index_df)){
     custom_index_ind <- ticker %in% index_df$Ticker
-    custom_tickers <- NULL
     if(any(custom_index_ind)){
       custom_tickers <- ticker[custom_index_ind]
       for (tk in custom_tickers){
