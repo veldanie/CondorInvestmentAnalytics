@@ -25,8 +25,9 @@ series_merge <- function(series_list, dates, asset_data, ref_curr, assets, curre
   }else if (!is.null(invest_assets) && invest_assets == 'IA'){
     ticker <- asset_data$TickerInvestAsset[match(assets, asset_data$Asset)]
     if(!is.null(fixed_tickers)){
-      pos_assets <- match(assets, names(fixed_tickers))
-      ticker[pos_assets[!is.na(pos_assets)]] <- fixed_tickers[pos_assets[!is.na(pos_assets)]]
+      ind_assets <- assets %in% names(fixed_tickers)
+      pos_assets <- match(assets[ind_assets], names(fixed_tickers))
+      ticker[ind_assets] <- fixed_tickers[pos_assets]
     }
   }else{
     ticker <- asset_data$TickerBenchmark[match(assets, asset_data$Asset)]
