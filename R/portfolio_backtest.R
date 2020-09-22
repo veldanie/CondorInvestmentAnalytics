@@ -19,7 +19,7 @@
 #' @return Backtesting results.
 #' @export
 
-portfolio_backtest <- function(weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, weights_xts = NULL, rebal_dates = NULL, slippage = 5, commission = 5, invest_assets = NULL, fixed_curr = NULL) {
+portfolio_backtest <- function(weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, weights_xts = NULL, rebal_dates = NULL, slippage = 5, commission = 5, invest_assets = NULL, fixed_curr = NULL, rebal_thres=0) {
 
   hold_per_days <- switch(hold_per, '1D' = 1, '1M' = 30, '3M' = 90, '1Y' = 360)
   n_assets <- length(weights)
@@ -69,6 +69,7 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
   }else{
     rebal_dates <- NA
   }
+  non_rebal_dates <- c()
   dec_dates <- c(date_ini, date_last)
   if(any(is.na(rebal_dates))){
     series_assets <- series_backtest[,asset_univ][paste0(c(date_ini,date_last), collapse = '/')]
@@ -206,7 +207,13 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
 
       ##Rebalancing
       if(k < (length(dec_dates)-1)){
-        cash_ini_ref_update <- as.vector(weights_xts[dec_dates[k+1],asset_univ]) * capital_update
+        rebal_ind <- any(abs(as.vector(tail(cash_full_conv,1)/sum(tail(cash_full_conv,1))) - as.vector(weights_xts[dec_dates[k+1],asset_univ])) >= rebal_thres)
+        if (rebal_ind){
+          cash_ini_ref_update <- as.vector(weights_xts[dec_dates[k+1],asset_univ]) * capital_update
+        }else{
+          cash_ini_ref_update <- coredata(tail(cash_full_conv,1))[1,]
+          non_rebal_dates <- c(non_rebal_dates, dec_dates[k+1])
+        }
         names(cash_ini_ref_update) <- colnames(weights_xts)
         cash_full_conv_all[dec_dates[k+1], ] <- cash_ini_ref_update
         fx_ini <- as.numeric(series_backtest[,index_curr][dec_dates[k+1]])
@@ -227,6 +234,6 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
   ret_port <- ret_cash_port/capital
   cash_assets <- rbind(xts(t(cash_ini_ref), order.by = date_ini), cash_full_conv_all)
 
-  return(list(ret_cash_port = ret_cash_port, ret_port = ret_port, cash_port = cash_port, cash_assets = cash_assets, diff_cash_assets = diff_cash_assets, weights_port = weights_port, dec_dates = dec_dates, weights_xts = weights_xts))
+  return(list(ret_cash_port = ret_cash_port, ret_port = ret_port, cash_port = cash_port, cash_assets = cash_assets, diff_cash_assets = diff_cash_assets, weights_port = weights_port, dec_dates = dec_dates, non_rebal_dates=non_rebal_dates, weights_xts = weights_xts))
 }
 
