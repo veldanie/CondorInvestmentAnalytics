@@ -207,7 +207,11 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
 
       ##Rebalancing
       if(k < (length(dec_dates)-1)){
-        rebal_ind <- any(abs(as.vector(tail(cash_full_conv,1)/sum(tail(cash_full_conv,1))) - as.vector(weights_xts[dec_dates[k+1],asset_univ])) >= rebal_thres)
+        if (k == 1){
+          rebal_ind <- (sum(abs(as.vector(weights_xts[dec_dates[k+1],asset_univ])-as.vector(weights[asset_univ]))) > 0.001) | any(abs(as.vector(tail(cash_full_conv,1)/sum(tail(cash_full_conv,1))) - as.vector(weights_xts[dec_dates[k+1],asset_univ])) >= rebal_thres)
+        }else{
+          rebal_ind <- (sum(abs(as.vector(weights_xts[dec_dates[k+1],asset_univ])-as.vector(weights_xts[dec_dates[k],asset_univ]))) > 0.001) | any(abs(as.vector(tail(cash_full_conv,1)/sum(tail(cash_full_conv,1))) - as.vector(weights_xts[dec_dates[k+1],asset_univ])) >= rebal_thres)
+        }
         if (rebal_ind){
           cash_ini_ref_update <- as.vector(weights_xts[dec_dates[k+1],asset_univ]) * capital_update
         }else{
