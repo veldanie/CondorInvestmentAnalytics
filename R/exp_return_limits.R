@@ -8,27 +8,25 @@
 #' @param ref_currency ref_currency
 #' @param period period - daily, monthly, quarterly, yearly
 #' @param conn database connection
-#' @param quant Quantile to calculate intervals according to a standard normal distribution (0.95 = 1.64)
+#' @param conf_interv Return conf. interval
+#' @param horizon_in_months Returns horizon in months
+#' @param method Interval gen. method
 #' @return Datafame with asset name, expected return, upper bound, lower bound
 #' @export
 
-
-### Agregar un argumento de año para seleccionar a partir de que fecha hacer los cálculos
-
-exp_ret_limits <- function(series_list, assets, ports, ref_currency, conn, asset_data, period = 'monthly', quant = 0.95, ia = FALSE,
-                           since_date = '01012008') {
+exp_ret_limits <- function(series_list, assets, ports, ref_currency, conn, asset_data, period = 'monthly', conf_interv = 0.95, ia = FALSE,
+                           since_date = '01012008', horizon_in_months=NULL, method="chebyshev") {
   period_adjust <- c(252, 12, 4, 1)
   names(period_adjust) <- c('daily', 'monthly', 'quarterly', 'yearly')
   temp_series <- series_merge(series_list, dates = dmy(c(since_date, "31122050")), asset_data, ref_curr = ref_currency, assets = assets, convert_to_ref = TRUE)
   temp_returns <- returns(temp_series, period = period)
-
-  mean_asset_rets <- round(apply(temp_returns, 2, mean) * as.vector(period_adjust[period]), 3)
-  sd_asset_rets <- apply(temp_returns, 2, sd) * as.vector(sqrt(period_adjust[period]))
-  mean_asset_rets_ub <- round(mean_asset_rets + qnorm(quant) * sd_asset_rets / sqrt(nrow(temp_returns)), 3)
-  mean_asset_rets_lb <- round(mean_asset_rets - qnorm(quant) * sd_asset_rets / sqrt(nrow(temp_returns)), 3)
-
-  temp_df_asset <- data.frame(portfolio = assets, retornoEsperado = mean_asset_rets, limiteSuperior = mean_asset_rets_ub,
-                              limiteInferior = mean_asset_rets_lb, row.names = NULL)
+  if (is.null(horizon_in_months)){
+    temp_df_asset <- return_interval(temp_returns, freq = period_adjust[period], conf_interv,
+                                     header=c('portfolio', 'retornoEsperado', 'limiteInferior','limiteSuperior'), method=method)
+  }else{
+    temp_df_asset <- return_hor_interval(temp_series, horizon_in_months = horizon_in_months, conf_interv = conf_interv,
+                                         header=c('portfolio', 'retornoEsperado', 'limiteInferior','limiteSuperior'))
+  }
 
   DBI::dbBegin(conn)
   for(port in ports){
@@ -50,13 +48,18 @@ exp_ret_limits <- function(series_list, assets, ports, ref_currency, conn, asset
     }else{
       series_port <- series_merge(series_list, dates = dmy(c(since_date, "31122050")), asset_data, ref_curr = ref_currency, assets = assets_port$Asset, convert_to_ref = TRUE, invest_assets = 'IA')
     }
-    returns_assets <- apply(returns(series_port, period = period), 2, mean) * period_adjust[period]
-    covar_matrix <- cov(returns(series_port, period = period) * as.vector(period_adjust[period]))
-    port_return <- round(as.numeric(t(assets_port$Weight) %*% returns_assets), 3)
-    port_sd <- sqrt(as.numeric(t(assets_port$Weight) %*% covar_matrix %*% assets_port$Weight))
-    port_ret_ub <- round(port_return + qnorm(quant) * port_sd / sqrt(nrow(series_port)), 3)
-    port_ret_lb <- round(port_return - qnorm(quant) * port_sd / sqrt(nrow(series_port)), 3)
-    temp_port_data <- c(port, port_return, port_ret_ub, port_ret_lb)
+    w <- assets_port$Weight
+    names(w) <- assets_port$Asset
+    port_series <- index_series(series_list, w, dates=dmy(c(since_date, "31122050")), val_ini = 100, ref_curr = ref_curr)
+    port_rets <- returns(port_series, period = period)
+    colnames(port_rets) <- colnames(port_series) <- port
+    if (is.null(horizon_in_months)){
+      temp_port_data <- return_interval(port_rets, freq = period_adjust[period], conf_interv,
+                                       header=c('portfolio', 'retornoEsperado', 'limiteInferior','limiteSuperior'), method=method)
+    }else{
+      temp_port_data <- return_hor_interval(port_series, horizon_in_months = horizon_in_months, conf_interv = conf_interv,
+                                           header=c('portfolio', 'retornoEsperado', 'limiteInferior','limiteSuperior'))
+    }
     temp_df_asset <- rbind(temp_df_asset, temp_port_data)
   }
 
@@ -64,7 +67,6 @@ exp_ret_limits <- function(series_list, assets, ports, ref_currency, conn, asset
   poolReturn(conn)
 
   return(temp_df_asset)
-
 }
 
 
