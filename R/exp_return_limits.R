@@ -7,15 +7,16 @@
 #' @param ports Vector of portfolios
 #' @param ref_currency ref_currency
 #' @param period period - daily, monthly, quarterly, yearly
-#' @param conn database connection
+#' @param db database connection
 #' @param conf_interv Return conf. interval
 #' @param horizon_in_months Returns horizon in months
 #' @param method Interval gen. method
 #' @return Datafame with asset name, expected return, upper bound, lower bound
 #' @export
 
-exp_ret_limits <- function(series_list, assets, ports, ref_currency, conn, asset_data, period = 'monthly', conf_interv = 0.95, ia = FALSE,
+exp_ret_limits <- function(series_list, assets, ports, ref_currency, db, asset_data, period = 'monthly', conf_interv = 0.95, ia = FALSE,
                            since_date = '01012008', horizon_in_months=NULL, method="chebyshev") {
+  conn <- poolCheckout(db)
   period_adjust <- c(252, 12, 4, 1)
   names(period_adjust) <- c('daily', 'monthly', 'quarterly', 'yearly')
   temp_series <- series_merge(series_list, dates = dmy(c(since_date, "31122050")), asset_data, ref_curr = ref_currency, assets = assets, convert_to_ref = TRUE)
@@ -50,7 +51,7 @@ exp_ret_limits <- function(series_list, assets, ports, ref_currency, conn, asset
     }
     w <- assets_port$Weight
     names(w) <- assets_port$Asset
-    port_series <- index_series(series_list, w, dates=dmy(c(since_date, "31122050")), val_ini = 100, ref_curr = ref_curr)
+    port_series <- index_series(series_list, w, dates=dmy(c(since_date, "31122050")), val_ini = 100, ref_curr = ref_currency)
     port_rets <- returns(port_series, period = period)
     colnames(port_rets) <- colnames(port_series) <- port
     if (is.null(horizon_in_months)){
