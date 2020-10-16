@@ -54,7 +54,7 @@ exp_ret_limits <- function(series_list, assets, ports, ref_currency, db, asset_d
       post_ret <- posterior_params(mu,q,1,Sigma,P,conf = 0.75)$post_ret
       ret_shift <- post_ret - mu
       pos_assets <- match(names(mu),temp_df_asset$portfolio)
-      temp_df_asset[pos_assets,2:4] <- temp_df_asset[pos_assets,2:4] + ret_shift
+      temp_df_asset[pos_assets,2:4] <- round(temp_df_asset[pos_assets,2:4] + ret_shift, 5)
     }
   }
   temp_df_asset <- temp_df_asset[match(assets,rownames(temp_df_asset)),]
@@ -114,7 +114,7 @@ exp_ret_limits <- function(series_list, assets, ports, ref_currency, db, asset_d
       }
 
       ret_shift = sum(w * temp_df_asset_port$retornoEsperado[match(names(w), temp_df_asset_port$portfolio)]) - temp_port_data$retornoEsperado
-      temp_port_data[,2:4] <- temp_port_data[,2:4] + ret_shift
+      temp_port_data[,2:4] <- round(temp_port_data[,2:4] + ret_shift,5)
     }
 
     temp_df_asset <- rbind(temp_df_asset, temp_port_data)
