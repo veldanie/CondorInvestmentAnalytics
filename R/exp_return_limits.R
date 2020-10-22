@@ -48,13 +48,15 @@ exp_ret_limits <- function(series_list, assets, ports, ref_currency, db, asset_d
       names(mu) <- temp_df_asset[assets_temp,]$portfolio[ind_assets_curr]
       Sigma <- covar(temp_returns[,assets_temp])$cov_matrix_ann[ind_assets_curr,ind_assets_curr]
       views_abs_curr <- views_abs[views_abs$asset %in% assets_temp[ind_assets_curr],]
-      q <- (1+temp_df_asset$retornoEsperado[temp_df_asset$portfolio==curr_i]) * views_abs_curr$ret
-      P <- matrix(0, length(q), length(mu))
-      for (i in 1:length(q)){P[i,match(views_abs_curr$asset[i], names(mu))] <- 1}
-      post_ret <- posterior_params(mu,q,1,Sigma,P,conf = 0.75)$post_ret
-      ret_shift <- post_ret - mu
-      pos_assets <- match(names(mu),temp_df_asset$portfolio)
-      temp_df_asset[pos_assets,2:4] <- round(temp_df_asset[pos_assets,2:4] + ret_shift, 5)
+      if(nrow(views_abs_curr)>0){
+        q <- (1+temp_df_asset$retornoEsperado[temp_df_asset$portfolio==curr_i]) * views_abs_curr$ret
+        P <- matrix(0, length(q), length(mu))
+        for (i in 1:length(q)){P[i,match(views_abs_curr$asset[i], names(mu))] <- 1}
+        post_ret <- posterior_params(mu,q,1,Sigma,P,conf = 0.75)$post_ret
+        ret_shift <- post_ret - mu
+        pos_assets <- match(names(mu),temp_df_asset$portfolio)
+        temp_df_asset[pos_assets,2:4] <- round(temp_df_asset[pos_assets,2:4] + ret_shift, 5)
+      }
     }
   }
   temp_df_asset <- temp_df_asset[match(assets,rownames(temp_df_asset)),]
