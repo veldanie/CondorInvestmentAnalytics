@@ -29,7 +29,8 @@ exp_ret_limits <- function(series_list, assets, ports, ref_currency, db, asset_d
     add_currs <- NULL
   }
 
-  temp_series <- series_merge(series_list, dates = dmy(c(since_date, "31122050")), asset_data, ref_curr = ref_currency, assets = assets_temp, currencies = unique(add_currs), convert_to_ref = TRUE)
+  temp_series <- series_merge(series_list, dates = dmy(c(since_date, "31122050")), asset_data, ref_curr = ref_currency, assets = assets_temp, currencies = unique(add_currs), convert_to_ref = TRUE, join = 'outer')
+  temp_series <- temp_series[, colSums(is.na(temp_series)) == 0]
   temp_returns <- returns(temp_series, period = period)
 
   if (is.null(horizon_in_months)){
