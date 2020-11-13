@@ -73,11 +73,19 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_be
     colnames(rets_assets2) <- colnames(weights_port) <- c(asset_names_temp, diff_assets2)
   }
 
-  aa <- apply(coredata(weights_port[, asset_names] - weights_bench[, asset_names]) * coredata(rets_assets1[, asset_names] - rets1 %*% t(rep(1,length(asset_names)))),2, function(x) prod(1+x)) - 1
-  ss <- apply(coredata(weights_bench[, asset_names]) * coredata(rets_assets2[, asset_names] - rets_assets1[, asset_names]), 2, function(x) prod(1+x)) - 1
-  inter <- apply(coredata(weights_port[, asset_names] - weights_bench[, asset_names]) * coredata(rets_assets2[, asset_names] - rets_assets1[, asset_names]), 2, function(x) prod(1+x)) - 1
-  #total_asset_ret <- ra2[asset_names] - ra1[asset_names]
-  #inter <- total_asset_ret - aa - ss
+  # aa <- apply(coredata(weights_port[, asset_names] - weights_bench[, asset_names]) * coredata(rets_assets1[, asset_names] - rets1 %*% t(rep(1,length(asset_names)))),2, function(x) prod(1+x)) - 1
+  # ss <- apply(coredata(weights_bench[, asset_names]) * coredata(rets_assets2[, asset_names] - rets_assets1[, asset_names]), 2, function(x) prod(1+x)) - 1
+  # inter <- apply(coredata(weights_port[, asset_names] - weights_bench[, asset_names]) * coredata(rets_assets2[, asset_names] - rets_assets1[, asset_names]), 2, function(x) prod(1+x)) - 1
+  # total_asset_ret <- ra2[asset_names] - ra1[asset_names]
+  # inter <- total_asset_ret - aa - ss
+
+  ref_bench <- (cumprod(1+c(0,rets1))%*% t(rep(1, length(asset_names))))[1:nrow(weights_bench),]
+  rets2 <- returns(cash_port[ref_dates])
+  ref_port <- (cumprod(1+c(0,rets2))%*% t(rep(1, length(asset_names))))[1:nrow(weights_port),]
+
+  aa <- colSums(coredata(weights_port[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench - coredata(weights_bench[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
+  ss <- colSums(coredata(weights_bench[, asset_names]) * coredata(rets_assets2[, asset_names])*ref_port - coredata(weights_bench[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
+  inter <- colSums(coredata(weights_port[, asset_names])*coredata(rets_assets2[, asset_names])*ref_port - coredata(weights_port[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench - coredata(weights_bench[, asset_names])*coredata(rets_assets2[, asset_names])*ref_port + coredata(weights_bench[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
 
   total <- aa + ss + inter
   diff_days_dates <- as.numeric(diff(ref_dates))
