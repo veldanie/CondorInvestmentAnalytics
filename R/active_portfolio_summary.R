@@ -55,7 +55,11 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
       }
     }
   }
-  port_curr <- unique(port_curr)
+  if(invest_assets %in% c("IA", "ETF")){
+    port_curr <- unique(c(port_curr, currency))
+  }else{
+    port_curr <- unique(port_curr)
+  }
   asset_names_diff <- setdiff(asset_names, names(fixed_tickers))
   series_back <- series_merge(series_list, ref_dates, asset_data, currency, asset_names_diff, port_curr, convert_to_ref = FALSE, invest_assets = invest_assets, fixed_tickers =  NULL)
   if(length(series_back)==0){
