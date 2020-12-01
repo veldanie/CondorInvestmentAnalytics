@@ -55,7 +55,7 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
       }
     }
   }
-  if(invest_assets %in% c("IA", "ETF")){
+  if(!is.null(invest_assets) && invest_assets %in% c("IA", "ETF")){
     port_curr <- unique(c(port_curr, currency))
   }else{
     port_curr <- unique(port_curr)
