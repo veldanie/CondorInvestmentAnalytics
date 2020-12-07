@@ -42,7 +42,7 @@ index_series_with_div <- function(series, backup_series, threshold=0, ref_years=
     last_date <- index(series_out)[length(index(series_out))]
     date_range <- seq(as.Date(first_date), by = "day", length.out = as.numeric(as.Date(last_date) - as.Date(first_date)))
     df_complete <- xts(x = rep(NA, length(date_range)), order.by = date_range)
-    df_complete <- na.locf(merge.xts(df_complete, series_out)[, 'series_out'])
+    series_out <- na.locf(merge.xts(df_complete, series_out)[, 'series_out'])
   }
 
   return(series_out)
