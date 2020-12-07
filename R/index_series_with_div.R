@@ -8,7 +8,7 @@
 #' @return index series
 #' @export
 
-index_series_with_div <- function(series, backup_series, threshold=0, ref_years='2005/2020', discard_zeros=TRUE, complete_method_rets=TRUE){
+index_series_with_div <- function(series, backup_series, threshold=0, ref_years='2005/2020', discard_zeros=TRUE, complete_method_rets=TRUE, all_dates = FALSE){
   n_row <- nrow(series)
   diff_pr <- diff(as.vector(series))
   if (discard_zeros){
@@ -36,5 +36,14 @@ index_series_with_div <- function(series, backup_series, threshold=0, ref_years=
       series_out <- complete_index_series(index_dayly, backup_series)[ref_years]
     }
   }
+
+  if(all_dates){
+    first_date <- index(series_out)[1]
+    last_date <- index(series_out)[length(index(series_out))]
+    date_range <- seq(as.Date(first_date), by = "day", length.out = as.numeric(as.Date(last_date) - as.Date(first_date)))
+    df_complete <- xts(x = rep(NA, length(date_range)), order.by = date_range)
+    df_complete <- na.locf(merge.xts(df_complete, series_out)[, 'series_out'])
+  }
+
   return(series_out)
 }
