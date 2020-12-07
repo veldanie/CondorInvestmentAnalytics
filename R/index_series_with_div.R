@@ -43,6 +43,7 @@ index_series_with_div <- function(series, backup_series, threshold=0, ref_years=
     date_range <- seq(as.Date(first_date), by = "day", length.out = as.numeric(as.Date(last_date) - as.Date(first_date)))
     df_complete <- xts(x = rep(NA, length(date_range)), order.by = date_range)
     series_out <- na.locf(merge.xts(df_complete, series_out)[, 'series_out'])
+    colnames(series_out) <- NULL
   }
 
   return(series_out)
