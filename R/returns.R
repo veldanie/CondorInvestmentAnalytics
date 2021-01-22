@@ -32,11 +32,14 @@ returns <- function(series, dates = NULL, period = 'daily', type = 'arithmetic',
       rets  <- merge.xts(rets, rets_i)
     }
   }
+
+  rets <- na.omit(rets)
+  names(rets) <- names(series)
+
   if(period_semi){
     rets <- quarterly_to_semiannualy(rets)
   }
 
-  rets <- na.omit(rets)
-  names(rets) <- names(series)
+
   return(rets)
 }
