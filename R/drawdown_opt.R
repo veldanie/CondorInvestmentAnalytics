@@ -27,6 +27,9 @@ drawdown_opt <- function(series, w, horizon = '3M', quant = 0.9, type = 'log', t
       months_seq_all <- seq(date_ini, date_last, by = "months")
     }
     n_months_seq <- length(months_seq_all)
+    if(n_months_seq <= num_months){
+      return(NULL)
+    }
     months_seq <- months_seq_all[1:(n_months_seq - num_months)]
     per_last <- as_date(sapply(1:length(months_seq), function(x) months_seq_all[x + num_months]))
     if(num_months >= lb_months && n_months_seq > 2){ #Se incorporan periodos de menor plazo al inicio para no descartar datos relevantes.
