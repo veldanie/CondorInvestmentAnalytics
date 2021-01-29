@@ -45,7 +45,7 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
   }else{
     asset_names <- names(w_ini)
   }
-  Sigma_all <- covar(rets, per=per, shrink = FALSE)
+  Sigma_all <- covar(rets, per=per, shrink = shrink_cov)
   mu_all <- apply(rets, 2, mean)
   if(is.null(mu_ann) || is.null(Sigma_ann)){
     Sigma <- Sigma_all$cov_matrix
