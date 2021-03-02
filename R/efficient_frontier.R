@@ -30,7 +30,7 @@ efficient_frontier <- function(mu, Sigma, lb = rep(0, ncol(Sigma)), ub = rep(1, 
         as.numeric(util)
       }
       weights <- try(optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
-                                    eqfun = sum_weigths, eqB = 1, method = "GD"),
+                                    eqfun = sum_weights, eqB = 1, method = "GD"),
                      silent = TRUE)
       if(class(weights)!="try-error" && !all(weights==w_ini)){
         port_res <- portfolio_return(weights, mu, Sigma)
@@ -50,7 +50,7 @@ efficient_frontier <- function(mu, Sigma, lb = rep(0, ncol(Sigma)), ub = rep(1, 
       mean_vec <- sigma_vec <- rep(0, length(vols))
       for (i in 1:length(vols)){
         weights <- try(optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
-                                       eqfun = sum_weigths, eqB = 1, ineqfun = risk_function,
+                                       eqfun = sum_weights, eqB = 1, ineqfun = risk_function,
                                        ineqLB = 0, ineqUB = vols[i], method = "GD"),
                        silent = TRUE)
         if(class(weights)!="try-error" && !all(weights==w_ini)){
