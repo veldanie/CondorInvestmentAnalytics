@@ -26,6 +26,18 @@ forecast_volatility <- function(return_series, n_ahead=12, penalty = 'Akaike', l
   garchspec8 <- ugarchspec(mean.model = list(armaOrder = c(1, 1)),
                            variance.model = list(model = "gjrGARCH"),
                            distribution.model = "sstd")
+  garchspec9 <- ugarchspec(mean.model = list(armaOrder = c(0, 0)),
+                           variance.model = list(model = "eGARCH"),
+                           distribution.model = "sstd")
+  garchspec10 <- ugarchspec(mean.model = list(armaOrder = c(0, 1)),
+                           variance.model = list(model = "eGARCH"),
+                           distribution.model = "sstd")
+  garchspec11 <- ugarchspec(mean.model = list(armaOrder = c(1, 0)),
+                           variance.model = list(model = "eGARCH"),
+                           distribution.model = "sstd")
+  garchspec12 <- ugarchspec(mean.model = list(armaOrder = c(1, 1)),
+                           variance.model = list(model = "eGARCH"),
+                           distribution.model = "sstd")
 
   # Fit models
   garchfit1 <- ugarchfit(data=return_series, spec=garchspec1)
@@ -36,58 +48,59 @@ forecast_volatility <- function(return_series, n_ahead=12, penalty = 'Akaike', l
   garchfit6 <- ugarchfit(data=return_series, spec=garchspec6)
   garchfit7 <- ugarchfit(data=return_series, spec=garchspec7)
   garchfit8 <- ugarchfit(data=return_series, spec=garchspec8)
+  garchfit9 <- ugarchfit(data=return_series, spec=garchspec9)
+  garchfit10 <- ugarchfit(data=return_series, spec=garchspec10)
+  garchfit11 <- ugarchfit(data=return_series, spec=garchspec11)
+  garchfit12 <- ugarchfit(data=return_series, spec=garchspec12)
 
-  # Residuals
-  res1 <- residuals(garchfit1, standardize = TRUE)
-  res2 <- residuals(garchfit2, standardize = TRUE)
-  res3 <- residuals(garchfit3, standardize = TRUE)
-  res4 <- residuals(garchfit4, standardize = TRUE)
-  res5 <- residuals(garchfit5, standardize = TRUE)
-  res6 <- residuals(garchfit6, standardize = TRUE)
-  res7 <- residuals(garchfit7, standardize = TRUE)
-  res8 <- residuals(garchfit8, standardize = TRUE)
+  models <- c(garchfit1, garchfit2, garchfit3, garchfit4, garchfit5, garchfit6, garchfit7,
+              garchfit8, garchfit9, garchfit10, garchfit11, garchfit12)
+  converged <- sapply(models, convergence)
+  converged_models <- models[converged == 0]
 
-  # Ljung-Box test
-  box1 <- Box.test(abs(res1), ljung_box_lag, type = 'Ljung-Box')[3]
-  box2 <- Box.test(abs(res2), ljung_box_lag, type = 'Ljung-Box')[3]
-  box3 <- Box.test(abs(res3), ljung_box_lag, type = 'Ljung-Box')[3]
-  box4 <- Box.test(abs(res4), ljung_box_lag, type = 'Ljung-Box')[3]
-  box5 <- Box.test(abs(res5), ljung_box_lag, type = 'Ljung-Box')[3]
-  box6 <- Box.test(abs(res6), ljung_box_lag, type = 'Ljung-Box')[3]
-  box7 <- Box.test(abs(res7), ljung_box_lag, type = 'Ljung-Box')[3]
-  box8 <- Box.test(abs(res8), ljung_box_lag, type = 'Ljung-Box')[3]
-  box_results <- c(box1, box2, box3, box4, box5, box6, box7, box8)
-  passed_test <- box_results > 0.05
-  # Information criteria
-  information_criteria <- c(infocriteria(garchfit1)[penalty, ], infocriteria(garchfit2)[penalty, ], infocriteria(garchfit3)[penalty, ],
-                            infocriteria(garchfit4)[penalty, ], infocriteria(garchfit5)[penalty, ], infocriteria(garchfit6)[penalty, ],
-                            infocriteria(garchfit7)[penalty, ], infocriteria(garchfit8)[penalty, ])
-  names(information_criteria) <- c(1:8)
-  information_criteria <- information_criteria[passed_test]
-  min_pos <- match(min(information_criteria), information_criteria)
+  if(sum(converged) == length(converged)){
+    print("No hubo convergencia")
+  }else{
+    # Calculate information criteria to select best model
+    information_criteria <- lapply(converged_models, infocriteria)
+    criteria_pos <- which(names(information_criteria[[1]][, 1]) == penalty)
+    values <- sapply(information_criteria, '[', criteria_pos)
+    best_model <- converged_models[match(min(values), values)]
 
-  if(min_pos == "1"){
-    garchforecast <- ugarchforecast(fitORspec = garchfit1, n.ahead = n_ahead)
-  }else if(min_pos == "2"){
-    garchforecast <- ugarchforecast(fitORspec = garchfit2, n.ahead = n_ahead)
-  }else if(min_pos == "3"){
-    garchforecast <- ugarchforecast(fitORspec = garchfit3, n.ahead = n_ahead)
-  }else if(min_pos == "4"){
-    garchforecast <- ugarchforecast(fitORspec = garchfit4, n.ahead = n_ahead)
-  }else if(min_pos == "5"){
-    garchforecast <- ugarchforecast(fitORspec = garchfit5, n.ahead = n_ahead)
-  }else if(min_pos == "6"){
-    garchforecast <- ugarchforecast(fitORspec = garchfit6, n.ahead = n_ahead)
-  }else if(min_pos == "7"){
-    garchforecast <- ugarchforecast(fitORspec = garchfit7, n.ahead = n_ahead)
-  }else if(min_pos == "8"){
-    garchforecast <- ugarchforecast(fitORspec = garchfit8, n.ahead = n_ahead)
+    # Instantiate forecast class
+    garchforecast <- ugarchforecast(fitORspec = best_model[[1]], n.ahead = n_ahead)
+
+    # Residuals and Ljung-Box test
+    res <- residuals(best_model[[1]], standardize = TRUE)
+    box_result <- Box.test(abs(res), n_ahead, type = 'Ljung-Box')
+    print(box_result)
+
+    # Calculate conditional variance and rolling standard deviation of returns
+    conditional_variance <- sigma(best_model[[1]])
+    colnames(conditional_variance) <- c('Conditional variance')
+    conditional_variance$std_dev <- apply.rolling(return_series, n_ahead, trim = FALSE, FUN = 'sd')
+    return(list(forecast = garchforecast, conditional_variance = na.omit(conditional_variance)))
   }
-
-  sigma_forecasts <- sigma(garchforecast)
-  mean_forecasts <- fitted(garchforecast)
-  return(list(volatility = mean(sigma_forecasts), mean = mean(mean_forecasts)))
 }
+
+library(SuraInvestmentAnalytics)
+library(xts)
+library(quantmod)
+library(lubridate)
+
+indices <- c('SPX Index', 'LG38TRUU Index', 'GCOMMSURA Index', 'IRTCOMP Index', 'XAU')
+for(index in indices){
+  print(index)
+  test_rets <- returns(series_list[[index]], period = 'monthly')
+  vol_results <- forecast_volatility(test_rets)
+  x <- coredata(vol_results$conditional_variance$Conditional.variance)
+  y <- coredata(vol_results$conditional_variance$std_dev)
+  plot(x, y, main = index,
+       xlab = "Conditional variance", ylab = "Standard deviation",
+       pch = 19, frame = FALSE)
+  abline(lm(y ~ x, data = mtcars), col = "blue")
+}
+
 
 # results <- rep(NA, length(colnames(df)) -1)
 # observations <- rep(NA, length(colnames(df)) - 1)
