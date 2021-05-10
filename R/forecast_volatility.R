@@ -82,24 +82,24 @@ forecast_volatility <- function(return_series, n_ahead=12, penalty = 'Akaike', l
     return(list(forecast = garchforecast, conditional_variance = na.omit(conditional_variance)))
   }
 }
-
-library(SuraInvestmentAnalytics)
-library(xts)
-library(quantmod)
-library(lubridate)
-
-indices <- c('SPX Index', 'LG38TRUU Index', 'GCOMMSURA Index', 'IRTCOMP Index', 'XAU')
-for(index in indices){
-  print(index)
-  test_rets <- returns(series_list[[index]], period = 'monthly')
-  vol_results <- forecast_volatility(test_rets)
-  x <- coredata(vol_results$conditional_variance$Conditional.variance)
-  y <- coredata(vol_results$conditional_variance$std_dev)
-  plot(x, y, main = index,
-       xlab = "Conditional variance", ylab = "Standard deviation",
-       pch = 19, frame = FALSE)
-  abline(lm(y ~ x, data = mtcars), col = "blue")
-}
+#
+# library(SuraInvestmentAnalytics)
+# library(xts)
+# library(quantmod)
+# library(lubridate)
+#
+# indices <- c('SPX Index', 'LG38TRUU Index', 'GCOMMSURA Index', 'IRTCOMP Index', 'XAU')
+# for(index in indices){
+#   print(index)
+#   test_rets <- returns(series_list[[index]], period = 'monthly')
+#   vol_results <- forecast_volatility(test_rets)
+#   x <- coredata(vol_results$conditional_variance$Conditional.variance)
+#   y <- coredata(vol_results$conditional_variance$std_dev)
+#   plot(x, y, main = index,
+#        xlab = "Conditional variance", ylab = "Standard deviation",
+#        pch = 19, frame = FALSE)
+#   abline(lm(y ~ x, data = mtcars), col = "blue")
+# }
 
 
 # results <- rep(NA, length(colnames(df)) -1)
