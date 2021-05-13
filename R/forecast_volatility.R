@@ -1,5 +1,5 @@
 
-forecast_volatility <- function(return_series, n_ahead=12, penalty = 'Akaike', ljung_box_lag = 12){
+forecast_volatility <- function(return_series, n_ahead=12, freq = 12, quant = 0.95, penalty = 'Akaike'){
 
   # Define models
   garchspec1 <- ugarchspec(mean.model = list(armaOrder = c(0, 0)),
@@ -59,9 +59,30 @@ forecast_volatility <- function(return_series, n_ahead=12, penalty = 'Akaike', l
     box_result <- Box.test(abs(res), n_ahead, type = 'Ljung-Box')
 
     # Calculate conditional variance and rolling standard deviation of returns
-    conditional_variance <- sigma(best_model[[1]])
-    colnames(conditional_variance) <- c('Conditional variance')
-    conditional_variance$std_dev <- apply.rolling(return_series, n_ahead, trim = FALSE, FUN = 'sd')
-    return(list(forecast = sigma(garchforecast), conditional_variance = na.omit(conditional_variance)))
+    # conditional_variance <- sigma(best_model[[1]])
+    # colnames(conditional_variance) <- c('Conditional variance')
+    # conditional_variance$std_dev <- apply.rolling(return_series, n_ahead, trim = FALSE, FUN = 'sd')
+    historical_vol <- apply.rolling(return_series, n_ahead, trim = TRUE, FUN = 'sd')
+    ub_historical_vol <- quantile(na.omit(historical_vol), probs = quant) * sqrt(freq)
+    lb_historical_vol <- quantile(na.omit(historical_vol), probs = 1 - quant) * sqrt(freq)
+    vol_forecast <- mean(sigma(garchforecast)) * sqrt(freq)
+    return(list(forecast = vol_forecast, ub = ub_historical_vol, lb = lb_historical_vol,
+                model = best_model[[1]]))
   }
 }
+
+#library(SuraInvestmentAnalytics)
+library(xts)
+library(quantmod)
+library(lubridate)
+library(rugarch)
+library(PerformanceAnalytics)
+
+df <- read.csv('D:/OneDrive - SURA INVESTMENT MANAGEMENT S.A/temp/co_arriesgado.csv', check.names = FALSE)
+df <- xts(x = df[, c('CO Arriesgado')], order.by = as.Date(df[, c('FECHA')]))
+
+output_12m <- forecast_volatility(df['/2020-04'], n_ahead = 12, quant = 0.95)
+
+output_12m$forecast
+output_12m$ub
+output_12m$lb
