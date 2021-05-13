@@ -35,7 +35,7 @@ calc_risk_ret_metrics <- function(bench_series, port_series, per = 'monthly', ye
     active_ret <- avg_port2 - avg_port1
     output[[i]]['Alpha anualizado'] <- round(100*active_ret*freq, 3)
     output[[i]]['Tracking error anualizado'] <- round(te*sqrt(freq)*100,3)
-    output[[i]]['Information ratio anualizado'] <- round(output[[i]]['Alpha anualizado']/output[[i]]['Tracking error anualizado'],3)
+    output[[i]]['Information ratio anualizado'] <- round(output[[i]][['Alpha anualizado']]/output[[i]][['Tracking error anualizado']],3)
     output[[i]]['Retorno maximo anualizado benchmark'] <- round(max(rets_port1_temp) * freq * 100, 3)
     output[[i]]['Retorno minimo anualizado benchmark'] <- round(min(rets_port1_temp) * freq * 100, 3)
     output[[i]]['Retorno maximo anualizado portafolio'] <- round(max(rets_port2_temp) * freq * 100, 3)
