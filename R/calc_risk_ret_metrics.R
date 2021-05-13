@@ -4,21 +4,23 @@ calc_risk_ret_metrics <- function(bench_series, port_series, per = 'monthly', ye
   freq <- switch(per, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4, 'semiannualy' = 2)
   rets_port1 <- returns(bench_series, period = per, leading=FALSE)
   rets_port2 <- returns(port_series, period = per, leading=FALSE)
-  
+
   output <- vector(mode = "list", length = length(years_horizon))
   names(output) <- years_horizon
-  
+
   for(i in 1:length(output)){
     slice_since <- as.Date(tail(index(rets_port1), 1)) - (365 * as.numeric(gsub("Y", "", years_horizon[i])) + 1)
     rets_port1_temp <- rets_port1[paste0(slice_since, '/')]
     rets_port2_temp <- rets_port2[paste0(slice_since, '/')]
-    
+
     v_cuota <- matrix(0, nrow(bench_series[paste0(slice_since, '/')]), 2)
     colnames(v_cuota) <- c("Bench series", "Port series")
     v_cuota[, 'Bench series'] <- 1000 * cumprod(1 + c(0, returns(bench_series)[paste0(slice_since, '/')][2:length(returns(bench_series)[paste0(slice_since, '/')])]))
     v_cuota[, 'Port series'] <- 1000 * cumprod(1 + c(0, returns(port_series)[paste0(slice_since, '/')][2:length(returns(port_series)[paste0(slice_since, '/')])]))
-    output[[i]]['Valor cuota'] <- v_cuota
-    
+    v_cuota <- data.frame(v_cuota)
+    rownames(v_cuota) <- index(returns(port_series)[paste0(slice_since, '/')])
+    output[[i]]['Valor cuota'] <- list(v_cuota)
+
     avg_port1 <- mean(rets_port1_temp)
     avg_port2 <- mean(rets_port2_temp)
     vol_port1 <- sd(rets_port1_temp)
@@ -40,4 +42,4 @@ calc_risk_ret_metrics <- function(bench_series, port_series, per = 'monthly', ye
     output[[i]]['Retorno minimo anualizado portafolio'] <- round(min(rets_port2_temp) * freq * 100, 3)
   }
   return(output)
-}  
+}
