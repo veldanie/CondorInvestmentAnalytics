@@ -1,6 +1,6 @@
 
 
-calc_risk_ret_metrics <- function(bench_series, port_series, per = 'monthly', years_horizon = c('3Y', '5Y')){
+calc_risk_ret_metrics <- function(bench_series, port_series, per = 'monthly', years_horizon = c('1Y', '3Y', '5Y')){
   freq <- switch(per, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4, 'semiannualy' = 2)
   rets_port1 <- returns(bench_series, period = per, leading=FALSE)
   rets_port2 <- returns(port_series, period = per, leading=FALSE)
@@ -34,10 +34,10 @@ calc_risk_ret_metrics <- function(bench_series, port_series, per = 'monthly', ye
     output[[i]]['Alpha anualizado'] <- round(100*active_ret*freq, 3)
     output[[i]]['Tracking error anualizado'] <- round(te*sqrt(freq)*100,3)
     output[[i]]['Information ratio anualizado'] <- round(output[[i]][['Alpha anualizado']]/output[[i]][['Tracking error anualizado']],3)
-    output[[i]]['Retorno maximo anualizado benchmark'] <- round(max(rets_port1_temp) * freq * 100, 3)
-    output[[i]]['Retorno minimo anualizado benchmark'] <- round(min(rets_port1_temp) * freq * 100, 3)
-    output[[i]]['Retorno maximo anualizado portafolio'] <- round(max(rets_port2_temp) * freq * 100, 3)
-    output[[i]]['Retorno minimo anualizado portafolio'] <- round(min(rets_port2_temp) * freq * 100, 3)
+    output[[i]]['Retorno maximo benchmark'] <- round(max(rets_port1_temp) * 100, 3)
+    output[[i]]['Retorno minimo benchmark'] <- round(min(rets_port1_temp) * 100, 3)
+    output[[i]]['Retorno maximo portafolio'] <- round(max(rets_port2_temp) * 100, 3)
+    output[[i]]['Retorno minimo portafolio'] <- round(min(rets_port2_temp) * 100, 3)
   }
   return(output)
 }

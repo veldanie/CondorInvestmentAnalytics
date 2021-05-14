@@ -1,5 +1,7 @@
 
-forecast_volatility <- function(return_series, n_ahead=12, freq = 12, quant = 0.95, penalty = 'Akaike'){
+forecast_volatility <- function(return_series, n_ahead=12, per = 'monthly', quant = 0.95, penalty = 'Akaike'){
+
+  freq <- switch(per, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4, 'semiannualy' = 2)
 
   # Define models
   garchspec1 <- ugarchspec(mean.model = list(armaOrder = c(0, 0)),
@@ -70,19 +72,3 @@ forecast_volatility <- function(return_series, n_ahead=12, freq = 12, quant = 0.
                 model = best_model[[1]]))
   }
 }
-
-#library(SuraInvestmentAnalytics)
-library(xts)
-library(quantmod)
-library(lubridate)
-library(rugarch)
-library(PerformanceAnalytics)
-
-df <- read.csv('D:/OneDrive - SURA INVESTMENT MANAGEMENT S.A/temp/co_arriesgado.csv', check.names = FALSE)
-df <- xts(x = df[, c('CO Arriesgado')], order.by = as.Date(df[, c('FECHA')]))
-
-output_12m <- forecast_volatility(df['/2020-04'], n_ahead = 12, quant = 0.95)
-
-output_12m$forecast
-output_12m$ub
-output_12m$lb
