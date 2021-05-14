@@ -1,7 +1,7 @@
 
 forecast_volatility <- function(return_series, n_ahead=12, per = 'monthly', quant = 0.95, penalty = 'Akaike'){
 
-  freq <- switch(per, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4, 'semiannualy' = 2)
+  freq <- switch(per, "daily" = 252, "monthly" = 12, "quarterly" = 4, "semianualy" = 2)
 
   # Define models
   garchspec1 <- ugarchspec(mean.model = list(armaOrder = c(0, 0)),
