@@ -65,9 +65,9 @@ forecast_volatility <- function(return_series, n_ahead=12, per = 'monthly', quan
     # colnames(conditional_variance) <- c('Conditional variance')
     # conditional_variance$std_dev <- apply.rolling(return_series, n_ahead, trim = FALSE, FUN = 'sd')
     historical_vol <- apply.rolling(return_series, n_ahead, trim = TRUE, FUN = 'sd')
-    ub_historical_vol <- quantile(na.omit(historical_vol), probs = quant) * sqrt(freq)
-    lb_historical_vol <- quantile(na.omit(historical_vol), probs = 1 - quant) * sqrt(freq)
-    vol_forecast <- mean(sigma(garchforecast)) * sqrt(freq)
+    ub_historical_vol <- round(quantile(na.omit(historical_vol), probs = quant) * sqrt(freq) * 100, 2)
+    lb_historical_vol <- round(quantile(na.omit(historical_vol), probs = 1 - quant) * sqrt(freq) * 100, 2)
+    vol_forecast <- round(mean(sigma(garchforecast)) * sqrt(freq) * 100, 2)
     return(list(forecast = vol_forecast, ub = ub_historical_vol, lb = lb_historical_vol,
                 model = best_model[[1]]))
   }
