@@ -24,7 +24,7 @@
 #' @return Active summary data frame.
 #' @export
 
-active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, weights_bench = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, index_df=NULL, header_df = c("Ret Total Bench", "Ret Total Port", "Ret Prom Bench", "Ret Prom Port", "Vol", "Sharpe", "Alpha", "TE", "RI", "AA", "SS/INTER")) {
+active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, weights_bench = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, index_df=NULL, header_df = c("Ret Total Bench", "Ret Total Port", "Ret Prom Bench", "Ret Prom Port", "Vol", "Sharpe", "Alpha", "TE", "RI", "AA", "SS/INTER"), dissag_ret_attrib=FALSE) {
   freq <- switch(per, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4)
   if(is.null(w_port) & is.null(w_bench)){ stop("Null portafolios. Check weights!")}
 
@@ -64,6 +64,7 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
   series_back <- series_merge(series_list, ref_dates, asset_data, currency, asset_names_diff, port_curr, convert_to_ref = FALSE, invest_assets = invest_assets, fixed_tickers =  NULL)
   if(length(series_back)==0){
     summ_df <- t(rep(0, length(header_df)))
+    attrib_df <- NULL
   }else{
     if(!is.null(fixed_tickers)){
       series_comp <- series_compose(series_list, asset_data, fixed_tickers, ref_dates, ref_curr=currency, join = 'inner', index_df=index_df)
@@ -174,10 +175,14 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
         active_ret_ss <- 0
       }
     }
-
     summ_df <- t(c(total_bench, total_port, ann_avg_bench, ann_avg_port, ann_vol_port, sharpe_port, active_ret, ann_te, info_ratio, active_ret_aa, active_ret_ss))
+    if(dissag_ret_attrib){
+      attrib_df <- total_return_attribution(w_port, w_bench, total_port, total_bench, port_back$cash_port, bench_back$cash_port, port_back$diff_cash_assets, bench_back$diff_cash_assets, port_back$weights_port, bench_back$weights_port, port_back$dec_dates, bench_back$dec_dates, factor=NULL, asset_data=asset_data)$summ_df
+    }else{
+      attrib_df <- NULL
+    }
   }
   colnames(summ_df) <- header_df
   rownames(summ_df) <- port_name
-  return(list(summ_df=summ_df, bench_series=bench_back$cash_port, port_series=port_back$cash_port))
+  return(list(summ_df=summ_df, bench_series=bench_back$cash_port, port_series=port_back$cash_port, attrib_df=attrib_df))
 }
