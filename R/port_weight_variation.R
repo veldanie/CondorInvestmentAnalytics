@@ -1,4 +1,14 @@
 
+#' port_weight_variation
+#'
+#' Returns real series of portfolio weights
+#' @param port_weights portfolio weights
+#' @param asset_series asset series
+#' @param ini_date initial date
+#' @param end_date final date
+#' @return xts weights_xts
+#' @export
+
 port_weight_variation <- function(port_weights, asset_series, ini_date, end_date){
   output_df <- xts(x = matrix(nrow = length(index(asset_series[paste0(c(ini_date, end_date), collapse = '/')])),
                   ncol = ncol(asset_series)), order.by = index(asset_series[paste0(c(ini_date, end_date), collapse = '/')]))
