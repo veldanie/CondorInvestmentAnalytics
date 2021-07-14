@@ -15,8 +15,8 @@ calc_risk_ret_metrics <- function(bench_series, port_series, per = 'monthly', ye
     rets_port1_temp <- rets_port1[paste0(slice_since, '/')]
     rets_port2_temp <- rets_port2[paste0(slice_since, '/')]
 
-    v_cuota_bseries <- xts(x = 1000 * cumprod(1 + c(0, returns(bench_series)[paste0(slice_since, '/')])), order.by = index(bench_series[paste0(slice_since, '/')]))
-    v_cuota_pseries <- xts(x = 1000 * cumprod(1 + c(0, returns(port_series)[paste0(slice_since, '/')])), order.by = index(port_series[paste0(slice_since, '/')]))
+    v_cuota_bseries <- xts(x = 1000 * cumprod(1 + c(0, returns(bench_series)[paste0(slice_since, '/')][2:length(returns(bench_series)[paste0(slice_since, '/')])])), order.by = index(bench_series[paste0(slice_since, '/')]))
+    v_cuota_pseries <- xts(x = 1000 * cumprod(1 + c(0, returns(port_series)[paste0(slice_since, '/')][2:length(returns(bench_series)[paste0(slice_since, '/')]]))), order.by = index(port_series[paste0(slice_since, '/')]))
     v_cuota <- merge.xts(v_cuota_bseries, v_cuota_pseries)
     colnames(v_cuota) <- c("Bench series", "Port series")
     output[[i]]['Valor cuota'] <- list(v_cuota)
