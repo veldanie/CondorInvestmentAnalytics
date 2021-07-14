@@ -19,7 +19,7 @@
 #' @return Backtesting results.
 #' @export
 
-portfolio_backtest <- function(weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, weights_xts = NULL, rebal_dates = NULL, slippage = 5, commission = 5, invest_assets = NULL, fixed_curr = NULL, rebal_thres=0) {
+portfolio_backtest <- function(weights, capital, currency, asset_data, series_backtest, fx_hedge_asset = rep(0, length(weights)), fwd_prem = NULL, hold_per = '1M', rebal_per_in_months = NA, weights_xts = NULL, rebal_dates = NULL, slippage = 5, commission = 5, invest_assets = NULL, fixed_curr = NULL, rebal_thres=0, weights_ini = NULL) {
 
   hold_per_days <- switch(hold_per, '1D' = 1, '1M' = 30, '3M' = 90, '1Y' = 360)
   n_assets <- length(weights)
@@ -55,6 +55,9 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
     weights_xts <- weights_xts[index(weights_xts)>date_ini & index(weights_xts)<date_last,]
   }
 
+  if(is.null(weights_ini)){
+    weights_ini <- weights
+  }
   if(!is.null(weights_xts) && nrow(weights_xts)>0){
     rebal_dates <- index(weights_xts)
     rebal_dates <- index(series_backtest)[findInterval(rebal_dates, index(series_backtest))]
@@ -99,7 +102,7 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
   }
 
   # Initial cash in reference currency:
-  cash_ini_ref <- weights[asset_univ] * capital
+  cash_ini_ref <- weights_ini[asset_univ] * capital
 
   cash_ini <- mapply(cash_conv, cash_in = cash_ini_ref, spot = fx_ini, spot_id = quotes_curr, MoreArgs = list(curr_in = currency))
   cash_ini_hedge <- cash_ini * fx_hedge_asset[names(cash_ini)]
