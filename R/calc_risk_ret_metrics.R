@@ -9,7 +9,9 @@ calc_risk_ret_metrics <- function(bench_series, port_series, per = 'monthly', ye
   names(output) <- years_horizon
 
   for(i in 1:length(output)){
-    slice_since <- as.Date(tail(index(rets_port1), 1)) - (365 * as.numeric(gsub("Y", "", years_horizon[i])))
+    date_vector <- str_split(as.Date(tail(index(rets_port1), 1)), '-')[[1]]
+    date_vector[1] <- as.character(as.numeric(format(as.Date(tail(index(rets_port1), 1)), "%Y")) - as.numeric(gsub("Y", "", years_horizon[i])))
+    slice_since <- paste(date_vector, sep = '-', collapse = '-')
     rets_port1_temp <- rets_port1[paste0(slice_since, '/')]
     rets_port2_temp <- rets_port2[paste0(slice_since, '/')]
 
