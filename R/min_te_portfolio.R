@@ -35,5 +35,7 @@ min_te_portfolio <- function(assets, benchmark_series, series_list, asset_data, 
   w <- sol$par
   names(w) <- assets
   w <- w[w > min_w]/sum(w[w > min_w])
-  return(w)
+  te <- sqrt(as.numeric(c(w,-1) %*% Sigma[c(names(w),'Benchmark'),c(names(w),'Benchmark')] %*% c(w,-1)))
+  
+  return(list(w=w, te=te))
 }
