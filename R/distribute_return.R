@@ -1,5 +1,5 @@
 
-prlat_rebuild <- function(ticker, series_list, reported_returns, since_date){
+distribute_return <- function(ticker, series_list, reported_returns, since_date){
 
   series <- series_list[[ticker]][paste0(since_date, '/')]
   reported_returns <- xts(x = na.omit(reported_returns[, which(colnames(reported_returns) == ticker) + 1]),
