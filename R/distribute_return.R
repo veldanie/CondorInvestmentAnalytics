@@ -1,7 +1,11 @@
 
-distribute_return <- function(ticker, series_list, reported_returns, since_date){
+distribute_return <- function(ticker, series_list, reported_returns, since_date, complete_dates = TRUE){
 
-  series <- series_list[[ticker]][paste0(since_date, '/')]
+  if(complete_dates){
+    series <- complete_all_dates(ticker, series_list)[paste0(since_date, '/')]
+  }else{
+    series <- series_list[[ticker]][paste0(since_date, '/')]
+  }
   reported_returns <- xts(x = na.omit(reported_returns[, which(colnames(reported_returns) == ticker) + 1]),
                           order.by = na.omit(as.Date(reported_returns[, which(colnames(reported_returns) == ticker)], format = "%d/%m/%Y")))
   series_returns <- returns(series)
