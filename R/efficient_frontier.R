@@ -22,7 +22,7 @@ efficient_frontier <- function(mu, Sigma, lb = rep(0, ncol(Sigma)), ub = rep(1, 
 
   if(!is.null(lambda)){
     w_mat <- matrix(0, nrow = n_assets, ncol = length(lambda))
-    mean_vec <- sigma_vec <- rep(0, length(lambda))
+    mean_vec <- sigma_vec <- ra_vec <- rep(0, length(lambda))
     for (i in 1:length(lambda)){
 
       obj_fun <- function(w){
@@ -36,6 +36,7 @@ efficient_frontier <- function(mu, Sigma, lb = rep(0, ncol(Sigma)), ub = rep(1, 
         port_res <- portfolio_return(weights, mu, Sigma)
         mean_vec[i] <- port_res$port_mean_ret
         sigma_vec[i] <- port_res$port_vol
+        ra_vec[i] <- port_res$port_mean_ret/(port_res$port_vol**2)
       }
     }
   }else{
@@ -47,7 +48,7 @@ efficient_frontier <- function(mu, Sigma, lb = rep(0, ncol(Sigma)), ub = rep(1, 
       }
       risk_function <- risk_fun(Sigma = Sigma)
       w_mat <- matrix(0, nrow = n_assets, ncol = length(vols))
-      mean_vec <- sigma_vec <- rep(0, length(vols))
+      mean_vec <- sigma_vec <- ra_vec <- rep(0, length(vols))
       for (i in 1:length(vols)){
         weights <- try(optim_portfolio(w_ini = w_ini, fn = obj_fun, lb = lb, ub = ub,
                                        eqfun = sum_weights, eqB = 1, ineqfun = risk_function,
@@ -57,6 +58,7 @@ efficient_frontier <- function(mu, Sigma, lb = rep(0, ncol(Sigma)), ub = rep(1, 
           port_res <- portfolio_return(weights, mu, Sigma)
           mean_vec[i] <- port_res$port_mean_ret
           sigma_vec[i] <- port_res$port_vol
+          ra_vec[i] <- port_res$port_mean_ret/(port_res$port_vol**2)
           w_mat[, i] <- weights
         }
       }
@@ -68,14 +70,16 @@ efficient_frontier <- function(mu, Sigma, lb = rep(0, ncol(Sigma)), ub = rep(1, 
   if(length(valid_pos)>0){
     mean_vec_front <- mean_vec[valid_pos]
     sigma_vec_front <- sigma_vec[valid_pos]
+    ra_vec_front <- ra_vec[valid_pos]
     w_mat <- w_mat[, valid_pos, drop = FALSE]
     ports_id <- 1:length(mean_vec_front)
     colnames(w_mat) <- paste0(port_id_pref, ports_id)
-    rr_df <- data.frame(Port=ports_id, Ret=round(100*mean_vec_front, 2), Vol=round(100*sigma_vec_front, 2))
+    rr_df <- data.frame(Port=ports_id, Ret=round(100*mean_vec_front, 2), Vol=round(100*sigma_vec_front, 2), RA=round(ra_vec_front, 2))
     w_df <- data.frame(Asset=names(mu), round(100*w_mat, 2), check.names = FALSE)
   }else{
     mean_vec_front <- NULL
     sigma_vec_front <- NULL
+    ra_vec_front <- NULL
     w_mat <- NULL
     rr_df <- NULL
     w_df <- NULL
@@ -91,5 +95,5 @@ efficient_frontier <- function(mu, Sigma, lb = rep(0, ncol(Sigma)), ub = rep(1, 
   }else{
     ef_ss <- NULL
   }
-  return(list(mean_vec = c(mean_vec_front, add_mu), sigma_vec = c(sigma_vec_front, add_sigma), mean_vec_front=mean_vec_front, sigma_vec_front=sigma_vec_front, ef_ss = ef_ss, n_points = n_points, w_df = w_df, rr_df = rr_df))
+  return(list(mean_vec = c(mean_vec_front, add_mu), sigma_vec = c(sigma_vec_front, add_sigma), ra_vec=c(ra_vec_front, add_mu/(add_sigma**2)), ra_vec_front=ra_vec_front, mean_vec_front=mean_vec_front, sigma_vec_front=sigma_vec_front, ef_ss = ef_ss, n_points = n_points, w_df = w_df, rr_df = rr_df))
 }
