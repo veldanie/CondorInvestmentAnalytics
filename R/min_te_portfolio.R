@@ -2,7 +2,7 @@
 #'
 #' Min tracking error portfolio
 #' @param assets Assets vector,
-#' @param benchmark_series Benchmark xts series,
+#' @param series_bench Benchmark xts series,
 #' @param series_list Series list,
 #' @param asset_data Assets dataframe,
 #' @param ref_curr reference currency,
@@ -14,13 +14,21 @@
 #' @return weights.
 #' @export
 
-min_te_portfolio <- function(assets, benchmark_series, series_list, asset_data, ref_curr, lb=NULL, ub=NULL, dates=NULL, period="monthly", min_w=0){
+min_te_portfolio <- function(assets, series_list, asset_data, ref_curr, series_bench=NULL, w_bench=NULL, lb=NULL, ub=NULL, dates=NULL, period="monthly", min_w=0){
   if(is.null(lb)){lb <- rep(0, length(assets))}
   if(is.null(ub)){ub <- rep(1, length(assets))}
   if(is.null(dates)){dates <- dmy(c("01012000","01012050"))}
-
+  
+  if (is.null(series_bench)){
+    if (is.null(w_bench)){
+      stop('Both series_bench and w_bench cannot be NULL!')
+    }else{
+      series_bench <- index_series(series_list, w_bench, dates, val_ini = 100, ref_curr, anual_cost = 0)
+    }
+  }  
+  
   series <- series_merge(series_list, asset_data, dates = dates, ref_curr, assets = assets, convert_to_ref = TRUE)
-  series_sync <- merge.xts(series, benchmark_series,join = "inner")
+  series_sync <- merge.xts(series, series_bench,join = "inner")
   colnames(series_sync) <- c(colnames(series), "Benchmark")
   Sigma <- covar(returns(series_sync, period=period))$cov_matrix_ann
   te_obj_fun <- function(x){
