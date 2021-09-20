@@ -28,12 +28,12 @@ freglob_rebuild <- function(ticker, asset_cf, fund_data, shift_values = NULL, as
 
   delta_div_payments <- as.vector(mean(diff(index(div_yield))))
   div_yield <- rbind(div_yield, xts(x = mean(coredata(div_yield)[(length(coredata(div_yield)) - 4):length(coredata(div_yield))]),
-                                    order.by = Sys.Date()))
+                                    order.by = index(fund_data)[nrow(fund_data)]))
 
   for(i in 2:length(index(div_yield))){
     if(i == length(index(div_yield))){
       n_values <- as.numeric(index(fund_data)[nrow(fund_data)] - index(div_yield)[i-1])
-      adjust_div <- n_values / as.numeric(index(div_yield)[i] - index(div_yield)[i-1])
+      adjust_div <- n_values / delta_div_payments
       div_yield_nom <- (1 + convert_rates(div_yield[i] * adjust_div, n_values - 1, 'Efectiva', 'Nominal')) ^ (1/n_values) - 1
     }else{
       n_values <- length(index(fund_data)[index(div_yield[i - 1]):index(div_yield[i])])
