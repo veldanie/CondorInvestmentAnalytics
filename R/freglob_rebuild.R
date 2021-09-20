@@ -34,10 +34,10 @@ freglob_rebuild <- function(ticker, asset_cf, fund_data, shift_values = NULL, as
     if(i == length(index(div_yield))){
       n_values <- as.numeric(index(fund_data)[nrow(fund_data)] - index(div_yield)[i-1])
       adjust_div <- n_values / as.numeric(index(div_yield)[i] - index(div_yield)[i-1])
-      div_yield_nom <- convert_rates(div_yield[i] * adjust_div, n_values - 1, 'Efectiva', 'Nominal') ^ (1/n_values) - 1
+      div_yield_nom <- (1 + convert_rates(div_yield[i] * adjust_div, n_values - 1, 'Efectiva', 'Nominal')) ^ (1/n_values) - 1
     }else{
       n_values <- length(index(fund_data)[index(div_yield[i - 1]):index(div_yield[i])])
-      div_yield_nom <- convert_rates(div_yield[i], n_values - 1, 'Efectiva', 'Nominal') ^ (1/n_values) - 1
+      div_yield_nom <- (1 + convert_rates(div_yield[i], n_values - 1, 'Efectiva', 'Nominal')) ^ (1/n_values) - 1
     }
     fund_returns[paste(toString(index(div_yield[i - 1])), toString(index(div_yield[i])), sep = '/')] <- fund_returns[paste(toString(index(div_yield[i - 1])), toString(index(div_yield[i])), sep = '/')] + as.vector(div_yield_nom)
   }
