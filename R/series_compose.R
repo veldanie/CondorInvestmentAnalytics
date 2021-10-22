@@ -11,7 +11,7 @@
 #' @return xts series.
 #' @export
 
-series_compose <- function(series_list, asset_data, assets_list, dates, ref_curr=NULL, join = 'inner', index_df=NULL){
+series_compose <- function(series_list, asset_data, assets_list, dates, ref_curr=NULL, join = 'inner', index_df=NULL, convert_to_ref=FALSE){
   n_list <- length(assets_list)
   ids <- names(assets_list)
   assets_list_out <- as.list(rep(NA, n_list))
@@ -45,11 +45,14 @@ series_compose <- function(series_list, asset_data, assets_list, dates, ref_curr
       warning(paste0('Missing tickers: ', tickers[missing_ticker]))
       tickers[missing_ticker] <- asset_data$TickerBenchmark[match(assets, asset_data$Asset)]
     }
-
-    if(tail(assets, 1) %in% asset_data$Asset){
-      currs[i] <- asset_data$Currency[match(tail(assets, 1), asset_data$Asset)]
-    }else{
+    if(convert_to_ref){
       currs[i] <- ref_curr
+    }else{
+      if(tail(assets, 1) %in% asset_data$Asset){
+        currs[i] <- asset_data$Currency[match(tail(assets, 1), asset_data$Asset)]
+      }else{
+        currs[i] <- ref_curr
+      }
     }
     if(tail(assets,1) %in% index_df$IndexId){
       index_w <- index_df %>% filter(IndexId==tail(assets,1)) %>% pull(Weight)
