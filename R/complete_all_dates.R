@@ -7,6 +7,5 @@ complete_all_dates <- function(ticker, series_list){
     temp_xts <- xts(x = rep(NA, length(date_range)), order.by = date_range)
     series_out <- na.locf(merge.xts(temp_xts, series_list[[ticker]]))[, 2]
     colnames(series_out) <- NULL
-    series_list[[ticker]] <- series_out
-    series_list[[ticker]]
+    return(series_out)
 }
