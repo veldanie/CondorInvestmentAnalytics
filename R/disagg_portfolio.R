@@ -8,7 +8,9 @@
 #' @return Vector of assets weights.
 #' @export
 
-disagg_portfolio <- function(w_i, benchmarks, conn){
+disagg_portfolio <- function(w_i, benchmarks, db){
+  conn <- poolCheckout(db)
+  DBI::dbBegin(conn)
   ind_fund_db <- names(w_i) %in% as.data.frame(conn %>% tbl("Weights"))$PortId
   ind_fund <- names(w_i) %in% benchmarks$Benchmark
   w_funds <- c()
@@ -29,5 +31,7 @@ disagg_portfolio <- function(w_i, benchmarks, conn){
       w_funds <- c(w_funds, w_fund)
     }
   }
+  DBI::dbCommit(conn)
+  poolReturn(conn)
   w_i <- tapply(c(w_i[!ind_fund], w_funds), names(c(w_i[!ind_fund], w_funds)), sum)
 }
