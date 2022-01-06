@@ -33,5 +33,5 @@ disagg_portfolio <- function(w_i, benchmarks, db){
   }
   DBI::dbCommit(conn)
   poolReturn(conn)
-  w_i <- tapply(c(w_i[!ind_fund], w_funds), names(c(w_i[!ind_fund], w_funds)), sum)
+  w_i <- tapply(c(w_i[!ind_fund & !ind_fund_db], w_funds), names(c(w_i[!ind_fund & !ind_fund_db], w_funds)), sum)
 }
