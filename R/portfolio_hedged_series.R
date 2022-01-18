@@ -64,7 +64,8 @@ portfolio_hedged_series <- function(w, ref_curr, asset_data, series_list, series
           series_fxfwd_list[[i_fxfwd]][,1] <- 1/series_fxfwd_list[[i_fxfwd]][,1]
           series_fxfwd_list[[i_fxfwd]][,2] <- 1/(1+series_fxfwd_list[[i_fxfwd]][,2])-1
         }
-        fwd_prem <- as.vector(series_fxfwd_list[[i_fxfwd]][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]])),2])/days_per
+        # fwd_prem <- as.vector(series_fxfwd_list[[i_fxfwd]][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]])),2])/days_per
+        fwd_prem <- as.vector(series_fxfwd_list[[i_fxfwd]][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]])),2])/days_per + c(0,diff(as.vector(series_fxfwd_list[[i_fxfwd]][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]])),2])))
       }else{
           iso_cross <- paste0(fx, ref_curr) #In this case cross rates are built as ref currency per unit of foreign.
           series_temp_fxsp <- merge.xts(series_fxfwd_list[[i_fxfwd]][,1]/(1+series_fxfwd_list[[i_fxfwd]][,2]),
@@ -82,7 +83,8 @@ portfolio_hedged_series <- function(w, ref_curr, asset_data, series_list, series
           series_fxfwd_list[[i_fxfwd]] <- merge.xts(series_fxfwd_cross, series_premfwd_cross)
           names(series_fxfwd_list[[i_fxfwd]]) <- c("outright", "premium")
 
-          fwd_prem <- as.vector(series_fxfwd_list[[i_fxfwd]][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]])),2])/days_per
+          # fwd_prem <- as.vector(series_fxfwd_list[[i_fxfwd]][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]])),2])/days_per
+          fwd_prem <- as.vector(series_fxfwd_list[[i_fxfwd]][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]])),2])/days_per + c(0,diff(as.vector(series_fxfwd_list[[i_fxfwd]][findInterval(index(rets),index(series_fxfwd_list[[i_fxfwd]])),2])))
       }
     }
     rets <- merge.xts(rets, fwd = fwd_prem)# Remove last row to sync with return data.
