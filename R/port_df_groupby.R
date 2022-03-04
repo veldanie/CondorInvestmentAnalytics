@@ -20,5 +20,5 @@ port_df_groupby <- function(port_df, asset_data, factor_id='AssetClass'){
   }
   colnames(summ_factor_df) <- colnames(port_df)
   rownames(summ_factor_df) <- factor_names
-  return(summ_factor_df)
+  return(as.data.frame(summ_factor_df))
 }
