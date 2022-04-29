@@ -5,14 +5,20 @@
 #' @param w_i weights vector.
 #' @param benchmarks DF benchmarks.
 #' @param conn database connection
+#' @param filter_char Only disaggregate assets that contain the this characters
 #' @return Vector of assets weights.
 #' @export
 
-disagg_portfolio <- function(w_i, benchmarks, db){
+disagg_portfolio <- function(w_i, benchmarks, db, filter_char=NULL){
   conn <- poolCheckout(db)
   DBI::dbBegin(conn)
-  ind_fund_db <- names(w_i) %in% as.data.frame(conn %>% tbl("Weights"))$PortId
+  ind_fund_db <- names(w_i) %in% as.data.frame(conn %>% tbl("Weights"))$PortId 
   ind_fund <- names(w_i) %in% benchmarks$Benchmark
+  
+  if (!is.null(filter_char)){
+    ind_fund_db <- ind_fund_db & grepl(filter_char, names(w_i))
+    ind_fund <- ind_fund & grepl(filter_char, names(w_i))
+  }
   w_funds <- c()
   if(any(ind_fund_db)){
     for(fi in names(w_i[ind_fund_db])){
@@ -34,4 +40,5 @@ disagg_portfolio <- function(w_i, benchmarks, db){
   DBI::dbCommit(conn)
   poolReturn(conn)
   w_i <- tapply(c(w_i[!ind_fund & !ind_fund_db], w_funds), names(c(w_i[!ind_fund & !ind_fund_db], w_funds)), sum)
+  returns(w_i)
 }
