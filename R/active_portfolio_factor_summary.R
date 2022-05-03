@@ -128,8 +128,17 @@ active_portfolio_factor_summary <- function(capital, currency, w_port, w_bench, 
     bench_back <- portfolio_backtest(w_bench, capital, currency, asset_data, series_bench[,c(names(w_bench), bench_curr)], rebal_per_in_months = rebal_per, weights_xts = NULL,
                                      rebal_dates = rebal_dates, slippage = slippage, commission = commission)
     total_bench <-as.numeric(tail(bench_back$ret_port,1))
-
-    summ_df <- total_return_attribution(w_port, w_bench, total_port, total_bench, port_back$cash_port, bench_back$cash_port, port_back$diff_cash_assets, bench_back$diff_cash_assets, port_back$weights_port, bench_back$weights_port, port_back$dec_dates, bench_back$dec_dates, factor=factor, asset_data=asset_data)$summ_factor_df
+    
+    if(is.null(factor)){
+      k <- "summ_df"
+    }else if(!is.null(factor) && factor=="Asset"){
+      factor<-NULL
+      k <- "summ_df"
+    }else{
+      k <- "summ_factor_df"
+    }
+    
+    summ_df <- total_return_attribution(w_port, w_bench, total_port, total_bench, port_back$cash_port, bench_back$cash_port, port_back$diff_cash_assets, bench_back$diff_cash_assets, port_back$weights_port, bench_back$weights_port, port_back$dec_dates, bench_back$dec_dates, factor=factor, asset_data=asset_data)[[k]]
     rownames(summ_df) <- paste(port_name, "-", rownames(summ_df))
   }
   return(summ_df)
