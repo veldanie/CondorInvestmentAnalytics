@@ -6,12 +6,13 @@
 #'
 #' @param bench_series xts serie of multiples benchmarks
 #' @param port_series xts serie of multiples portfolios
+#' @param custom_ini_date Fecha inicial
 #' @param period Period
 #' @param factor_val Valuation factor
 #' @return List of returns, information, absolute metrics to benchmark and portfolio series and relative metrics.
 #' @export
 
-mult_port_metrics <- function (bench_series, port_series, period = "monthly", factor_val = 100)
+mult_port_metrics <- function (bench_series, port_series, custom_ini_date, period = "monthly", factor_val = 100)
 {
   if(length(bench_series)!=length(port_series)){
     warning(paste0('Benchmark and port tables must have same columns and rows lenghts'))
@@ -56,7 +57,7 @@ mult_port_metrics <- function (bench_series, port_series, period = "monthly", fa
   curr_date <- tail(index(port_series),1)
   ini_date <- index(port_series)[1]
 
-  ref_dates_all <- c(input$custom_ini_date, max(dmy(paste("0101", year(curr_date))),ini_date), curr_date - 30, curr_date - 90, curr_date - 180, curr_date - 365*c(1,3,5,7,10))
+  ref_dates_all <- c(custom_ini_date, max(dmy(paste("0101", year(curr_date))),ini_date), curr_date - 30, curr_date - 90, curr_date - 180, curr_date - 365*c(1,3,5,7,10))
   ref_dates_valid <- ref_dates_all >= ini_date
   ref_dates <- ref_dates_all[ref_dates_valid]
   if(length(ref_dates)>1){
