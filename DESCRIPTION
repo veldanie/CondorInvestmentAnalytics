@@ -1,7 +1,7 @@
 Package: SuraInvestmentAnalytics
 Type: Package
 Title: Investment Analytics
-Version: 0.1.0
+Version: 0.1.1
 Author: Daniel Velasquez <daniel.velasquez@sura-am.com>
 Maintainer: Daniel Velasquez <daniel.velasquez@sura-am.com>
 Description: Funciones para inversiones.
