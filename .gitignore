@@ -2,3 +2,4 @@
 SuraInvestmentAnalytics.Rproj
 *.Rhistory
 *.Rbuildignore
+*.RData
