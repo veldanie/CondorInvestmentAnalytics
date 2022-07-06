@@ -13,9 +13,10 @@
 complete_series_forward <- function(complete_series, series_to_complete, estimate_coef=FALSE, constant=FALSE){
   if(constant){
     ref_dates <- index(complete_series)[index(complete_series)>tail(index(series_to_complete),1)]
-    if(ref_dates>5){
+    if(length(ref_dates)>5){
       series_to_complete <- rbind(series_to_complete, xts(rep(as.numeric(tail(series_to_complete,1)), length(ref_dates)), order.by = ref_dates))
     }
+    return(series_to_complete)
   }else{
     if(index(complete_series)[length(index(complete_series))] > index(series_to_complete)[length(series_to_complete)]){
       returns_complete_series <- returns(complete_series, period = 'daily')
