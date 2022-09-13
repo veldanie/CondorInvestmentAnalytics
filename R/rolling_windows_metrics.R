@@ -8,7 +8,7 @@
 #' @param funct Function to apply 
 #' @param windows_width integer specifying the window width (in numbers of observations) which is aligned to the original sample according to the align argument
 #' @param align specifyies whether the index of the result should be left- or right-aligned or centered [c("center", "left", "right")] compared to the rolling window of observations.
-#' @param quantile_dist Qunatile for the distribution
+#' @param quantile_dist Quantile for the distribution
 #' @param factor_val Constant thar multiplies output metrics
 #' @return list with data and metrics
 #' @export
