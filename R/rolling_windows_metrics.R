@@ -10,7 +10,7 @@
 #' @param align specifyies whether the index of the result should be left- or right-aligned or centered [c("center", "left", "right")] compared to the rolling window of observations.
 #' @param quantile_dist Qunatile for the distribution
 #' @param factor_val Constant thar multiplies output metrics
-#' @return Absolute and relative metrics dataframes.
+#' @return list with data and metrics
 #' @export
 
 rolling_windows_metrics <- function(data_series, returns = FALSE, period = "monthly", port_names = NULL, func = mean, windows_width = 12, align = c('right'), quantile_dist = 5, factor_val = 100){
