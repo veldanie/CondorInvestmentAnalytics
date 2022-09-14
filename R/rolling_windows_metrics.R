@@ -21,10 +21,10 @@ rolling_windows_metrics <- function(data_series, returns = FALSE, period = "mont
   if(!is.null(port_names)){
     colnames(ports_rolling_fun) <- port_names
   }
-  var_rets_dw <- apply(ports_rolling_fun, 2, function (x) round(quantile(x, probs = quantile_dist/100), 3))
-  var_rets_up <- apply(ports_rolling_fun, 2, function (x) round(quantile(x, probs = 1 - quantile_dist/100), 3))
+  var_rets_dw <- apply(ports_rolling_fun, 2, function (x) round(quantile(x, probs = quantile_dist/100)*factor_val, 3))
+  var_rets_up <- apply(ports_rolling_fun, 2, function (x) round(quantile(x, probs = 1 - quantile_dist/100)*factor_val, 3))
   var_date <- format(index(ports_rolling_fun[apply(abs(ports_rolling_fun-var_rets_dw), 2, which.min)]), "%b%Y")
-  mean_ret <- apply(ports_rolling_fun, 2, function(x) round(mean(x),3))
-  xticks <- apply(ports_rolling_fun, 2, function(x) pretty(x)*factor_val)
-  return(list(rolling_data = ports_rolling_fun*factor_val, var_rets_dw = var_rets_dw*factor_val, var_rets_up = var_rets_up*factor_val, var_date = var_date, mean_ret = mean_ret*factor_val, xticks = xticks))
+  mean_ret <- apply(ports_rolling_fun, 2, function(x) round(mean(x)*factor_val,3))
+  xticks <- lapply(ports_rolling_fun, function(x) pretty(x)*factor_val)
+  return(list(rolling_data = ports_rolling_fun*factor_val, var_rets_dw = var_rets_dw, var_rets_up = var_rets_up, var_date = var_date, mean_ret = mean_ret, xticks = xticks))
 }
