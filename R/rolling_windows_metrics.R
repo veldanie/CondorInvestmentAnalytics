@@ -20,6 +20,8 @@ rolling_windows_metrics <- function(data_series, returns = FALSE, period = "mont
     if(identical(sd,func)){
       freq <- sqrt(freq)
     }
+  }else{
+    freq <- 1
   }
   if (!returns){
     data_series <- returns(data_series, period=period)
