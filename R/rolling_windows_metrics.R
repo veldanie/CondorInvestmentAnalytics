@@ -4,7 +4,7 @@
 #' @param data_series xts portfolios series.
 #' @param returns boolean the data are returns
 #' @param period returns period, as string ('daily','monthly','quarterly','semiannualy')
-#' @param annualized number to annualize the data (p.e sqrt(252) for sd daily data). if not, default 1.
+#' @param annualized boolean to annualize the data. If funct = sd, \*sqrt(freq), else \*freq
 #' @param port_names Header names.
 #' @param funct Function to apply 
 #' @param windows_width integer specifying the window width (in numbers of observations) which is aligned to the original sample according to the align argument
@@ -14,11 +14,17 @@
 #' @return list with data and metrics
 #' @export
 
-rolling_windows_metrics <- function(data_series, returns = FALSE, period = "monthly", annualized = 1, port_names = NULL, func = mean, windows_width = 12, align = c('right'), quantile_dist = 5, factor_val = 100){
+rolling_windows_metrics <- function(data_series, returns = FALSE, period = "monthly", annualized = FALSE, port_names = NULL, func = mean, windows_width = 12, align = c('right'), quantile_dist = 5, factor_val = 100){
+  if (annualized){
+    freq <- switch(period, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4, 'semiannualy' = 2)
+    if(identical(sd,func)){
+      freq <- sqrt(freq)
+    }
+  }
   if (!returns){
     data_series <- returns(data_series, period=period)
   }
-  ports_rolling_fun <- na.omit(rollapply(data_series, windows_width, func,  align = align))*annualized
+  ports_rolling_fun <- na.omit(rollapply(data_series, windows_width, func,  align = align))*freq
   if(!is.null(port_names)){
     colnames(ports_rolling_fun) <- port_names
   }
