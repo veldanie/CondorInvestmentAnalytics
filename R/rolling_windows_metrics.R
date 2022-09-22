@@ -4,9 +4,9 @@
 #' @param data_series xts portfolios series.
 #' @param returns boolean the data are returns
 #' @param period returns period, as string ('daily','monthly','quarterly','semiannualy')
-#' @param annualized boolean to annualize the data. If funct = sd, \*sqrt(freq), else \*freq
+#' @param annualized boolean to annualize the data. If func = sd, \*sqrt(freq), else \*freq
 #' @param port_names Header names.
-#' @param funct Function to apply 
+#' @param func Function to apply 
 #' @param windows_width integer specifying the window width (in numbers of observations) which is aligned to the original sample according to the align argument
 #' @param align specifyies whether the index of the result should be left- or right-aligned or centered [c("center", "left", "right")] compared to the rolling window of observations.
 #' @param quantile_dist Quantile for the distribution
