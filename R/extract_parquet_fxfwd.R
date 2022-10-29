@@ -7,8 +7,10 @@
 #' @param colnames_fx vector with two columns names for fx. The sep = '_' 
 #' @return data, in xts table or nested list of xts.
 #' @export
+
 extract_parquet_fxfwd <- function(bucket_name='suraraven', file_name = 'output/series_fxfwd/series_fxfwd.parquet', to_nested_list=TRUE, colnames_fx = c('outright','premium')){
-  fx_series_df <-read_parquet(paste0('s3://',bucket_name,'/',file_name))
+  fx_series_df <- s3read_using(FUN=read_parquet, bucket = bucket_name, object=file_name, sep = sep, header=TRUE, check.names=FALSE)
+  #fx_series_df <-read_parquet(paste0('s3://',bucket_name,'/',file_name))
   fx_series_xts <- xts(fx_series_df[,setdiff(colnames(fx_series_df), "Date")], order.by = as.Date(fx_series_df$Date))
   if (to_nested_list){
     series_fxfwd_list <-list()
