@@ -28,7 +28,8 @@ index_series_with_div <- function(series, backup_series, threshold=0, ref_years=
   if(is.null(backup_series)){
     series_out <- na.approx(index_monthly, xout = index(series))
   }else{
-    series_index <- index(backup_series[paste0(c(index(index_monthly)[1], tail(index(series),1)), collapse = "/")])
+    series_index <- c(index(backup_series)[index(backup_series)<index(series)[1]],index(series))
+    
     index_dayly <- na.approx(index_monthly, xout = series_index)
     if(complete_method_rets){
       series_out <- rets_complete_index_series(index_dayly, backup_series, "2000/2020")[ref_years]
