@@ -8,7 +8,7 @@
 #' @param since_date Date since the data is extracted
 #' @return data, in xts table or nested list of xts.
 #' @export
-extract_parquet_s3select <- function(ticker_list, bucket_name='suraraven', file_name = 'output/series_table/series_table.parquet', to_nested_list=TRUE, since_date='2008-01-01'){
+extract_parquet_s3select <- function(ticker_list, bucket_name='condor-sura-qa', file_name = 'output/series_table/series_table.parquet', to_nested_list=TRUE, since_date='2008-01-01'){
   output_data <- NULL
   if(length(ticker_list)!=0){
     if(is.null(since_date)){
