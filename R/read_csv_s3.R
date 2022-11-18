@@ -7,7 +7,7 @@
 #' @return data.frame.
 #' @export
 
-read_csv_s3 <- function(bucket_name='suraraven', file_name = 'inputs/static/asset_data.csv', sep = ','){
+read_csv_s3 <- function(bucket_name='condor-sura-qa', file_name = 'inputs/static/asset_data.csv', sep = ','){
   svc = paws.storage::s3()
   s3_download <- svc$get_object(
     Bucket = bucket_name,
