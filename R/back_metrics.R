@@ -25,7 +25,7 @@ back_metrics <- function(bench_series, port_series, dates=NULL, period="monthly"
   }
   freq <- switch(period, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4, 'semiannualy' = 2)
   
-  rets <- returns(series)
+  rets <- returns(series, period = period)
   
   n_y <- as.numeric(tail(index(series),1) - index(series)[1])/365
   avg_ret <- colMeans(rets)
