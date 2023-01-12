@@ -7,7 +7,7 @@
 #' @param vol_add Approximate Volatiliyy increment.
 #' @return rebuilt series
 
-rebuild_series_spr <- function(series_orig, spr_anual=0, vol_add=NULL){
+rebuild_series_spr <- function(series_orig, spr_anual=0, vol_add=NULL, days_year=252){
   
   spr_daily <- spr_anual/days_year
   series_rets <- returns(series_orig)
