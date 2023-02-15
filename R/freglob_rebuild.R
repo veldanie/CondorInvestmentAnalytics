@@ -1,6 +1,6 @@
 
 
-freglob_rebuild <- function(ticker, asset_cf, fund_data, shift_values = NULL, as_div_yield = FALSE,
+freglob_rebuild <- function(ticker, asset_cf, fund_data=series_fix, shift_values = NULL, as_div_yield = FALSE,
                                  since_date = NULL, series_list = FALSE){
   fund_cf <- xts(x = na.omit(as.numeric(asset_cf[, which(colnames(asset_cf) == ticker) + 1])),
                  order.by = na.omit(as.Date(asset_cf[, which(colnames(asset_cf) == ticker)], format = "%d/%m/%Y")))
@@ -27,8 +27,13 @@ freglob_rebuild <- function(ticker, asset_cf, fund_data, shift_values = NULL, as
   }
 
   delta_div_payments <- as.vector(mean(diff(index(div_yield))))
+  
+  if(length(coredata(div_yield))>4){
   div_yield <- rbind(div_yield, xts(x = mean(coredata(div_yield)[(length(coredata(div_yield)) - 4):length(coredata(div_yield))]),
                                     order.by = index(fund_data)[nrow(fund_data)]))
+  }else{
+    div_yield <- rbind(div_yield, xts(x = mean(coredata(div_yield)),order.by = index(fund_data)[nrow(fund_data)]))
+  }
 
   for(i in 2:length(index(div_yield))){
     if(i == length(index(div_yield))){
