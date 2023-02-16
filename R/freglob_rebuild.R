@@ -1,6 +1,6 @@
 
 
-freglob_rebuild <- function(ticker, asset_cf, fund_data=series_fix, shift_values = NULL, as_div_yield = FALSE,
+freglob_rebuild <- function(ticker, asset_cf, fund_data, shift_values = NULL, as_div_yield = FALSE,
                                  since_date = NULL, series_list = FALSE){
   fund_cf <- xts(x = na.omit(as.numeric(asset_cf[, which(colnames(asset_cf) == ticker) + 1])),
                  order.by = na.omit(as.Date(asset_cf[, which(colnames(asset_cf) == ticker)], format = "%d/%m/%Y")))
