@@ -1,12 +1,12 @@
 
 
 freglob_rebuild <- function(ticker, asset_cf, fund_data, shift_values = NULL, as_div_yield = FALSE,
-                                 since_date = NULL, series_list = FALSE){
+                                 since_date = NULL, series_list = FALSE, series_fix=FALSE){
   fund_cf <- xts(x = na.omit(as.numeric(asset_cf[, which(colnames(asset_cf) == ticker) + 1])),
                  order.by = na.omit(as.Date(asset_cf[, which(colnames(asset_cf) == ticker)], format = "%d/%m/%Y")))
 
   if(!(series_list)){
-    if(class(fund_data)=='data.frame'){
+    if(series_fix){
       fund_data <- xts(x = na.omit(as.numeric(fund_data[, which(colnames(fund_data) == ticker) + 1])),
                        order.by = na.omit(as.Date(fund_data[, which(colnames(fund_data) == ticker)], format = "%d/%m/%Y")))
     }else{
