@@ -6,10 +6,14 @@ freglob_rebuild <- function(ticker, asset_cf, fund_data, shift_values = NULL, as
                  order.by = na.omit(as.Date(asset_cf[, which(colnames(asset_cf) == ticker)], format = "%d/%m/%Y")))
 
   if(!(series_list)){
-    fund_data <- xts(x = na.omit(as.numeric(fund_data[, which(colnames(fund_data) == ticker) + 1])),
-                     order.by = na.omit(as.Date(fund_data[, which(colnames(fund_data) == ticker)], format = "%d/%m/%Y")))
+    if(class(fund_data)=='data.frame'){
+      fund_data <- xts(x = na.omit(as.numeric(fund_data[, which(colnames(fund_data) == ticker) + 1])),
+                       order.by = na.omit(as.Date(fund_data[, which(colnames(fund_data) == ticker)], format = "%d/%m/%Y")))
+    }else{
+      fund_data = na.omit(fund_data)
+    }
   }
-
+  
   if(!(is.null(since_date))){
     fund_data <- fund_data[paste(toString(as.Date(since_date)), '/')]
   }
