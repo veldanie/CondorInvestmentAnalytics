@@ -17,11 +17,27 @@
 #' @param header_df Header.
 #' @param factor Factor name.
 #' @param asset_data Assets dataframe.
+#' @param assets_funds_map Assets in benchmark that corresponds to funds/etfs/assets in port
 
 #' @return Performance attribution df.
 #' @export
 
-total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_bench, cash_port, cash_bench, diff_cash_assets_port, diff_cash_assets_bench, weights_port, weights_bench, dec_dates_port = NA, dec_dates_bench = NA, header_df = c("Portafolio", "Benchmark", "Desv. Prom.", "AA", "SS", "INT", "TOTAL"), ret_ini_capital=FALSE, factor=NULL, asset_data=NULL) {
+total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_bench, cash_port, cash_bench, diff_cash_assets_port, diff_cash_assets_bench, weights_port, weights_bench, dec_dates_port = NA, dec_dates_bench = NA, header_df = c("Portafolio", "Benchmark", "Desv. Prom.", "AA", "SS", "INT", "TOTAL"), ret_ini_capital=FALSE, factor=NULL, asset_data=NULL, assets_funds_map=NULL) {
+  if (!is.null(assets_funds_map)){
+    for (k in names(w_bench)){
+      pos_ind <- k==assets_funds_map$Asset
+      if (any(pos_ind)){
+        funds <- assets_funds_map$Fund[pos_ind]
+        funds_in_port <- names(w_port)[names(w_port) %in% funds]
+        w_bench_temp <- w_bench[k]*w_port[funds_in_port]/sum(w_port[funds_in_port])
+        w_bench <- c(w_bench, w_bench_temp)[names(w_bench_temp)]
+        
+        weights_bench <- merge(weights_bench, (weights_bench[,k] %*% rep(1, length(funds_in_port))) * weights_port[,funds_in_port]/(matrix(rowSums(weights_port[,funds_in_port]), ncol=1) %*% rep(1, length(funds_in_port))), check.names = FALSE)[,funds_in_port]
+        diff_cash_assets_bench <- merge(diff_cash_assets_bench, (diff_cash_assets_bench[,k] %*% rep(1, length(funds_in_port))) * weights_port[2:nrow(weights_port),funds_in_port]/(matrix(rowSums(weights_port[2:nrow(weights_port),funds_in_port]), ncol=1) %*% rep(1, length(funds_in_port))), check.names = FALSE)[,funds_in_port]
+      }
+    }
+  } 
+  
   asset_names <- unique(c(names(w_bench), names(w_port)))
   w1 <- w2 <- rep(0, length(asset_names))
   names(w1) <- names(w2) <- asset_names
