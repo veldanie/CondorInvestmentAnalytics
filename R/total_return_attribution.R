@@ -30,10 +30,20 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_be
         funds <- assets_funds_map$Fund[pos_ind]
         funds_in_port <- names(w_port)[names(w_port) %in% funds]
         w_bench_temp <- w_bench[k]*w_port[funds_in_port]/sum(w_port[funds_in_port])
-        w_bench <- c(w_bench, w_bench_temp)[names(w_bench_temp)]
+        bench_valid_names <- setdiff(c(names(w_bench), funds_in_port), k)
+        w_bench <- c(w_bench, w_bench_temp)[bench_valid_names]
+
+        w_sums <- rowSums(weights_port[,funds_in_port])
+        w_sums[w_sums==0] <- 1
+        weights_bench <- merge(weights_bench, (weights_bench[,k] %*% rep(1, length(funds_in_port))) * weights_port[,funds_in_port]/(matrix(w_sums, ncol=1) %*% rep(1, length(funds_in_port))), check.names = FALSE)[,bench_valid_names]
+        diff_cash_assets_bench <- merge(diff_cash_assets_bench, (diff_cash_assets_bench[,k] %*% rep(1, length(funds_in_port))) * weights_port[2:nrow(weights_port),funds_in_port]/(matrix(w_sums[2:nrow(weights_port)], ncol=1) %*% rep(1, length(funds_in_port))), check.names = FALSE)[,bench_valid_names]
         
-        weights_bench <- merge(weights_bench, (weights_bench[,k] %*% rep(1, length(funds_in_port))) * weights_port[,funds_in_port]/(matrix(rowSums(weights_port[,funds_in_port]), ncol=1) %*% rep(1, length(funds_in_port))), check.names = FALSE)[,funds_in_port]
-        diff_cash_assets_bench <- merge(diff_cash_assets_bench, (diff_cash_assets_bench[,k] %*% rep(1, length(funds_in_port))) * weights_port[2:nrow(weights_port),funds_in_port]/(matrix(rowSums(weights_port[2:nrow(weights_port),funds_in_port]), ncol=1) %*% rep(1, length(funds_in_port))), check.names = FALSE)[,funds_in_port]
+        if (k %in% names(w_port)){
+          w_bench <- c(w_bench, w_port[k])
+          weights_bench <- merge(weights_bench, weights_port[,k], check.names = FALSE) 
+          diff_cash_assets_bench <- merge(diff_cash_assets_bench, diff_cash_assets_port[,k], check.names = FALSE) 
+        }
+        
       }
     }
   } 
