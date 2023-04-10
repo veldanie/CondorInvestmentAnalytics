@@ -85,7 +85,9 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_be
   }
   rets_assets1[is.nan(rets_assets1)] <- 0
   rets_assets2[is.nan(rets_assets2)] <- 0
-
+  rets_assets1[is.infinite(rets_assets1)] <- 0
+  rets_assets2[is.infinite(rets_assets2)] <- 0
+  
   if(length(diff_assets1)>0){
     asset_names_temp <- colnames(rets_assets1)
     weights_bench <- merge.xts(weights_bench[,asset_names_temp], xts(matrix(0, ncol = length(diff_assets1), nrow = nrow(weights_bench)), order.by = index(weights_bench)))
