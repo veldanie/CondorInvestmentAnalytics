@@ -20,10 +20,11 @@
 #' @param sync_dates Bool, sync. dates.
 #' @param fund_complete Bool, indicates if benchmark funds are used.
 #' @param index_df Custom index dataframe
+#' @param assets_funds_map Assets in benchmark that corresponds to funds/etfs/assets in port
 #' @return Active summary data frame.
 #' @export
 
-active_portfolio_factor_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, factor="AssetClassMarket", per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, weights_bench = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, index_df=NULL) {
+active_portfolio_factor_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, factor="AssetClassMarket", per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, weights_bench = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, index_df=NULL, assets_funds_map=NULL) {
   freq <- switch(per, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4)
   if(is.null(w_port) & is.null(w_bench)){ stop("Null portafolios. Check weights!")}
 
@@ -138,7 +139,7 @@ active_portfolio_factor_summary <- function(capital, currency, w_port, w_bench, 
       k <- "summ_factor_df"
     }
     
-    summ_df <- total_return_attribution(w_port, w_bench, total_port, total_bench, port_back$cash_port, bench_back$cash_port, port_back$diff_cash_assets, bench_back$diff_cash_assets, port_back$weights_port, bench_back$weights_port, port_back$dec_dates, bench_back$dec_dates, factor=factor, asset_data=asset_data)[[k]]
+    summ_df <- total_return_attribution(w_port, w_bench, total_port, total_bench, port_back$cash_port, bench_back$cash_port, port_back$diff_cash_assets, bench_back$diff_cash_assets, port_back$weights_port, bench_back$weights_port, port_back$dec_dates, bench_back$dec_dates, factor=factor, asset_data=asset_data, assets_funds_map=assets_funds_map)[[k]]
     rownames(summ_df) <- paste(port_name, "-", rownames(summ_df))
   }
   return(summ_df)
