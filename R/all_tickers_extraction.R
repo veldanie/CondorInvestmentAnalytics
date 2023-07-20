@@ -134,6 +134,9 @@ all_tickers_extraction <- function(db, asset_data, benchmarks, assets = NULL, po
     funds_names <- funds_names[!is.na(funds_names)]
     assets_names <- unique(c(assets_names,funds_names))
   }
+  # FX
+  ticker_list <- unique(c(ticker_list, na.omit(asset_data$Currency[match(ticker_list, asset_data$TickerBenchmark)])))
+  
   if(!is.null(assets_names)){
     pos_assets <- unique(match(assets_names, asset_data$Asset))
     ticker_list <- unique(c(ticker_list,asset_data$Currency[pos_assets]))
