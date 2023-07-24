@@ -1,7 +1,7 @@
 
 #' Performance attribution df.
 #'
-#' Performance attribution df.
+#' Performance attribution df. If assets_funds_map, diff_cash asset_bench is transformed so that series are replicated per fund.
 #' @param w_port Portfolio weights.
 #' @param w_bench Benchmark weights.
 #' @param efec_ret_port Portfolio realized returns.
@@ -29,7 +29,7 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_be
       if (any(pos_ind)){
         funds <- assets_funds_map$Fund[pos_ind]
         funds_in_port <- names(w_port)[names(w_port) %in% funds]
-        w_bench_temp <- w_bench[k]*w_port[funds_in_port]/sum(w_port[funds_in_port])
+        w_bench_temp <- (w_port[funds_in_port]/sum(w_port[funds_in_port])) * as.numeric(w_bench[k])
         bench_valid_names <- setdiff(c(names(w_bench), funds_in_port), k)
         w_bench <- c(w_bench, w_bench_temp)[bench_valid_names]
 
