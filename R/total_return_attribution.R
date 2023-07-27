@@ -36,7 +36,7 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_be
         w_sums <- rowSums(weights_port[,funds_in_port])
         w_sums[w_sums==0] <- 1
         weights_bench <- merge(weights_bench, (weights_bench[,k] %*% rep(1, length(funds_in_port))) * weights_port[,funds_in_port]/(matrix(w_sums, ncol=1) %*% rep(1, length(funds_in_port))), check.names = FALSE)[,bench_valid_names]
-        diff_cash_assets_bench <- merge(diff_cash_assets_bench, (diff_cash_assets_bench[,k] %*% rep(1, length(funds_in_port))) * weights_port[2:nrow(weights_port),funds_in_port]/(matrix(w_sums[2:nrow(weights_port)], ncol=1) %*% rep(1, length(funds_in_port))), check.names = FALSE)[,bench_valid_names]
+        diff_cash_assets_bench <- merge(diff_cash_assets_bench, (diff_cash_assets_bench[,k] %*% rep(1, length(funds_in_port))) * coredata(weights_port[1:(nrow(weights_port)-1),funds_in_port])/(matrix(w_sums[1:(nrow(weights_port)-1)], ncol=1) %*% rep(1, length(funds_in_port))), check.names = FALSE)[,bench_valid_names]
         
         if (k %in% names(w_port)){
           w_bench <- c(w_bench, w_port[k])
