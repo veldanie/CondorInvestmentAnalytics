@@ -101,7 +101,7 @@ all_tickers_extraction <- function(db, asset_data, benchmarks, assets = NULL, po
       for (port_i in ports){
         tac_ind <- grepl("Tactico", port_i)
         if(tac_ind){
-          next
+          port_db <- gsub(" - Tactico", "", port_i)
         }else{
           port_db <- paste0(port_i, " - Tactico")
         }
