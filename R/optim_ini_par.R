@@ -29,7 +29,7 @@ optim_ini_par <- function(lb, ub, f_const=NULL, ind_rel=NULL, pos_asset=NULL, f_
   }
 
   ws <- try(xsample(E=E, F=eq_const, G=G, H=h, iter = iter)$X, silent = TRUE)
-  if(class(ws)=='try-error'){
+  if(any(class(ws)=='try-error')){
     w0 <- lb + (1-sum(lb))*(ub - lb)/sum(ub - lb)
   }else{
     #Transform output to incorporate relative constraints:
