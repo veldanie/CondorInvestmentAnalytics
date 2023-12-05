@@ -111,7 +111,8 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
   index_units <- cash_ini/index_val_ini # Number of units depend on execution price.
   tc <- transaction_costs(index_units, index_val_ini, slippage = slippage, commission = commission)
   index_units <- cash_ini/tc$exec_price # Number of units depend on execution price.
-
+  index_units[is.na(index_units)] <- 0
+  
   fx_hedge_ind <- fx_hedge_asset[asset_univ] != 0 # Indicator of assets that are hedged.
   fx_conv_ind <- index_curr != currency# Indicator of assets with index_curr != ref_curr
   fx_nhedge_conv <- !fx_hedge_ind & fx_conv_ind # Indicator of non-hedged assets with index_curr != ref_curr.
@@ -234,6 +235,7 @@ portfolio_backtest <- function(weights, capital, currency, asset_data, series_ba
         index_units <- cash_ini/index_val_ini # Number of units depend on execution price.
         tc <- transaction_costs(index_units, index_val_ini, slippage = slippage, commission = commission)
         index_units <- cash_ini/tc$exec_price # Number of units depend on execution price.
+        index_units[is.na(index_units)] <- 0
       }
     }
   }
