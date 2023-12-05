@@ -62,14 +62,19 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
     port_curr <- unique(port_curr)
   }
   asset_names_diff <- setdiff(asset_names, names(fixed_tickers))
-  if (fill_dates & per!='daily'){
+  if (fill_dates){
     series_back <- series_merge(series_list, ref_dates, asset_data, currency, asset_names_diff, port_curr, convert_to_ref = FALSE, invest_assets = invest_assets, fixed_tickers =  NULL, join='outer')
-    series_back <- na.locf(na.locf(series_back), fromLast = TRUE)
-    series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE, join='outer')
-    series_bench <- na.locf(na.locf(series_bench), fromLast = TRUE)
+    ref_asset_dates <- apply(weights_tac, 2, function(x){index(weights_tac)[x>0][1]})
+    for (k in names(ref_asset_dates)){
+      if(ref_asset_dates[k]>ref_dates[1]){
+        series_temp <- na.omit(series_back[,k])
+        date_temp <- as.Date(min(ref_asset_dates[k], index(series_temp)[1]))
+        series_back[index(series_back)<=date_temp,k]<- na.locf(series_back[index(series_back)<=date_temp,k], fromLast = TRUE)
+      }
+    }
+    series_back <- na.omit(series_back)
   }else{
     series_back <- series_merge(series_list, ref_dates, asset_data, currency, asset_names_diff, port_curr, convert_to_ref = FALSE, invest_assets = invest_assets, fixed_tickers =  NULL)
-    series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE)
   }
   if(length(series_back)==0){
     summ_df <- t(rep(0, length(header_df)))
@@ -82,7 +87,8 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
       series_back <- series_back[, c(asset_names, port_curr)]
       fixed_curr <- series_comp$currs
     }
-
+    
+    series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE)
     intersect_dates <- zoo::as.Date(intersect(index(series_bench), index(series_back)))
     series_bench <- series_bench[intersect_dates]
     series_back <- series_back[intersect_dates]
