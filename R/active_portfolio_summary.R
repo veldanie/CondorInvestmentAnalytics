@@ -68,8 +68,9 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
     for (k in names(ref_asset_dates)){
       if(ref_asset_dates[k]>ref_dates[1]){
         series_temp <- na.omit(series_back[,k])
-        date_temp <- as.Date(min(ref_asset_dates[k], index(series_temp)[1]))
-        series_back[index(series_back)<=date_temp,k]<- na.locf(series_back[index(series_back)<=date_temp,k], fromLast = TRUE)
+        if(index(series_temp)[1]<=ref_asset_dates[k]){
+          series_back[index(series_back)<=index(series_temp)[1],k]<- na.locf(series_back[index(series_back)<=index(series_temp)[1],k], fromLast = TRUE)
+        }
       }
     }
     series_back <- na.omit(series_back)
@@ -79,8 +80,9 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
     for (k in names(ref_bench_dates)){
       if(ref_bench_dates[k]>index(series_back)[1]){
         series_temp <- na.omit(series_bench[,k])
-        date_temp <- as.Date(min(ref_bench_dates[k], index(series_temp)[1]))
-        series_bench[index(series_bench)<=date_temp,k]<- na.locf(series_bench[index(series_bench)<=date_temp,k], fromLast = TRUE)
+        if(index(series_temp)[1]<=ref_bench_dates[k]){
+          series_bench[index(series_bench)<=index(series_temp)[1],k]<- na.locf(series_bench[index(series_bench)<=index(series_temp)[1],k], fromLast = TRUE)
+        }
       }
     }
     series_bench <- na.omit(series_bench)
