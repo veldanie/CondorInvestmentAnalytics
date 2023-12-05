@@ -25,7 +25,7 @@
 #' @return Active summary data frame.
 #' @export
 
-active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, weights_bench = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, index_df=NULL, header_df = c("Ret Total Bench", "Ret Total Port", "Ret Prom Bench", "Ret Prom Port", "Vol", "Sharpe", "Alpha", "TE", "RI", "AA", "SS", "INTER"), factor='AssetClassMarket', assets_funds_map=NULL) {
+active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, weights_bench = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, index_df=NULL, header_df = c("Ret Total Bench", "Ret Total Port", "Ret Prom Bench", "Ret Prom Port", "Vol", "Sharpe", "Alpha", "TE", "RI", "AA", "SS", "INTER"), factor='AssetClassMarket', assets_funds_map=NULL, fill_dates=FALSE) {
   freq <- switch(per, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4)
   if(is.null(w_port) & is.null(w_bench)){ stop("Null portafolios. Check weights!")}
 
@@ -62,7 +62,15 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
     port_curr <- unique(port_curr)
   }
   asset_names_diff <- setdiff(asset_names, names(fixed_tickers))
-  series_back <- series_merge(series_list, ref_dates, asset_data, currency, asset_names_diff, port_curr, convert_to_ref = FALSE, invest_assets = invest_assets, fixed_tickers =  NULL)
+  if (fill_dates & per!='daily'){
+    series_back <- series_merge(series_list, ref_dates, asset_data, currency, asset_names_diff, port_curr, convert_to_ref = FALSE, invest_assets = invest_assets, fixed_tickers =  NULL, join='outer')
+    series_back <- na.locf(na.locf(series_back), fromLast = TRUE)
+    series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE, join='outer')
+    series_bench <- na.locf(na.locf(series_bench), fromLast = TRUE)
+  }else{
+    series_back <- series_merge(series_list, ref_dates, asset_data, currency, asset_names_diff, port_curr, convert_to_ref = FALSE, invest_assets = invest_assets, fixed_tickers =  NULL)
+    series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE)
+  }
   if(length(series_back)==0){
     summ_df <- t(rep(0, length(header_df)))
     attrib_res <- NULL
@@ -75,8 +83,6 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
       fixed_curr <- series_comp$currs
     }
 
-    # the date 01012000 is added when completing with benchmark
-    series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE)
     intersect_dates <- zoo::as.Date(intersect(index(series_bench), index(series_back)))
     series_bench <- series_bench[intersect_dates]
     series_back <- series_back[intersect_dates]
