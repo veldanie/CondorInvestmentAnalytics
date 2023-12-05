@@ -74,18 +74,7 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
       }
     }
     series_back <- na.omit(series_back)
-
-    series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE, join='outer')
-    ref_bench_dates <- apply(weights_bench, 2, function(x){index(weights_bench)[x>0][1]})
-    for (k in names(ref_bench_dates)){
-      if(ref_bench_dates[k]>index(series_back)[1]){
-        series_temp <- na.omit(series_bench[,k])
-        if(index(series_temp)[1]<=ref_bench_dates[k]){
-          series_bench[index(series_bench)<=index(series_temp)[1],k]<- na.locf(series_bench[index(series_bench)<=index(series_temp)[1],k], fromLast = TRUE)
-        }
-      }
-    }
-    series_bench <- na.omit(series_bench)
+    series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, colnames(weights_bench), bench_curr, convert_to_ref = FALSE)
   }else{
     series_back <- series_merge(series_list, ref_dates, asset_data, currency, asset_names_diff, port_curr, convert_to_ref = FALSE, invest_assets = invest_assets, fixed_tickers =  NULL)
     series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE)
@@ -112,7 +101,7 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
       add_asset <- setdiff(colnames(weights_tac), col_bench)
       if(length(add_asset)>0){
         index_series_bench <- index(series_bench)
-        series_bench_ext <- merge.xts(series_bench, xts(rep(0, length(index_series_bench)), order.by = index_series_bench), join = "inner")
+        series_bench_ext <- merge.xts(series_bench, xts(matrix(0, length(index_series_bench), length(add_asset)), order.by = index_series_bench), join = "inner")
         colnames(series_bench_ext) <- c(col_bench, add_asset)
       }else{
         series_bench_ext <- series_bench
