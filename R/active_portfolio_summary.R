@@ -65,6 +65,7 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
   if (fill_dates & !is.null(weights_tac)){
     series_back <- series_merge(series_list, ref_dates, asset_data, currency, asset_names_diff, port_curr, convert_to_ref = FALSE, invest_assets = invest_assets, fixed_tickers =  NULL, join='outer')
     ref_asset_dates <- apply(weights_tac, 2, function(x){index(weights_tac)[x>0][1]})
+    ref_asset_dates[is.na(ref_asset_dates)] <- index(weights_tac)[1]
     for (k in names(ref_asset_dates)){
       if(ref_asset_dates[k]>ref_dates[1]){
         series_temp <- na.omit(series_back[,k])
