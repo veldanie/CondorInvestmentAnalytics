@@ -75,7 +75,7 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
       }
     }
     series_back <- na.omit(series_back)
-    series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, colnames(weights_bench), bench_curr, convert_to_ref = FALSE)
+    series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, unique(c(colnames(weights_bench), names(w_bench))), bench_curr, convert_to_ref = FALSE)
   }else{
     series_back <- series_merge(series_list, ref_dates, asset_data, currency, asset_names_diff, port_curr, convert_to_ref = FALSE, invest_assets = invest_assets, fixed_tickers =  NULL)
     series_bench <- series_merge(series_list, c(index(series_back)[1], tail(index(series_back), 1)), asset_data, currency, asset_names, bench_curr, convert_to_ref = FALSE)
