@@ -74,7 +74,7 @@ all_tickers_extraction <- function(db, asset_data, benchmarks, assets = NULL, po
               assets_names <- unique(c(assets_names,fund_asset$Asset))
             }else if(fi %in% fund_names_db){
               fund_asset <- conn %>% tbl("Weights") %>% filter(PortId==fi) %>% dplyr::select(Asset)
-              assets_names <- unique(c(assets_names,fund_asset$Asset))
+              assets_names <- unique(c(assets_names,fund_asset %>% dplyr::pull(Asset)))
             }
           }
         }
