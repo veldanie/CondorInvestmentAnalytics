@@ -82,7 +82,7 @@ optim_portfolio_resamp <- function(rets, per = 12, mu_ann=NULL, Sigma_ann=NULL, 
     Sigma <- Sigma_ann/per
   }
 
-  if(is.null(ineqfun) & (!is.null(ineqUB) | ineqLB>0)){
+  if(is.null(ineqfun) && (!is.null(ineqUB) | any(ineqLB>0))){
     ineqfun <- risk_fun(Sigma = Sigma_all$cov_matrix_ann, type = 'vol') # Assumes volatility restriction
   }
 
