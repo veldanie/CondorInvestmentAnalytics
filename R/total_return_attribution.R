@@ -116,7 +116,7 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_be
   
   if (method=="brinson-fachler"){
     aa <- colSums(coredata(weights_port[, asset_names]) * (coredata(rets_assets1[, asset_names])-as.vector(rets1))*ref_bench - coredata(weights_bench[, asset_names])*(coredata(rets_assets1[, asset_names])-as.vector(rets1))*ref_bench)
-  else{
+  }else{
     aa <- colSums(coredata(weights_port[, asset_names]) * coredata(rets_assets1[, asset_names])*ref_bench - coredata(weights_bench[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
   }
   if (agg_inter){
