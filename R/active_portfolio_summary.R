@@ -22,10 +22,11 @@
 #' @param index_df Custom index dataframe
 #' @param header_df DF headers.
 #' @param assets_funds_map Assets in benchmark that corresponds to funds/etfs/assets in port
+#' @param method Performance attribution method
 #' @return Active summary data frame.
 #' @export
 
-active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, weights_bench = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, index_df=NULL, header_df = c("Ret Total Bench", "Ret Total Port", "Ret Prom Bench", "Ret Prom Port", "Vol", "Sharpe", "Alpha", "TE", "RI", "AA", "SS", "INTER"), factor='AssetClassMarket', assets_funds_map=NULL, fill_dates=FALSE) {
+active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dates, asset_data, series_list, per = "monthly", rebal_per = 1, slippage = 0, commission = 0, port_name = NULL, invest_assets = NULL, fixed_tickers = NULL, weights_tac = NULL, weights_bench = NULL, sync_dates = NULL, total_ret = FALSE, fund_complete = FALSE, index_df=NULL, header_df = c("Ret Total Bench", "Ret Total Port", "Ret Prom Bench", "Ret Prom Port", "Vol", "Sharpe", "Alpha", "TE", "RI", "AA", "SS", "INTER"), factor='AssetClassMarket', assets_funds_map=NULL, fill_dates=FALSE, method="brinson-fachler") {
   freq <- switch(per, 'daily' = 252, 'monthly' = 12, 'quarterly' = 4)
   if(is.null(w_port) & is.null(w_bench)){ stop("Null portafolios. Check weights!")}
 
@@ -168,7 +169,7 @@ active_portfolio_summary <- function(capital, currency, w_port, w_bench, ref_dat
         info_ratio <- round(active_ret/ann_te,3)
       }
 
-      attrib_res <- total_return_attribution(w_port, w_bench, total_port, total_bench, port_back$cash_port, bench_back$cash_port, port_back$diff_cash_assets, bench_back$diff_cash_assets, port_back$weights_port, bench_back$weights_port, port_back$dec_dates, bench_back$dec_dates, factor=factor, asset_data=asset_data, assets_funds_map=assets_funds_map)
+      attrib_res <- total_return_attribution(w_port, w_bench, total_port, total_bench, port_back$cash_port, bench_back$cash_port, port_back$diff_cash_assets, bench_back$diff_cash_assets, port_back$weights_port, bench_back$weights_port, port_back$dec_dates, bench_back$dec_dates, factor=factor, asset_data=asset_data, assets_funds_map=assets_funds_map, method=method)
       if(total_ret){
         active_ret_aa <- active_total_ret
         active_ret_aa <- sum(attrib_res$summ_df$AA)
