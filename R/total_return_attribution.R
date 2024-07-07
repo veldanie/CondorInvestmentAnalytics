@@ -121,6 +121,7 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_be
   }
   if (agg_inter){
     ss <- colSums(coredata(weights_port[, asset_names]) * coredata(rets_assets2[, asset_names])*ref_port - coredata(weights_port[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
+    inter <- 0    
   }else{
     ss <- colSums(coredata(weights_bench[, asset_names]) * coredata(rets_assets2[, asset_names])*ref_bench - coredata(weights_bench[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
     inter <- colSums(coredata(weights_port[, asset_names]) * coredata(rets_assets2[, asset_names])*ref_port - coredata(weights_port[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench - coredata(weights_bench[, asset_names])*coredata(rets_assets2[, asset_names])*ref_bench + coredata(weights_bench[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
