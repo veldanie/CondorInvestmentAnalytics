@@ -18,11 +18,13 @@
 #' @param factor Factor name.
 #' @param asset_data Assets dataframe.
 #' @param assets_funds_map Assets in benchmark that corresponds to funds/etfs/assets in port
+#' @param method Attribution method (brinsor or brinson-fachler)
+#' @param agg_inter Indicator, aggregate selection and interaction
 
 #' @return Performance attribution df.
 #' @export
 
-total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_bench, cash_port, cash_bench, diff_cash_assets_port, diff_cash_assets_bench, weights_port, weights_bench, dec_dates_port = NA, dec_dates_bench = NA, header_df = c("Portafolio", "Benchmark", "Desv. Prom.", "AA", "SS", "INT", "TOTAL"), ret_ini_capital=FALSE, factor=NULL, asset_data=NULL, assets_funds_map=NULL) {
+total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_bench, cash_port, cash_bench, diff_cash_assets_port, diff_cash_assets_bench, weights_port, weights_bench, dec_dates_port = NA, dec_dates_bench = NA, header_df = c("Portafolio", "Benchmark", "Desv. Prom.", "AA", "SS", "INT", "TOTAL"), ret_ini_capital=FALSE, factor=NULL, asset_data=NULL, assets_funds_map=NULL, method="brinson", agg_inter=FALSE) {
   if (!is.null(assets_funds_map)){
     for (k in names(w_bench)){
       pos_ind <- k==assets_funds_map$Asset
@@ -111,10 +113,18 @@ total_return_attribution <- function(w_port, w_bench, efec_ret_port, efec_ret_be
   ref_bench <- (cumprod(1+c(0,rets1))%*% t(rep(1, length(asset_names))))[1:nrow(weights_bench),]
   rets2 <- returns(cash_port[ref_dates])
   ref_port <- (cumprod(1+c(0,rets2))%*% t(rep(1, length(asset_names))))[1:nrow(weights_port),]
-
-  aa <- colSums(coredata(weights_port[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench - coredata(weights_bench[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
-  ss <- colSums(coredata(weights_bench[, asset_names]) * coredata(rets_assets2[, asset_names])*ref_bench - coredata(weights_bench[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
-  inter <- colSums(coredata(weights_port[, asset_names])*coredata(rets_assets2[, asset_names])*ref_port - coredata(weights_port[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench - coredata(weights_bench[, asset_names])*coredata(rets_assets2[, asset_names])*ref_bench + coredata(weights_bench[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
+  
+  if (method=="brinson-fachler"){
+    aa <- colSums(coredata(weights_port[, asset_names]) * coredata(rets_assets1[, asset_names]-rets1)*ref_bench - coredata(weights_bench[, asset_names])*coredata(rets_assets1[, asset_names]-rets1)*ref_bench)
+  else{
+    aa <- colSums(coredata(weights_port[, asset_names]) * coredata(rets_assets1[, asset_names])*ref_bench - coredata(weights_bench[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
+  }
+  if (agg_inter){
+    ss <- colSums(coredata(weights_port[, asset_names]) * coredata(rets_assets2[, asset_names])*ref_port - coredata(weights_port[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
+  }else{
+    ss <- colSums(coredata(weights_bench[, asset_names]) * coredata(rets_assets2[, asset_names])*ref_bench - coredata(weights_bench[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
+    inter <- colSums(coredata(weights_port[, asset_names]) * coredata(rets_assets2[, asset_names])*ref_port - coredata(weights_port[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench - coredata(weights_bench[, asset_names])*coredata(rets_assets2[, asset_names])*ref_bench + coredata(weights_bench[, asset_names])*coredata(rets_assets1[, asset_names])*ref_bench)
+  }
 
   total <- aa + ss + inter
   diff_days_dates <- as.numeric(diff(ref_dates))
