@@ -1,3 +1,4 @@
+
 #' Returns
 #'
 #' Estimates returns with a given period.
