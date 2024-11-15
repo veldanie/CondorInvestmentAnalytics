@@ -1,4 +1,5 @@
 
+
 #' Drawdown Returns returns
 #'
 #' Estimates de covariance using weighted averages of products of past returns.
