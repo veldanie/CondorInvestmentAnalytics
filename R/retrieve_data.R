@@ -11,17 +11,7 @@
 #' @param output_path path to which the output should be exported. If NULL, returns dataframe.
 #' @return dataframe
 #' @export
-
-retrieve_data <- function(target_data, output_path = NULL){
-  library(tidyr)
-  library(odbc)
-  library(DBI)
-  library(dbplyr)
-  library(dplyr)
-  library(purrr)
-  # Crea conexión a DataLicense
-  db <- try(DBI::dbConnect(odbc::odbc(), Driver = "SQL Server", UID='user_sura', PWD='Sur4dano.',
-                           Server='169.61.38.18', database = 'DataLicense', Port = 1433))
+retrieve_data <- function(db, target_data, output_path = NULL){
   # Tabla que trae los datos partickers y campos, por ejemplo: TOT_RETURN_INDEX_GROSS_DVDS para un determinado ETF
   df_series <- db %>%
     tbl("tbl_DatosBloomberg") %>%
