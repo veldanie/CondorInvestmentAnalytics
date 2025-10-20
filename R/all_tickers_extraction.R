@@ -87,8 +87,7 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
       if(length(port_tickers) > 0){
         ticker_list <- unique(c(ticker_list, port_tickers$Ticker)) #Listado de fondos para descargar series
       }
-      index_df <- query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor) %>% 
-        dplyr::select(IndexId, Asset, Weight, Ticker))
+      index_df <- query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor) %>% dplyr::select(IndexId, Asset, Weight, Ticker)
       if(nrow(index_df)!=0){
         ct_ind <- ticker_list %in% index_df$Ticker
         ticker_list <- unique(c(ticker_list[!ct_ind], get_ticker(index_df$Asset,asset_data)))
@@ -119,8 +118,7 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
         if(length(port_tickers) > 0){
           ticker_list <- unique(c(ticker_list, port_tickers$Ticker)) #Listado de fondos para descargar series
         }
-        index_df <- as.data.frame(query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor) %>% 
-                                    dplyr::select(IndexId, Asset, Weight, Ticker))
+        index_df <- as.data.frame(query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor) %>% dplyr::select(IndexId, Asset, Weight, Ticker))
         if(nrow(index_df)!=0){
           ct_ind <- ticker_list %in% index_df$Ticker
           ticker_list <- unique(c(ticker_list[!ct_ind], get_ticker(index_df$Asset,asset_data)))
