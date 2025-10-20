@@ -10,7 +10,7 @@
 #' @param db_name Secretpool used to get token
 #' @export
 query_database <- function(url_database, query,
-                           url_token, username_req, password_req, secretpool_req="SecretPoolINVPROD",
+                           url_token, username_req, password_req, secretpool_req="SecretPoolInvSura",
                            db_name="wmdb"){
   bearen_token <- get_token(url_token,username_req,password_req)
   # Header

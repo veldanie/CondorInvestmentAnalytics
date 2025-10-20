@@ -11,7 +11,7 @@
 #' @param db_name Secretpool used to get token
 #' @export
 insert_query_database <- function(url_database, df_new_register, db_table,
-                                  url_token, username_req, password_req, secretpool_req="SecretPoolINVPROD",
+                                  url_token, username_req, password_req, secretpool_req="SecretPoolInvSura",
                                   db_name = "wmdb") {
   if (nrow(df_new_register) == 0) {
     stop("No se puede hacer la inserción de un data.frame vacío")

@@ -6,7 +6,7 @@
 #' @param password_req Password
 #' @param secretpool_req Secretpool used to get token
 #' @export
-get_token <- function(url_request,username_req,password_req,secretpool_req="SecretPoolINVPROD"){
+get_token <- function(url_request,username_req,password_req,secretpool_req="SecretPoolInvSura"){
   # Header
   headers <- add_headers(
     "Accept"= "*/*",

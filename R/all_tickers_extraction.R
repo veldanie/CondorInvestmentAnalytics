@@ -26,7 +26,7 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
   ticker_list<- NULL; assets_names<- NULL; assets_list <- NULL; port_assets <- NULL
   if(!is.null(assets)){
     assets_names <- unique(c(assets_names,assets))
-    }
+  }
   if(!is.null(ports)){
     #conn <- poolCheckout(db)
     #DBI::dbBegin(conn)
@@ -59,7 +59,7 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
         port_assets <- unique(port_db_i$Asset)
         assets_names <- unique(c(assets_names,port_assets))
       }
-
+      
       if(port_factor_disagg){
         ind_fund_bench <- port_assets %in% benchmarks$Benchmark
         fund_names_bench <- port_assets[ind_fund_bench]
@@ -87,12 +87,17 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
       if(length(port_tickers) > 0){
         ticker_list <- unique(c(ticker_list, port_tickers$Ticker)) #Listado de fondos para descargar series
       }
-      index_df <- query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor) %>% dplyr::select(IndexId, Asset, Weight, Ticker)
+      if(length(ticker_list)>0){
+        index_df <- query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor) %>% dplyr::select(IndexId, Asset, Weight, Ticker)
+      } else {
+        index_df <- data.frame(NULL)
+      }
+      
       if(nrow(index_df)!=0){
         ct_ind <- ticker_list %in% index_df$Ticker
         ticker_list <- unique(c(ticker_list[!ct_ind], get_ticker(index_df$Asset,asset_data)))
       }
-    
+      
     }
     #DBI::dbCommit(conn)
     #poolReturn(conn)
@@ -118,7 +123,12 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
         if(length(port_tickers) > 0){
           ticker_list <- unique(c(ticker_list, port_tickers$Ticker)) #Listado de fondos para descargar series
         }
-        index_df <- as.data.frame(query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor) %>% dplyr::select(IndexId, Asset, Weight, Ticker))
+        if (length(ticker_list)>0){
+          index_df <- as.data.frame(query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor) %>% dplyr::select(IndexId, Asset, Weight, Ticker))  
+        } else {
+          index_df <- data.frame(NULL)
+        }
+        
         if(nrow(index_df)!=0){
           ct_ind <- ticker_list %in% index_df$Ticker
           ticker_list <- unique(c(ticker_list[!ct_ind], get_ticker(index_df$Asset,asset_data)))
