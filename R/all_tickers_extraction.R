@@ -1,7 +1,10 @@
 #' all_tickers_extraction
 #'
 #' Extract all tickers from assets or portfolios, including currencies and tactical portfolios
-#' @param db DataBase Connection
+#' @param url_database url request to query_database lambda
+#' @param url_token url request token
+#' @param username_req Username who needs token. 
+#' @param password_req Password
 #' @param asset_data Dataframe with info regarding each asset. 
 #' @param assets Id of assets of interest. Vector
 #' @param ports Id of portfolios of interest. Vector
@@ -16,7 +19,7 @@
 #' @param get_fund get fund (IA) series data, and dependecies
 #' @return ticker_list, assets_list
 #' @export
-all_tickers_extraction <- function(db, asset_data, benchmarks, assets = NULL, ports = NULL, 
+all_tickers_extraction <- function(url_database, url_token, username_req, password_req,asset_data, benchmarks, assets = NULL, ports = NULL, 
                                    fixed_curr = NULL, tactical_port = FALSE, w_bench = NULL,
                                    w_optim = NULL, w_optim_mv = NULL, w_optim_pm = NULL, 
                                    port_factor_disagg = FALSE, ETF_IA_tickers = TRUE, get_fund = FALSE) {
@@ -25,8 +28,8 @@ all_tickers_extraction <- function(db, asset_data, benchmarks, assets = NULL, po
     assets_names <- unique(c(assets_names,assets))
     }
   if(!is.null(ports)){
-    conn <- poolCheckout(db)
-    DBI::dbBegin(conn)
+    #conn <- poolCheckout(db)
+    #DBI::dbBegin(conn)
     for (port_i in ports) {
       if(port_i == 'Mercado'){
         if (!is.null(w_bench)) {
@@ -52,7 +55,7 @@ all_tickers_extraction <- function(db, asset_data, benchmarks, assets = NULL, po
       }else if(length(w_optim_pm) > 0  && port_i %in% names(w_optim_pm)){
         assets_names <- unique(c(assets_names,names(w_optim_pm[[port_i]])))
       }else{
-        port_db_i <- as.data.frame(conn %>% tbl("Weights") %>% filter(PortId==port_i))
+        port_db_i <- as.data.frame(query_database(url_database, sprintf("SELECT * FROM Weights WHERE PortId ='%s'", port_i), url_token, user_condor, pass_condor))
         port_assets <- unique(port_db_i$Asset)
         assets_names <- unique(c(assets_names,port_assets))
       }
@@ -60,7 +63,7 @@ all_tickers_extraction <- function(db, asset_data, benchmarks, assets = NULL, po
       if(port_factor_disagg){
         ind_fund_bench <- port_assets %in% benchmarks$Benchmark
         fund_names_bench <- port_assets[ind_fund_bench]
-        ind_fund_db <- port_assets %in% (conn %>% tbl("Portfolios") %>% pull(Id))
+        ind_fund_db <- port_assets %in% (query_database(url_database, "SELECT DISTINCT Id FROM Portfolios", url_token, user_condor, pass_condor) %>% pull(Id))
         fund_names_db <- port_assets[ind_fund_db]
         fund_names <- unique(c(fund_names_bench, fund_names_db))
         ind_fund <- port_assets %in% fund_names
@@ -73,31 +76,30 @@ all_tickers_extraction <- function(db, asset_data, benchmarks, assets = NULL, po
               fund_asset <- benchmarks %>% filter(Benchmark==fi) %>% dplyr::select(Asset)
               assets_names <- unique(c(assets_names,fund_asset$Asset))
             }else if(fi %in% fund_names_db){
-              fund_asset <- conn %>% tbl("Weights") %>% filter(PortId==fi) %>% dplyr::select(Asset)
+              fund_asset <- query_database(url_database, sprintf("SELECT * FROM Weights WHERE PortId ='%s'", fi), url_token, user_condor, pass_condor) %>% dplyr::select(Asset)
               assets_names <- unique(c(assets_names,fund_asset %>% dplyr::pull(Asset)))
             }
           }
         }
       }
       
-      port_tickers <- as.data.frame(conn %>% tbl("InvestTickers") %>% filter(PortId == port_i))
-      if(length(port_tickers %>% pull(1)) > 0){
+      port_tickers <- as.data.frame(query_database(url_database, sprintf("SELECT * FROM InvestTickers WHERE PortId ='%s'", port_i), url_token, user_condor, pass_condor))
+      if(length(port_tickers) > 0){
         ticker_list <- unique(c(ticker_list, port_tickers$Ticker)) #Listado de fondos para descargar series
       }
-      index_df <- as.data.frame(conn %>% tbl("UserIndex") %>%
-                                  filter(Ticker %in% ticker_list) %>%
-                                  dplyr::select(IndexId, Asset, Weight, Ticker))
+      index_df <- query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor) %>% 
+        dplyr::select(IndexId, Asset, Weight, Ticker))
       if(nrow(index_df)!=0){
         ct_ind <- ticker_list %in% index_df$Ticker
         ticker_list <- unique(c(ticker_list[!ct_ind], get_ticker(index_df$Asset,asset_data)))
       }
     
     }
-    DBI::dbCommit(conn)
-    poolReturn(conn)
+    #DBI::dbCommit(conn)
+    #poolReturn(conn)
     if (tactical_port){
-      conn <- poolCheckout(db)
-      DBI::dbBegin(conn)
+      #conn <- poolCheckout(db)
+      #DBI::dbBegin(conn)
       for (port_i in ports){
         tac_ind <- grepl("Tactico", port_i)
         if(tac_ind){
@@ -105,7 +107,7 @@ all_tickers_extraction <- function(db, asset_data, benchmarks, assets = NULL, po
         }else{
           port_db <- paste0(port_i, " - Tactico")
         }
-        port_df <- as.data.frame(conn %>% tbl("Weights") %>% filter(PortId==port_db))
+        port_df <- as.data.frame(query_database(url_database, sprintf("SELECT * FROM Weights WHERE PortId ='%s'", port_db), url_token, user_condor, pass_condor))
         
         if(nrow(port_df)>0){
           port_assets <- unique(port_df$Asset)
@@ -113,20 +115,19 @@ all_tickers_extraction <- function(db, asset_data, benchmarks, assets = NULL, po
         }else{
           next
         }
-        port_tickers <- as.data.frame(conn %>% tbl("InvestTickers") %>% filter(PortId == port_db))
-        if(length(port_tickers %>% pull(1)) > 0){
+        port_tickers <- as.data.frame(query_database(url_database, sprintf("SELECT * FROM InvestTickers WHERE PortId ='%s'", port_db), url_token, user_condor, pass_condor))
+        if(length(port_tickers) > 0){
           ticker_list <- unique(c(ticker_list, port_tickers$Ticker)) #Listado de fondos para descargar series
         }
-        index_df <- as.data.frame(conn %>% tbl("UserIndex") %>%
-                                    filter(Ticker %in% ticker_list) %>%
+        index_df <- as.data.frame(query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor) %>% 
                                     dplyr::select(IndexId, Asset, Weight, Ticker))
         if(nrow(index_df)!=0){
           ct_ind <- ticker_list %in% index_df$Ticker
           ticker_list <- unique(c(ticker_list[!ct_ind], get_ticker(index_df$Asset,asset_data)))
         }
       }
-      DBI::dbCommit(conn)
-      poolReturn(conn)
+      #DBI::dbCommit(conn)
+      #poolReturn(conn)
     }
   }
   if(get_fund){
