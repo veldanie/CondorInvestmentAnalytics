@@ -88,7 +88,10 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
         ticker_list <- unique(c(ticker_list, port_tickers$Ticker)) #Listado de fondos para descargar series
       }
       if(length(ticker_list)>0){
-        index_df <- query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor) %>% dplyr::select(IndexId, Asset, Weight, Ticker)
+        index_df <- query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor)
+        if(length(index_df)>0){
+          index_df <- index_df %>% dplyr::select(IndexId, Asset, Weight, Ticker)
+        }
       } else {
         index_df <- data.frame(NULL)
       }
