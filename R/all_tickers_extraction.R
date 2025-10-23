@@ -76,7 +76,12 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
               fund_asset <- benchmarks %>% filter(Benchmark==fi) %>% dplyr::select(Asset)
               assets_names <- unique(c(assets_names,fund_asset$Asset))
             }else if(fi %in% fund_names_db){
-              fund_asset <- query_database(url_database, sprintf("SELECT * FROM Weights WHERE PortId ='%s'", fi), url_token, user_condor, pass_condor) %>% dplyr::select(Asset)
+              fund_asset <- query_database(url_database, sprintf("SELECT * FROM Weights WHERE PortId ='%s'", fi), url_token, user_condor, pass_condor)
+              if(length(fund_asset)){
+                fund_asset <- fund_asset %>% dplyr::select(Asset)
+              } else {
+                fund_asset <- data.frame(NULL)
+              }
               assets_names <- unique(c(assets_names,fund_asset %>% dplyr::pull(Asset)))
             }
           }
@@ -128,6 +133,9 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
         }
         if (length(ticker_list)>0){
           index_df <- as.data.frame(query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor) %>% dplyr::select(IndexId, Asset, Weight, Ticker))  
+          if(length(index_df)>0){
+            index_df <- index_df %>% dplyr::select(IndexId, Asset, Weight, Ticker)
+          }
         } else {
           index_df <- data.frame(NULL)
         }
