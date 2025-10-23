@@ -80,7 +80,7 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
               if(length(fund_asset)){
                 fund_asset <- fund_asset %>% dplyr::select(Asset)
               } else {
-                fund_asset <- data.frame(NULL)
+                fund_asset <- data.frame(Asset = character(), stringsAsFactors = FALSE)
               }
               assets_names <- unique(c(assets_names,fund_asset %>% dplyr::pull(Asset)))
             }
