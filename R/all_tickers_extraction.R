@@ -97,8 +97,6 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
         if(length(index_df)>0){
           index_df <- index_df %>% dplyr::select(IndexId, Asset, Weight, Ticker)
         } else {
-          index_df <- data.frame(NULL)
-      } else {
         index_df <- data.frame(NULL)
       }
       
