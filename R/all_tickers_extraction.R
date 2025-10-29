@@ -99,6 +99,8 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
         } else {
           index_df <- data.frame(NULL)
         } 
+      } else {
+        index_df <- data.frame(NULL)
       }
       
       if(length(index_df)>0){
