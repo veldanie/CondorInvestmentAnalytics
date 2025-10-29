@@ -96,7 +96,8 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
         index_df <- query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor)
         if(length(index_df)>0){
           index_df <- index_df %>% dplyr::select(IndexId, Asset, Weight, Ticker)
-        }
+        } else {
+          index_df <- data.frame(NULL)
       } else {
         index_df <- data.frame(NULL)
       }
@@ -135,10 +136,10 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
           index_df <- as.data.frame(query_database(url_database, paste0("SELECT * FROM UserIndex WHERE Ticker IN (",paste(shQuote(ticker_list, type = "sh"), collapse = ","),")"), url_token, user_condor, pass_condor) %>% dplyr::select(IndexId, Asset, Weight, Ticker))  
           if(length(index_df)>0){
             index_df <- index_df %>% dplyr::select(IndexId, Asset, Weight, Ticker)
+          }else {
+            index_df <- data.frame(NULL)
           }
-        } else {
-          index_df <- data.frame(NULL)
-        }
+        } 
         
         if(nrow(index_df)!=0){
           ct_ind <- ticker_list %in% index_df$Ticker
