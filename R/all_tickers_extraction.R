@@ -100,7 +100,7 @@ all_tickers_extraction <- function(url_database, url_token, username_req, passwo
         index_df <- data.frame(NULL)
       }
       
-      if(nrow(index_df)!=0){
+      if(length(index_df)>0){
         ct_ind <- ticker_list %in% index_df$Ticker
         ticker_list <- unique(c(ticker_list[!ct_ind], get_ticker(index_df$Asset,asset_data)))
       }
